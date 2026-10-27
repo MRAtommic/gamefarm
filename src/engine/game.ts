@@ -5174,6 +5174,9 @@ Game.setupTouchControls = function() {
             // Only shoot if touching the game canvas directly (never intercept hotbar, menus, or modals!)
             if (t.target !== this.canvas) continue;
 
+            // Also ignore touches on the left 48% of screen (virtual joystick thumb area)
+            if (t.clientX < window.innerWidth * 0.48 && t.clientY > 55) continue;
+
             e.preventDefault();
             canvasShootTouchId = t.identifier;
 
@@ -20628,7 +20631,7 @@ Game.renderActiveSkillBar = function() {
     }
 };
 
-// Skill Joystick Aiming Controls (Mobile Drag to Aim & Desktop Mouse Drag Aim)
+// Skill Joystick Aiming Controls (Mobile Drag to Aim & Desktop Mouse Drag Aim with ROV Cancel)
 Game.setupSkillJoystickControls = function() {
     const containers = [
         document.getElementById('activeSkillSlots'),
@@ -20643,6 +20646,31 @@ Game.setupSkillJoystickControls = function() {
     let activeSlot = 0;
     let activeSlotEl: HTMLElement | null = null;
     let isDraggingAim = false;
+
+    const checkCancelZoneHover = (clientX: number, clientY: number): boolean => {
+        const cancelZone = document.getElementById('skillCancelZone');
+        if (!cancelZone) return false;
+        cancelZone.style.display = 'flex';
+        const rect = cancelZone.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const dist = Math.hypot(clientX - centerX, clientY - centerY);
+        const isHovered = dist < Math.max(rect.width * 0.75, 55);
+        if (isHovered) {
+            cancelZone.classList.add('is-hovered');
+        } else {
+            cancelZone.classList.remove('is-hovered');
+        }
+        return isHovered;
+    };
+
+    const hideCancelZone = () => {
+        const cancelZone = document.getElementById('skillCancelZone');
+        if (cancelZone) {
+            cancelZone.style.display = 'none';
+            cancelZone.classList.remove('is-hovered');
+        }
+    };
 
     containers.forEach(container => {
         if ((container as any)._joystickAttached) return;
@@ -20664,6 +20692,7 @@ Game.setupSkillJoystickControls = function() {
             activeSlot = slot;
             activeSlotEl = slotEl;
             isDraggingAim = false;
+            this.activeSkillCancelled = false;
 
             SoundEngine.init();
             if (SoundEngine.isBgmOn()) SoundEngine.startBgm();
@@ -20690,13 +20719,18 @@ Game.setupSkillJoystickControls = function() {
             this.activeSkillAiming = true;
             this.activeSkillAimSlot = activeSlot;
             this.skillAimAngle = Math.atan2(dy, dx);
+            this.activeSkillCancelled = checkCancelZoneHover(touch.clientX, touch.clientY);
 
             // Visual joystick tilt on the slot orb
             const maxTilt = 18;
             const tiltX = Math.cos(this.skillAimAngle) * Math.min(dist, maxTilt);
             const tiltY = Math.sin(this.skillAimAngle) * Math.min(dist, maxTilt);
             activeSlotEl.style.transform = `translate(${tiltX}px, ${tiltY}px) scale(1.12)`;
-            activeSlotEl.style.boxShadow = `0 0 16px #38bdf8, 0 0 8px #facc15`;
+            if (this.activeSkillCancelled) {
+                activeSlotEl.style.boxShadow = `0 0 18px #ef4444, 0 0 10px #b91c1c`;
+            } else {
+                activeSlotEl.style.boxShadow = `0 0 16px #38bdf8, 0 0 8px #facc15`;
+            }
         }
     }, { passive: false });
 
@@ -20711,6 +20745,8 @@ Game.setupSkillJoystickControls = function() {
         }
         if (stillTouch) return;
 
+        hideCancelZone();
+
         if (activeSlotEl) {
             activeSlotEl.style.transform = '';
             activeSlotEl.style.boxShadow = '';
@@ -20718,18 +20754,27 @@ Game.setupSkillJoystickControls = function() {
 
         const slotToTrigger = activeSlot;
         const wasAiming = isDraggingAim;
+        const wasCancelled = !!this.activeSkillCancelled;
+        const finalAngle = this.skillAimAngle;
+
         activeTouchId = null;
         activeSlotEl = null;
+        this.activeSkillAiming = false;
+        this.activeSkillCancelled = false;
+        this.skillAimAngle = null;
 
-        if (wasAiming && this.skillAimAngle !== null) {
-            this.triggerPlayerSkill(slotToTrigger);
-        } else {
-            this.skillAimAngle = null;
-            this.triggerPlayerSkill(slotToTrigger);
+        if (wasCancelled) {
+            this.addFloatingText('✕ ยกเลิกสกิล', this.player.x, this.player.y - 15, '#ef4444');
+            return;
         }
 
-        this.activeSkillAiming = false;
-        this.skillAimAngle = null;
+        if (wasAiming && finalAngle !== null) {
+            this.skillAimAngle = finalAngle;
+            this.triggerPlayerSkill(slotToTrigger);
+            this.skillAimAngle = null;
+        } else {
+            this.triggerPlayerSkill(slotToTrigger);
+        }
     };
 
     window.addEventListener('touchend', endSkillTouch, { passive: false });
@@ -20750,6 +20795,7 @@ Game.setupSkillJoystickControls = function() {
             activeSlot = slot;
             activeSlotEl = slotEl;
             isDraggingAim = false;
+            this.activeSkillCancelled = false;
         });
     });
 
@@ -20764,38 +20810,57 @@ Game.setupSkillJoystickControls = function() {
             this.activeSkillAiming = true;
             this.activeSkillAimSlot = activeSlot;
             this.skillAimAngle = Math.atan2(dy, dx);
+            this.activeSkillCancelled = checkCancelZoneHover(e.clientX, e.clientY);
+
             const maxTilt = 18;
             const tiltX = Math.cos(this.skillAimAngle) * Math.min(dist, maxTilt);
             const tiltY = Math.sin(this.skillAimAngle) * Math.min(dist, maxTilt);
             activeSlotEl.style.transform = `translate(${tiltX}px, ${tiltY}px) scale(1.12)`;
-            activeSlotEl.style.boxShadow = `0 0 16px #38bdf8, 0 0 8px #facc15`;
+            if (this.activeSkillCancelled) {
+                activeSlotEl.style.boxShadow = `0 0 18px #ef4444, 0 0 10px #b91c1c`;
+            } else {
+                activeSlotEl.style.boxShadow = `0 0 16px #38bdf8, 0 0 8px #facc15`;
+            }
         }
     });
 
     window.addEventListener('mouseup', () => {
         if (!isMouseDown) return;
         isMouseDown = false;
+        hideCancelZone();
+
         if (activeSlotEl) {
             activeSlotEl.style.transform = '';
             activeSlotEl.style.boxShadow = '';
         }
         const slotToTrigger = activeSlot;
-        activeSlotEl = null;
+        const wasAiming = isDraggingAim;
+        const wasCancelled = !!this.activeSkillCancelled;
+        const finalAngle = this.skillAimAngle;
 
-        if (isDraggingAim && this.skillAimAngle !== null) {
+        activeSlotEl = null;
+        this.activeSkillAiming = false;
+        this.activeSkillCancelled = false;
+        this.skillAimAngle = null;
+
+        if (wasCancelled) {
+            this.addFloatingText('✕ ยกเลิกสกิล', this.player.x, this.player.y - 15, '#ef4444');
+            return;
+        }
+
+        if (wasAiming && finalAngle !== null) {
+            this.skillAimAngle = finalAngle;
             this.triggerPlayerSkill(slotToTrigger);
-        } else {
             this.skillAimAngle = null;
+        } else {
             this.triggerPlayerSkill(slotToTrigger);
         }
-        this.activeSkillAiming = false;
-        this.skillAimAngle = null;
     });
 };
 
 // Draw Canvas Active Skill Visuals
 Game.drawActiveSkillVisuals = function(ctx) {
-    // 0. Draw Skill Joystick Aiming Indicator (Mobile & Mouse Drag Aim)
+    // 0. Draw Skill Joystick Aiming Indicator (Mobile & Mouse Drag Aim with ROV Cancel)
     if (this.activeSkillAiming && this.skillAimAngle !== null && this.skillAimAngle !== undefined && this.player) {
         const px = Math.round(this.player.x + 12 - this.camera.x);
         const py = Math.round(this.player.y + 14 - this.camera.y);
@@ -20803,14 +20868,15 @@ Game.drawActiveSkillVisuals = function(ctx) {
         const aimDist = 160;
         const tx = px + Math.cos(ang) * aimDist;
         const ty = py + Math.sin(ang) * aimDist;
+        const isCancelled = !!this.activeSkillCancelled;
 
         ctx.save();
-        ctx.shadowColor = '#38bdf8';
+        ctx.shadowColor = isCancelled ? '#ef4444' : '#38bdf8';
         ctx.shadowBlur = 14;
 
         // Aiming trajectory dashed line
-        ctx.strokeStyle = '#38bdf8';
-        ctx.lineWidth = 3;
+        ctx.strokeStyle = isCancelled ? '#ef4444' : '#38bdf8';
+        ctx.lineWidth = isCancelled ? 3.5 : 3;
         ctx.setLineDash([8, 6]);
         ctx.beginPath();
         ctx.moveTo(px, py);
@@ -20819,7 +20885,7 @@ Game.drawActiveSkillVisuals = function(ctx) {
 
         // Directional Arrowhead
         ctx.setLineDash([]);
-        ctx.fillStyle = '#fde047';
+        ctx.fillStyle = isCancelled ? '#ef4444' : '#fde047';
         ctx.beginPath();
         const arrowSize = 14;
         const a1 = ang + Math.PI - 0.45;
@@ -20831,14 +20897,32 @@ Game.drawActiveSkillVisuals = function(ctx) {
         ctx.fill();
 
         // Target reticle ring
-        ctx.strokeStyle = '#facc15';
+        ctx.strokeStyle = isCancelled ? '#ef4444' : '#facc15';
         ctx.lineWidth = 2.5;
         ctx.beginPath();
         ctx.arc(tx, ty, 16, 0, Math.PI * 2);
         ctx.stroke();
 
+        if (isCancelled) {
+            // Draw Cancel '✕' icon inside reticle
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(tx - 7, ty - 7);
+            ctx.lineTo(tx + 7, ty + 7);
+            ctx.moveTo(tx + 7, ty - 7);
+            ctx.lineTo(tx - 7, ty + 7);
+            ctx.stroke();
+
+            // Floating label above reticle
+            ctx.fillStyle = '#fee2e2';
+            ctx.font = 'bold 12px Kanit, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('✕ ยกเลิกสกิล', tx, ty - 22);
+        }
+
         // Player range circle indicator
-        ctx.strokeStyle = 'rgba(56, 189, 248, 0.28)';
+        ctx.strokeStyle = isCancelled ? 'rgba(239, 68, 68, 0.35)' : 'rgba(56, 189, 248, 0.28)';
         ctx.lineWidth = 1.5;
         ctx.beginPath();
         ctx.arc(px, py, aimDist, 0, Math.PI * 2);
