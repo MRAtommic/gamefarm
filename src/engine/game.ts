@@ -916,6 +916,7 @@ Game.generateVillageMap = function() {
         map[y][51].solid = false;
         map[y][51].type = 'bridge';
     }
+    map[40][51].interactable = 'sailboat_pier';
     map[41][51].solid = true;
     map[41][51].type = 'sailboat';
     map[41][51].interactable = 'sailboat_pier';
@@ -2090,6 +2091,7 @@ Game.generateIslandMap = function() {
             map[y][x].type = 'bridge';
         }
     }
+    map[31][23].interactable = 'exit_island_sailboat';
     // Moored Sailboat at South Dock
     map[32][23].solid = true;
     map[32][23].type = 'sailboat';
@@ -3332,11 +3334,11 @@ Game.updatePlayer = function(dt) {
 
         // Check Sailboat Dock collision contact trigger
         if ((!this.player.warpCooldown || this.player.warpCooldown <= 0) && (!this.screenFade || this.screenFade.phase === 'none')) {
-            if (this.currentScene === 'village' && pTileX === 51 && pTileY >= 40 && dy > 0) {
+            if (this.currentScene === 'village' && pTileX === 51 && pTileY >= 40 && pTileY <= 42) {
                 this.player.warpCooldown = 800;
                 this.handleTileInteract('sailboat_pier', 51, 41);
                 return;
-            } else if (this.currentScene === 'island' && pTileX === 23 && pTileY >= 31 && dy > 0) {
+            } else if (this.currentScene === 'island' && pTileX === 23 && pTileY >= 31 && pTileY <= 33) {
                 this.player.warpCooldown = 800;
                 this.handleTileInteract('exit_island_sailboat', 23, 32);
                 return;
@@ -3905,6 +3907,14 @@ Game.actOnTile = function(tx, ty) {
     const dist = Math.hypot(playerTileX - tx, playerTileY - ty);
 
     // 1. Check interaction triggers if within reach (doors, bed, well, chests, shop counter, sailboat)
+    if (this.currentScene === 'village' && (tx === 51 || Math.abs(tx - 51) <= 1) && (ty >= 40 && ty <= 42) && dist <= 4.2) {
+        this.handleTileInteract('sailboat_pier', 51, 41);
+        return;
+    }
+    if (this.currentScene === 'island' && (tx === 23 || Math.abs(tx - 23) <= 1) && (ty >= 31 && ty <= 33) && dist <= 4.2) {
+        this.handleTileInteract('exit_island_sailboat', 23, 32);
+        return;
+    }
     if (tile && tile.interactable && dist <= 3.8) {
         this.handleTileInteract(tile.interactable, tx, ty);
         return;
@@ -7401,7 +7411,7 @@ Game.render = function() {
                         if (distToP <= 80) {
                             const isIsland = this.currentScene === 'island';
                             const isRepaired = !!this.player.sailboatRepaired;
-                            const promptText = isIsland ? 'ล่องเรือกลับหมู่บ้าน' : (isRepaired ? 'ล่องเรือสู่เกาะเขตร้อน' : 'บูรณะเรือใบโบราณ');
+                            const promptText = isIsland ? 'ล่องเรือกลับหมู่บ้าน' : (isRepaired ? 'ล่องเรือสู่เกาะเขตร้อน' : 'ขึ้นเรือ / บูรณะเรือใบ');
                             const badgeY = screenY - 26 + Math.sin(performance.now() * 0.005) * 3;
 
                             this.ctx.save();
@@ -17891,10 +17901,14 @@ Game.warpCaveFloor = function(targetFloor: number) {
 };
 
 
-Game.travelToIsland = function() {
-    this.switchScene('island', 18, 24);
+Game.sailToIslandNow = function() {
+    this.closeAllModals();
+    this.player.sailboatRepaired = true;
+    if (typeof this.saveGame === 'function') {
+        this.saveGame();
+    }
     SoundEngine.bell();
-    this.addFloatingText(' ล่องเรือข้ามสมุทรสู่เกาะเขตร้อน!', this.player.x, this.player.y - 15, '#38bdf8');
+    this.travelToIsland();
 };
 
 
@@ -18595,7 +18609,8 @@ Game.openSailboatRepairModal = function() {
     const woodEl = document.getElementById('repairReqWood');
     const ironEl = document.getElementById('repairReqIron');
     const goldEl = document.getElementById('repairReqGold');
-    const btn = document.getElementById('btnConfirmSailboatRepair') as HTMLButtonElement;
+    const btnRepair = document.getElementById('btnConfirmSailboatRepair') as HTMLButtonElement;
+    const btnSailNow = document.getElementById('btnSailNow') as HTMLButtonElement;
 
     if (woodEl) {
         woodEl.textContent = `${woodCount} / 20`;
@@ -18611,9 +18626,13 @@ Game.openSailboatRepairModal = function() {
     }
 
     const canRepair = woodCount >= 20 && ironCount >= 5 && goldCount >= 500;
-    if (btn) {
-        btn.disabled = !canRepair;
-        btn.textContent = canRepair ? 'บูรณะเรือใบโบราณ (ซ่อมแซม)' : 'วัสดุหรือเหรียญทองไม่เพียงพอ';
+    if (btnRepair) {
+        btnRepair.disabled = !canRepair;
+        btnRepair.textContent = canRepair ? 'บูรณะเรือใบ (+100 XP)' : 'ต้องการวัสดุครบเพื่อบูรณะ (+100 XP)';
+    }
+    if (btnSailNow) {
+        btnSailNow.disabled = false;
+        btnSailNow.textContent = 'ออกเรือสู่เกาะเขตร้อนทันที';
     }
 
     modal.style.display = 'flex';
