@@ -5813,15 +5813,30 @@ Game.updateDroppedItems = function(dt) {
                 }
             }
 
-            // Normal drops auto-magnet to player. Manual drops NEVER auto-magnet (require click or pressing E!)
+            // Normal drops auto-magnet to player only IF player has space in inventory. Manual drops NEVER auto-magnet (require click or pressing E!)
             if (item.timer > 250 && !item.manualPickup) {
                 const distToPlayer = Math.hypot((this.player.x + 12) - item.x, (this.player.y + 16) - item.y);
                 const magnetDist = (typeof this.hasRing === 'function' && this.hasRing('ring_magnet')) ? 240 : 110;
                 if (distToPlayer < magnetDist) {
-                    item.magnet = true;
+                    const canFit = this.canItemFitInInventory(item.id, item.count || 1, (item as any).quality || 0);
+                    if (canFit) {
+                        item.magnet = true;
+                    }
                 }
             }
         } else {
+            // Check if player's inventory became full mid-flight
+            const canFit = this.canItemFitInInventory(item.id, item.count || 1, (item as any).quality || 0);
+            if (!canFit) {
+                // Cancel magnet immediately and let it settle peacefully on the ground
+                item.magnet = false;
+                item.vx = 0;
+                item.vy = 0;
+                item.vz = 0;
+                item.z = 0;
+                continue;
+            }
+
             const dx = (this.player.x + 12) - item.x;
             const dy = (this.player.y + 16) - item.y;
             const dist = Math.hypot(dx, dy);
@@ -5831,13 +5846,20 @@ Game.updateDroppedItems = function(dt) {
                 item.x += (dx / dist) * pullSpeed;
                 item.y += (dy / dist) * pullSpeed;
             } else {
-                const added = this.addItemToInventory(item.id, item.count, item.name, (item as any).quality || 0);
+                const added = this.addItemToInventory(item.id, item.count, item.name, (item as any).quality || 0, true);
                 if (added) {
                     SoundEngine.itemMagnetPickup();
                     this.spawnParticles(item.x, item.y, '#facc15', 6);
                     this.addFloatingText('+' + item.count + ' ' + (item.name || item.id), this.player.x, this.player.y - 18, '#38bdf8');
+                    this.droppedItems.splice(i, 1);
+                } else {
+                    // Cannot fit in inventory: cancel magnet and let it rest on the ground
+                    item.magnet = false;
+                    item.vx = 0;
+                    item.vy = 0;
+                    item.vz = 0;
+                    item.z = 0;
                 }
-                this.droppedItems.splice(i, 1);
             }
         }
     }
@@ -5861,14 +5883,18 @@ Game.findNearbyDroppedItem = function(x: number, y: number, maxDist: number = 24
 
 Game.pickupDroppedItem = function(item: any) {
     if (!item) return false;
-    const fits = this.canItemFitInInventory(item.id, item.count || 1);
+    const fits = this.canItemFitInInventory(item.id, item.count || 1, item.quality || 0);
     if (!fits) {
-        SoundEngine.hit();
-        this.addFloatingText('กระเป๋าเต็ม! จัดช่องเก็บของก่อน', this.player.x, this.player.y - 18, '#ef4444');
+        const now = performance.now();
+        if (!this._lastFullInventoryWarning || now - this._lastFullInventoryWarning > 1500) {
+            this._lastFullInventoryWarning = now;
+            SoundEngine.hit();
+            this.addFloatingText('กระเป๋าเต็ม! จัดช่องเก็บของก่อน', this.player.x, this.player.y - 18, '#ef4444');
+        }
         return false;
     }
 
-    const added = this.addItemToInventory(item.id, item.count || 1, item.name || item.id, item.quality || 0);
+    const added = this.addItemToInventory(item.id, item.count || 1, item.name || item.id, item.quality || 0, true);
     if (added) {
         const idx = this.droppedItems.indexOf(item);
         if (idx !== -1) {
@@ -7032,15 +7058,27 @@ Game.campOut = function() {
 // 8. ECONOMY, INVENTORY & XP
 // ========================================================
 
-Game.canItemFitInInventory = function(id: string, count: number = 1, ingredientsToDeduct?: Record<string, number>): boolean {
+Game.canItemFitInInventory = function(id: string, count: number = 1, qualityOrIngredients?: number | Record<string, number>, ingredientsToDeduct?: Record<string, number>): boolean {
+    let itemQuality = 0;
+    let deductMap: Record<string, number> | undefined = undefined;
+
+    if (typeof qualityOrIngredients === 'number') {
+        itemQuality = qualityOrIngredients;
+        deductMap = ingredientsToDeduct;
+    } else if (typeof qualityOrIngredients === 'object' && qualityOrIngredients !== null) {
+        deductMap = qualityOrIngredients;
+    }
+
+    if (!this.player || !Array.isArray(this.player.inventory)) return false;
+
     const maxSlots = Math.max(this.player.maxInventorySlots || 36, this.player.inventory.length);
     const isWepOrTool = (id === 'slingshot' || id === 'rifle' || id === 'dragon_rifle' || id === 'dragon_cannon' || id === 'iron_sword' || id === 'excalibur_sword' || !!(WEAPONS && WEAPONS[id]) || id === 'hoe' || id === 'water' || id === 'scythe' || id === 'fishing_rod' || id === 'axe');
 
-    // 1. Check if can stack into an existing slot (weapons/tools never stack)
+    // 1. Check if can stack into an existing slot (weapons/tools never stack, quality must match!)
     if (!isWepOrTool) {
         for (let i = 0; i < maxSlots; i++) {
             const slot = this.player.inventory[i];
-            if (slot && slot.id === id && slot.count !== undefined) {
+            if (slot && slot.id === id && slot.count !== undefined && (slot.quality || 0) === itemQuality) {
                 return true;
             }
         }
@@ -7054,9 +7092,9 @@ Game.canItemFitInInventory = function(id: string, count: number = 1, ingredients
     if (emptySlots > 0) return true;
 
     // 3. If deducting ingredients, simulate to see if any slot becomes empty
-    if (ingredientsToDeduct) {
+    if (deductMap) {
         const sim = this.player.inventory.map((s: any) => s ? { ...s } : null);
-        for (let [ingId, reqCount] of Object.entries(ingredientsToDeduct)) {
+        for (let [ingId, reqCount] of Object.entries(deductMap)) {
             let needed = reqCount;
             for (let i = 0; i < sim.length; i++) {
                 const s = sim[i];
@@ -7084,7 +7122,7 @@ Game.canItemFitInInventory = function(id: string, count: number = 1, ingredients
     return false;
 };
 
-Game.addItemToInventory = function(id, count = 1, name = '', quality: 0 | 1 | 2 | 3 = 0) {
+Game.addItemToInventory = function(id, count = 1, name = '', quality: 0 | 1 | 2 | 3 = 0, isFromWorldPickup: boolean = false) {
     const itemQuality = quality || 0;
     const maxSlots = Math.max(this.player.maxInventorySlots || 36, this.player.inventory.length);
     while (this.player.inventory.length < maxSlots) {
@@ -7135,8 +7173,19 @@ Game.addItemToInventory = function(id, count = 1, name = '', quality: 0 | 1 | 2 
             return true;
         }
     }
-    this.addFloatingText('กระเป๋าเต็มแล้ว! ของดรอปตกลงที่พื้น (กด E หรือคลิกเพื่อเก็บ)', this.player.x, this.player.y - 15, '#f59e0b');
-    this.spawnDroppedItem(id, count, this.player.x, this.player.y, itemQuality, true);
+
+    // Inventory is full!
+    const now = performance.now();
+    if (!this._lastFullInventoryWarning || now - this._lastFullInventoryWarning > 2000) {
+        this._lastFullInventoryWarning = now;
+        this.addFloatingText('กระเป๋าเต็มแล้ว! จัดช่องเก็บของก่อน (กด E หรือคลิกเพื่อเก็บ)', this.player.x, this.player.y - 15, '#f59e0b');
+        if (SoundEngine && SoundEngine.hit) SoundEngine.hit();
+    }
+
+    // Only spawn dropped item if this was NOT an already existing item lying in the world
+    if (!isFromWorldPickup) {
+        this.spawnDroppedItem(id, count, this.player.x, this.player.y, itemQuality, true);
+    }
     return false;
 };
 
@@ -18626,6 +18675,10 @@ Game.updatePetCompanion = function(dt: number) {
             for (let i = 0; i < this.droppedItems.length; i++) {
                 const it = this.droppedItems[i];
                 if (!it || it.timer < 300) continue;
+                // Dog must never fetch manual drops (items dropped intentionally by player)
+                if (it.manualPickup) continue;
+                // Dog must only fetch if the player can actually carry it in their inventory!
+                if (!this.canItemFitInInventory(it.id, it.count || 1, it.quality || 0)) continue;
                 const d = Math.hypot(it.x - pet.x, it.y - pet.y);
                 if (d < closestDist) {
                     closestDist = d;
@@ -18640,14 +18693,19 @@ Game.updatePetCompanion = function(dt: number) {
             const distItem = Math.hypot(idx, idy);
 
             if (distItem < 18) {
+                if (!this.canItemFitInInventory(closestItem.id, closestItem.count || 1, closestItem.quality || 0)) {
+                    return;
+                }
                 const itName = closestItem.name || closestItem.id;
-                this.addItemToInventory(closestItem.id, closestItem.count || 1, itName, closestItem.quality || 0);
-                if (SoundEngine.dogBark) SoundEngine.dogBark();
-                this.spawnParticles(pet.x, pet.y, '#facc15', 12);
-                this.addFloatingText(' โฮ่ง! คาบ ' + itName + ' มาให้', pet.x, pet.y - 12, '#38bdf8');
-                const fIdx = this.droppedItems.indexOf(closestItem);
-                if (fIdx !== -1) this.droppedItems.splice(fIdx, 1);
-                this.updateHUD();
+                const added = this.addItemToInventory(closestItem.id, closestItem.count || 1, itName, closestItem.quality || 0, true);
+                if (added) {
+                    if (SoundEngine.dogBark) SoundEngine.dogBark();
+                    this.spawnParticles(pet.x, pet.y, '#facc15', 12);
+                    this.addFloatingText(' โฮ่ง! คาบ ' + itName + ' มาให้', pet.x, pet.y - 12, '#38bdf8');
+                    const fIdx = this.droppedItems.indexOf(closestItem);
+                    if (fIdx !== -1) this.droppedItems.splice(fIdx, 1);
+                    this.updateHUD();
+                }
             } else {
                 const fetchSpeed = 4.8 * (dt / 16);
                 pet.x += (idx / distItem) * Math.min(distItem, fetchSpeed);
