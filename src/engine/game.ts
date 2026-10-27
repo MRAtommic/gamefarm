@@ -8183,6 +8183,12 @@ Game.render = function() {
         this.queueCryptEntities(renderables);
     } else if (this.currentScene === 'spire') {
         this.queueSpireEntities(renderables);
+    } else if (this.currentScene === 'ancient_canopy') {
+        this.queueAncientCanopyEntities(renderables);
+    } else if (this.currentScene === 'tempest_plateau') {
+        this.queueTempestPlateauEntities(renderables);
+    } else if (this.currentScene === 'island') {
+        this.queueIslandEntities(renderables);
     } else if (this.currentScene === 'island_volcano') {
         this.queueSceneCombatEntities(renderables);
     }
@@ -16665,6 +16671,18 @@ Game.drawBoss = function() {
         grad.addColorStop(0, this.boss.phase === 3 ? 'rgba(147, 51, 234, 0.65)' : 'rgba(147, 51, 234, 0.42)');
         grad.addColorStop(0.5, 'rgba(220, 38, 38, 0.25)');
         grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    } else if (this.boss.id === 'boss_sylvanus') {
+        grad.addColorStop(0, this.boss.phase === 3 ? 'rgba(34, 197, 94, 0.65)' : 'rgba(34, 197, 94, 0.42)');
+        grad.addColorStop(0.5, 'rgba(74, 222, 128, 0.28)');
+        grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    } else if (this.boss.id === 'boss_astreon') {
+        grad.addColorStop(0, this.boss.phase === 3 ? 'rgba(234, 179, 8, 0.65)' : 'rgba(234, 179, 8, 0.42)');
+        grad.addColorStop(0.5, 'rgba(56, 189, 248, 0.3)');
+        grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    } else if (this.boss.id === 'boss_karzarak') {
+        grad.addColorStop(0, this.boss.phase === 3 ? 'rgba(239, 68, 68, 0.7)' : 'rgba(239, 68, 68, 0.45)');
+        grad.addColorStop(0.5, 'rgba(249, 115, 22, 0.35)');
+        grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
     } else {
         if (this.boss.phase === 3) {
             grad.addColorStop(0, 'rgba(239, 68, 68, 0.45)');
@@ -16768,7 +16786,10 @@ Game.drawBoss = function() {
         boss_hydrakis: 'พญาไฮดรา ไฮดราคิส',
         boss_ignistron: 'มังกรลาวา อิกนิสทรอน',
         boss_frostfang: 'ไททันน้ำแข็ง ฟรอสต์แฟงก์',
-        boss_malakor: 'ลอร์ดมรณะ มาลาคอร์'
+        boss_malakor: 'ลอร์ดมรณะ มาลาคอร์',
+        boss_sylvanus: 'เทพพฤกษา ซิลวาเนีย',
+        boss_astreon: 'จ้าวพายุสายฟ้า ออสทริออน',
+        boss_karzarak: 'จอมมารลาวา คาร์ซารัค'
     };
 
     const bName = bossLabels[this.boss.id] || this.boss.name || 'บอสแห่งดินแดน';
@@ -17433,6 +17454,21 @@ Game.queueCryptEntities = function(renderables) {
 
 
 Game.queueSpireEntities = function(renderables) {
+    this.queueSceneCombatEntities(renderables);
+};
+
+
+Game.queueAncientCanopyEntities = function(renderables) {
+    this.queueSceneCombatEntities(renderables);
+};
+
+
+Game.queueTempestPlateauEntities = function(renderables) {
+    this.queueSceneCombatEntities(renderables);
+};
+
+
+Game.queueIslandEntities = function(renderables) {
     this.queueSceneCombatEntities(renderables);
 };
 
