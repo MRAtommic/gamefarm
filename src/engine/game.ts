@@ -4927,6 +4927,7 @@ Game.setupTouchControls = function() {
     const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || window.innerWidth <= 840 || this.forceTouchControls;
     const touchOverlay = document.getElementById('touchControls');
     if (touchOverlay) {
+        touchOverlay.classList.toggle('force-show', isTouchDevice);
         touchOverlay.style.display = isTouchDevice ? 'flex' : 'none';
     }
     this.checkOrientationNotice();
@@ -5492,6 +5493,7 @@ Game.toggleTouchControls = function() {
     this.forceTouchControls = !this.forceTouchControls;
     const touchOverlay = document.getElementById('touchControls');
     if (touchOverlay) {
+        touchOverlay.classList.toggle('force-show', this.forceTouchControls);
         touchOverlay.style.display = this.forceTouchControls ? 'flex' : 'none';
     }
     this.addFloatingText(this.forceTouchControls ? 'เปิดปุ่มควบคุมบนหน้าจอ' : 'ซ่อนปุ่มควบคุมบนหน้าจอ', this.player.x, this.player.y - 15, '#38bdf8');

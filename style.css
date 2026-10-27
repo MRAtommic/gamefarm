@@ -2550,10 +2550,10 @@ body {
     transform: scale(0.92);
 }
 
-/* Auto-hide touch controls on desktop hover screens */
+/* Auto-hide touch controls on desktop hover screens (unless forced visible) */
 @media (min-width: 900px) and (hover: hover) and (pointer: fine) {
-    .touch-controls-overlay {
-        display: none;
+    .touch-controls-overlay:not(.force-show) {
+        display: none !important;
     }
 }
 
