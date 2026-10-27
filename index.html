@@ -14,12 +14,21 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Prompt:wght@400;600;700&display=swap"
         rel="stylesheet">
-    <link rel="icon" type="image/svg+xml" href="./favicon.svg">
-    <link rel="icon" type="image/x-icon" href="./favicon.ico">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <!-- Google Identity Services (GSI) for Google Sign-In -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <script type="module" crossorigin src="./assets/index-DLfhFdo0.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-B0WazyIu.css">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
+            });
+        }
+    </script>
+  <script type="module" crossorigin src="./assets/index-D3zCo8PK.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-USEPwqYO.css">
 </head>
 
 <body>
@@ -227,8 +236,29 @@
 
         <!-- TOUCH / MOBILE CONTROLS OVERLAY -->
         <div id="touchControls" class="touch-controls-overlay">
-            <!-- Left: D-Pad -->
-            <div class="touch-dpad">
+            <!-- ROV-Style Dynamic Floating Analog Joystick (Left thumb area) -->
+            <div id="virtualJoystickZone" class="virtual-joystick-zone">
+                <div id="virtualJoystickBase" class="virtual-joystick-base">
+                    <div id="virtualJoystickKnob" class="virtual-joystick-knob"></div>
+                    <div class="virtual-joystick-arrows">
+                        <span class="vj-arrow vj-up">▲</span>
+                        <span class="vj-arrow vj-down">▼</span>
+                        <span class="vj-arrow vj-left">◀</span>
+                        <span class="vj-arrow vj-right">▶</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ROV-Style Skill Drag Cancel Target -->
+            <div id="skillCancelZone" class="skill-cancel-zone" style="display: none;">
+                <div class="skill-cancel-circle">
+                    <span class="cancel-icon">✕</span>
+                    <span class="cancel-text">ลากมาที่นี่เพื่อยกเลิก</span>
+                </div>
+            </div>
+
+            <!-- Legacy D-Pad (Hidden fallback) -->
+            <div class="touch-dpad" style="display: none;">
                 <button class="touch-btn touch-up" data-dir="up">▲</button>
                 <div class="touch-dpad-middle">
                     <button class="touch-btn touch-left" data-dir="left">◀</button>
@@ -1165,9 +1195,10 @@
                             <span id="repairReqGold" class="repair-item-status">0 / 500 G</span>
                         </div>
                     </div>
-                    <div class="repair-modal-actions" style="margin-top: 18px; display: flex; justify-content: flex-end; gap: 10px;">
+                    <div class="repair-modal-actions" style="margin-top: 18px; display: flex; justify-content: flex-end; align-items: center; gap: 10px; flex-wrap: wrap;">
                         <button class="btn-secondary" onclick="Game.closeModal('sailboatRepairModal')">ยกเลิก</button>
-                        <button id="btnConfirmSailboatRepair" class="btn-primary" onclick="Game.repairSailboat()">บูรณะเรือใบโบราณ (ซ่อมแซม)</button>
+                        <button id="btnConfirmSailboatRepair" class="btn-secondary" style="border: 1px solid #eab308; color: #fde047; padding: 8px 14px; font-weight: 600;" onclick="Game.repairSailboat()">บูรณะเรือใบ (+100 XP)</button>
+                        <button id="btnSailNow" class="btn-primary" style="background: linear-gradient(135deg, #0284c7, #0ea5e9); font-weight: bold; padding: 8px 18px; border: 1px solid #38bdf8; box-shadow: 0 4px 12px rgba(14, 165, 233, 0.35);" onclick="Game.sailToIslandNow()">ออกเรือสู่เกาะเขตร้อนทันที</button>
                     </div>
                 </div>
             </div>
@@ -1223,7 +1254,7 @@
         <div class="you-died-letterbox-bottom"></div>
     </div>
 
-    <!-- Main TypeScript Entry Point (Vite) -->
+    <!-- Main TypeScript Entry Point (Vite) -->
 </body>
 
 </html>
