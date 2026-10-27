@@ -2365,10 +2365,10 @@ body {
    ======================================================== */
 .skill-cancel-zone {
     position: absolute;
-    top: 12px;
+    top: 14px;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 95;
+    z-index: 1000;
     pointer-events: auto;
     display: flex;
     flex-direction: column;
