@@ -11553,21 +11553,22 @@ Game.playerMeleeAttack = function(targetWorldX, targetWorldY, weapon) {
     if (combo === 1) {
         comboMult = 1.0;
         comboCooldownMult = 0.88;
-        SoundEngine.swordSlash();
+        SoundEngine.swordSlash(1);
     } else if (combo === 2) {
         comboMult = 1.25;
         comboCooldownMult = 0.92;
-        SoundEngine.swordSlash();
+        SoundEngine.swordSlash(2);
         this.addFloatingText('[2x COMBO!]', originX, originY - 24, '#38bdf8');
     } else if (combo === 3) {
         comboMult = 1.75;
         comboCooldownMult = 1.15;
         forceCrit = true;
-        this.triggerScreenShake(4.5, 140);
-        this.spawnParticles(originX, originY, '#facc15', 18);
-        this.spawnParticles(originX, originY, '#ffffff', 12);
-        SoundEngine.levelUp();
-        this.addFloatingText('★ 3x FINISHER CRIT!', originX - 25, originY - 28, '#fde047');
+        this.triggerScreenShake(5.0, 150);
+        this.spawnParticles(originX, originY, '#facc15', 20);
+        this.spawnParticles(originX, originY, '#ffffff', 14);
+        if (typeof SoundEngine.comboFinisher === 'function') SoundEngine.comboFinisher();
+        else SoundEngine.swordSlash(3);
+        this.addFloatingText('★ 3x FINISHER CRIT! ★', originX - 25, originY - 28, '#fde047');
     }
 
     this.playerShootCooldown = Math.round((weapon.cooldown || 250) * comboCooldownMult);
@@ -11578,6 +11579,7 @@ Game.playerMeleeAttack = function(targetWorldX, targetWorldY, weapon) {
         dir: this.player.direction,
         isHoly: (weapon.id === 'excalibur_sword' || weapon.id === 'luminarch_crystal_blade'),
         timer: combo === 3 ? 210 : 160,
+        maxTimer: combo === 3 ? 210 : 160,
         comboStep: combo
     };
 
@@ -11643,6 +11645,8 @@ Game.playerMeleeAttack = function(targetWorldX, targetWorldY, weapon) {
                 m.hp -= finalDamage;
                 this.applyRuneCombatProc(m, finalDamage);
                 m.flashTimer = 160;
+                m.squashX = 1.35;
+                m.squashY = 0.72;
                 m.x += Math.cos(angle) * (isCrit ? 18 : 10);
                 m.y += Math.sin(angle) * (isCrit ? 18 : 10);
 
@@ -11719,6 +11723,8 @@ Game.playerMeleeAttack = function(targetWorldX, targetWorldY, weapon) {
                 this.boss.hp -= finalDamage;
                 this.applyRuneCombatProc(this.boss, finalDamage);
                 this.boss.flashTimer = 180;
+                this.boss.squashX = 1.25;
+                this.boss.squashY = 0.8;
                 this.triggerScreenShake(isCrit ? 7.0 : 4.5, 160);
                 this.triggerHitstop(isCrit ? 70 : 45);
                 if (isCrit) SoundEngine.critHit(); else SoundEngine.hit();
@@ -12040,6 +12046,15 @@ Game.updateDemonBugs = function(dt) {
         const bug = this.demonBugs[i];
         if (bug.flashTimer > 0) bug.flashTimer -= dt;
 
+        if (bug.squashX && bug.squashX !== 1.0) {
+            bug.squashX += (1.0 - bug.squashX) * 0.22;
+            if (Math.abs(bug.squashX - 1.0) < 0.02) bug.squashX = 1.0;
+        }
+        if (bug.squashY && bug.squashY !== 1.0) {
+            bug.squashY += (1.0 - bug.squashY) * 0.22;
+            if (Math.abs(bug.squashY - 1.0) < 0.02) bug.squashY = 1.0;
+        }
+
         bug.animTimer += dt;
         if (bug.animTimer > 160) {
             bug.animTimer = 0;
@@ -12275,6 +12290,8 @@ Game.updateProjectiles = function(dt) {
                         hit = true;
                         bug.hp -= p.damage;
                         bug.flashTimer = 140;
+                        bug.squashX = 1.35;
+                        bug.squashY = 0.72;
                         if (p.fromPlayer) this.triggerScreenShake(2.5, 90);
                         SoundEngine.hit();
                         this.spawnParticles(p.x, p.y, '#f59e0b', 6);
@@ -12314,6 +12331,8 @@ Game.updateProjectiles = function(dt) {
                         m.hp -= p.damage;
                         if (p.fromPlayer) this.applyRuneCombatProc(m, p.damage);
                         m.flashTimer = 140;
+                        m.squashX = 1.35;
+                        m.squashY = 0.72;
                         if (p.fromPlayer) this.triggerScreenShake(2.5, 90);
                         SoundEngine.hit();
                         this.spawnParticles(p.x, p.y, '#f59e0b', 6);
@@ -12362,6 +12381,8 @@ Game.updateProjectiles = function(dt) {
                         this.boss.hp -= p.damage;
                         if (p.fromPlayer) this.applyRuneCombatProc(this.boss, p.damage);
                         this.boss.flashTimer = 140;
+                        this.boss.squashX = 1.25;
+                        this.boss.squashY = 0.8;
                         if (p.fromPlayer) this.triggerScreenShake(3.5, 120);
                         SoundEngine.hit();
                         this.spawnParticles(p.x, p.y, '#f59e0b', 8);
@@ -12763,13 +12784,29 @@ Game.drawSingleBug = function(bug) {
     const frames = SPRITES.bugs[bug.type];
     if (frames) {
         const spr = frames[bug.frame] || frames[0];
+        const bSquashX = bug.squashX || 1.0;
+        const bSquashY = bug.squashY || 1.0;
+        const hasSquash = (bSquashX !== 1.0 || bSquashY !== 1.0);
+
+        if (hasSquash) {
+            this.ctx.save();
+            this.ctx.translate(sx + 14, sy + 14);
+            this.ctx.scale(bSquashX, bSquashY);
+            this.ctx.translate(-(sx + 14), -(sy + 14));
+        }
+
+        this.ctx.drawImage(spr, sx, sy);
+
         if (bug.flashTimer > 0) {
             this.ctx.save();
-            this.ctx.filter = 'brightness(3) saturate(0.2)';
+            this.ctx.globalCompositeOperation = 'lighter';
+            this.ctx.globalAlpha = Math.min(0.85, bug.flashTimer / 100);
             this.ctx.drawImage(spr, sx, sy);
             this.ctx.restore();
-        } else {
-            this.ctx.drawImage(spr, sx, sy);
+        }
+
+        if (hasSquash) {
+            this.ctx.restore();
         }
     }
 
@@ -13927,8 +13964,10 @@ Game.drawBossDashGhosts = function() {
         const spr = (bossSprites && bossSprites[g.frame]) || bossSprites[0] || SPRITES.bossKathuros[0];
         if (spr) {
             this.ctx.save();
-            this.ctx.globalAlpha = Math.max(0, g.alpha);
-            this.ctx.filter = 'brightness(1.8) hue-rotate(300deg)';
+            this.ctx.globalAlpha = Math.max(0, g.alpha * 0.72);
+            this.ctx.drawImage(spr, bx, by);
+            this.ctx.globalCompositeOperation = 'lighter';
+            this.ctx.globalAlpha = Math.max(0, g.alpha * 0.5);
             this.ctx.drawImage(spr, bx, by);
             this.ctx.restore();
         }
@@ -13943,6 +13982,16 @@ Game.updateBoss = function(dt) {
         if (bossBar && bossBar.style.display !== 'none') bossBar.style.display = 'none';
         if (typeof SoundEngine.setBossBattle === 'function') SoundEngine.setBossBattle(false);
         return;
+    }
+
+    if (this.boss.flashTimer > 0) this.boss.flashTimer -= dt;
+    if (this.boss.squashX && this.boss.squashX !== 1.0) {
+        this.boss.squashX += (1.0 - this.boss.squashX) * 0.22;
+        if (Math.abs(this.boss.squashX - 1.0) < 0.02) this.boss.squashX = 1.0;
+    }
+    if (this.boss.squashY && this.boss.squashY !== 1.0) {
+        this.boss.squashY += (1.0 - this.boss.squashY) * 0.22;
+        if (Math.abs(this.boss.squashY - 1.0) < 0.02) this.boss.squashY = 1.0;
     }
 
     const dist = Math.hypot((this.player.x + 12) - (this.boss.x + 32), (this.player.y + 14) - (this.boss.y + 32));
@@ -16406,17 +16455,33 @@ Game.drawBoss = function() {
         this.ctx.stroke();
     }
 
-    // Boss Sprite with Flash
+    // Boss Sprite with Flash (Zero ctx.filter GPU stall & Dynamic Squash Bounce)
     const bossSprites = (SPRITES.bosses && SPRITES.bosses[this.boss.id]) || SPRITES.bossKathuros;
     const spr = (bossSprites && bossSprites[this.boss.frame]) || bossSprites[0] || SPRITES.bossKathuros[0];
     if (spr) {
+        const bSquashX = this.boss.squashX || 1.0;
+        const bSquashY = this.boss.squashY || 1.0;
+        const hasSquash = (bSquashX !== 1.0 || bSquashY !== 1.0);
+
+        if (hasSquash) {
+            this.ctx.save();
+            this.ctx.translate(bx + 32, by + 32);
+            this.ctx.scale(bSquashX, bSquashY);
+            this.ctx.translate(-(bx + 32), -(by + 32));
+        }
+
+        this.ctx.drawImage(spr, bx, by);
+
         if (this.boss.flashTimer > 0) {
             this.ctx.save();
-            this.ctx.filter = 'brightness(3) saturate(0.2)';
+            this.ctx.globalCompositeOperation = 'lighter';
+            this.ctx.globalAlpha = Math.min(0.85, this.boss.flashTimer / 100);
             this.ctx.drawImage(spr, bx, by);
             this.ctx.restore();
-        } else {
-            this.ctx.drawImage(spr, bx, by);
+        }
+
+        if (hasSquash) {
+            this.ctx.restore();
         }
     }
 
@@ -20442,6 +20507,8 @@ Game.damageEnemiesInRadius = function(x, y, radius, dmg, text, color, proc = nul
             if (Math.hypot((b.x + 14) - x, (b.y + 14) - y) <= radius) {
                 b.hp -= dmg;
                 b.flashTimer = 160;
+                b.squashX = 1.35;
+                b.squashY = 0.72;
                 this.addFloatingText(text, b.x, b.y - 10, color);
                 if (proc) proc(b);
             }
@@ -20453,6 +20520,8 @@ Game.damageEnemiesInRadius = function(x, y, radius, dmg, text, color, proc = nul
             if (Math.hypot((m.x + 16) - x, (m.y + 16) - y) <= radius) {
                 m.hp -= dmg;
                 m.flashTimer = 160;
+                m.squashX = 1.35;
+                m.squashY = 0.72;
                 this.addFloatingText(text, m.x, m.y - 10, color);
                 if (proc) proc(m);
             }
@@ -20462,6 +20531,8 @@ Game.damageEnemiesInRadius = function(x, y, radius, dmg, text, color, proc = nul
         if (Math.hypot((this.boss.x + 32) - x, (this.boss.y + 32) - y) <= radius + 30) {
             this.boss.hp -= dmg;
             this.boss.flashTimer = 180;
+            this.boss.squashX = 1.25;
+            this.boss.squashY = 0.8;
             this.addFloatingText(text, this.boss.x + 20, this.boss.y - 10, color);
             if (proc) proc(this.boss);
             if (this.boss.hp <= 0) this.defeatBoss();
@@ -20487,6 +20558,8 @@ Game.damageEnemiesInLine = function(x1, y1, x2, y2, width, dmg, text, color) {
             if (checkLineHit(m.x + 16, m.y + 16)) {
                 m.hp -= dmg;
                 m.flashTimer = 160;
+                m.squashX = 1.35;
+                m.squashY = 0.72;
                 this.addFloatingText(text, m.x, m.y - 10, color);
             }
         }
@@ -20495,6 +20568,8 @@ Game.damageEnemiesInLine = function(x1, y1, x2, y2, width, dmg, text, color) {
         if (checkLineHit(this.boss.x + 32, this.boss.y + 32)) {
             this.boss.hp -= dmg;
             this.boss.flashTimer = 180;
+            this.boss.squashX = 1.25;
+            this.boss.squashY = 0.8;
             this.addFloatingText(text, this.boss.x + 20, this.boss.y - 10, color);
             if (this.boss.hp <= 0) this.defeatBoss();
         }
