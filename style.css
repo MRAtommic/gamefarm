@@ -3589,11 +3589,12 @@ body {
         display: none !important;
     }
 
-    /* Quest Tracker: elegantly handled on canvas with navigational arrow and compass */
-    #hudQuestTracker,
-    .quest-tracker-widget,
+    /* Quest Tracker: compact and neat */
     .hud-quest-tracker {
-        display: none !important;
+        top: 6px !important;
+        max-width: 220px !important;
+        font-size: 10px !important;
+        padding: 3px 6px !important;
     }
 
     /* Bottom: D-Pad on Left */
@@ -3656,7 +3657,7 @@ body {
     .touch-skills-row {
         position: absolute !important;
         right: 12px !important;
-        bottom: 175px !important;
+        bottom: 196px !important;
         display: flex !important;
         align-items: flex-start !important;
         gap: 8px !important;
@@ -5904,13 +5905,8 @@ body {
 
 /* ========================================================
    DYNAMIC RPG QUEST TRACKER & RESPONSIVE MODAL ENHANCEMENT
-   (Canvas Game.drawActiveQuestTracker takes precedence)
    ======================================================== */
-#hudQuestTracker,
 .quest-tracker-widget {
-    display: none !important;
-}
-.quest-tracker-widget-hidden {
     background: rgba(15, 23, 42, 0.90);
     border: 2px solid #b45309;
     border-radius: 8px;

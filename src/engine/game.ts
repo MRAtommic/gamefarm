@@ -6035,10 +6035,14 @@ Game.switchMpTab = function(tabName: 'hub' | 'host' | 'join' | 'arena') {
 
 Game.startHostingRoom = async function() {
     if (typeof (window as any).Multiplayer === 'undefined') return;
+    this.addFloatingText('กำลังเปิดโลกออนไลน์...', this.player.x, this.player.y - 20, '#38bdf8');
     const res = await (window as any).Multiplayer.hostRoom();
     if (res.success) {
         this.addFloatingText('★ เปิดโลกออนไลน์สำเร็จ! รหัสห้อง: ' + res.code, this.player.x - 20, this.player.y - 25, '#4ade80');
         SoundEngine.questComplete();
+    } else {
+        this.addFloatingText('เปิดห้องไม่สำเร็จ: ' + (res.error || 'โปรดลองใหม่'), this.player.x, this.player.y - 20, '#ef4444');
+        SoundEngine.errorClick();
     }
 };
 
@@ -6072,7 +6076,28 @@ Game.joinFriendRoom = async function() {
             status.textContent = res.error || 'เชื่อมต่อล้มเหลว';
             status.style.color = '#ef4444';
         }
+        this.addFloatingText('เชื่อมต่อไม่สำเร็จ: ' + (res.error || 'ไม่พบห้อง'), this.player.x, this.player.y - 20, '#ef4444');
+        SoundEngine.errorClick();
     }
+};
+
+Game.warpToPlayer = function(playerId: string) {
+    if (!this.remotePlayers || !this.remotePlayers[playerId]) {
+        this.addFloatingText('ไม่พบผู้เล่นนี้ในห้อง', this.player.x, this.player.y - 15, '#f87171');
+        return;
+    }
+    const rp = this.remotePlayers[playerId];
+    const targetTileX = Math.round(rp.x / 32) || 16;
+    const targetTileY = Math.round(rp.y / 32) || 12;
+    this.closeAllModals();
+    if (this.currentScene !== rp.scene) {
+        this.switchScene(rp.scene, targetTileX, targetTileY);
+    } else {
+        this.player.x = rp.x;
+        this.player.y = rp.y;
+    }
+    SoundEngine.bell();
+    this.addFloatingText('★ วาร์ปมาหา ' + rp.name + ' สำเร็จ! ★', this.player.x - 30, this.player.y - 25, '#38bdf8');
 };
 
 Game.copyRoomCode = function() {
