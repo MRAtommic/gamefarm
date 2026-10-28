@@ -2700,7 +2700,7 @@ Game.drawTransition = function() {
 };
 
 Game.isCombatScene = function() {
-    return ['farm', 'forest', 'cave', 'cave_depths', 'swamp', 'volcano', 'frost_peak', 'crypt', 'spire', 'ancient_canopy', 'tempest_plateau', 'island', 'island_volcano'].includes(this.currentScene);
+    return ['farm', 'forest', 'cave', 'cave_depths', 'swamp', 'volcano', 'frost_peak', 'crypt', 'spire', 'ancient_canopy', 'tempest_plateau', 'island', 'island_volcano', 'pvp_arena'].includes(this.currentScene);
 };
 
 
@@ -12210,6 +12210,21 @@ Game.findNearestCombatTarget = function(maxDist = 720) {
         }
     }
 
+    // 4. Remote Players in PvP Arena & PvP Mode
+    if ((this.currentScene === 'pvp_arena' || this.isPvPEnabled) && this.remotePlayers) {
+        for (const pid in this.remotePlayers) {
+            const rp = this.remotePlayers[pid];
+            if (!rp || rp.scene !== this.currentScene || rp.hp <= 0) continue;
+            const rx = rp.x + 12;
+            const ry = rp.y + 14;
+            const d = Math.hypot(rx - px, ry - py);
+            if (d < minDist) {
+                minDist = d;
+                nearest = { x: rx, y: ry, dist: d, type: 'player', entity: rp };
+            }
+        }
+    }
+
     return nearest;
 };
 
@@ -21450,6 +21465,19 @@ Game.damageEnemiesInLine = function(x1, y1, x2, y2, width, dmg, text, color) {
             }
         }
     }
+    if (this.remotePlayers && (this.currentScene === 'pvp_arena' || this.isPvPEnabled)) {
+        for (const pid in this.remotePlayers) {
+            const rp = this.remotePlayers[pid];
+            if (!rp || rp.scene !== this.currentScene || rp.hp <= 0) continue;
+            if (checkLineHit(rp.x + 12, rp.y + 14)) {
+                if (typeof (window as any).Multiplayer !== 'undefined') {
+                    (window as any).Multiplayer.sendPvPHit(pid, dmg, false, 0, 'สกิลเส้นตรง');
+                }
+                this.addFloatingText(text, rp.x, rp.y - 12, color);
+            }
+        }
+    }
+
     if (this.boss && this.boss.alive) {
         if (checkLineHit(this.boss.x + 32, this.boss.y + 32)) {
             this.boss.hp -= dmg;
