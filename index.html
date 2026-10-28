@@ -17,7 +17,7 @@
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <!-- Google Identity Services (GSI) for Google Sign-In -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
@@ -27,8 +27,8 @@
             });
         }
     </script>
-  <script type="module" crossorigin src="./assets/index-BcbUgFuO.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-DuGb0673.css">
+  <script type="module" crossorigin src="./assets/index-CFYpH07O.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-CpxHsOrk.css">
 </head>
 
 <body>
@@ -92,6 +92,36 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Survival Vitals: Food & Drink (F & W) -->
+                <div class="hud-badge survival-badge" title="สถานะเอาชีวิตรอด: F (ความอิ่ม) | W (น้ำดื่ม)">
+                    <div class="vitals-container survival-vitals">
+                        <div class="vital-widget vital-hp" title="พลังชีวิต (HP)" style="display: none !important;">
+                            <div class="vital-track">
+                                <div id="hpBarFill" class="vital-fill hp-fill" style="height: 100%;"></div>
+                            </div>
+                            <div class="vital-label hp-label">HP</div>
+                        </div>
+                        <div class="vital-widget vital-energy" title="ค่าพลังงาน (Energy)" style="display: none !important;">
+                            <div class="vital-track">
+                                <div id="energyBarFill" class="vital-fill energy-fill" style="height: 100%;"></div>
+                            </div>
+                            <div class="vital-label">E</div>
+                        </div>
+                        <div class="vital-widget vital-hunger" title="ความอิ่มท้อง (Food / Hunger)">
+                            <div class="vital-track">
+                                <div id="hungerBarFill" class="vital-fill hunger-fill" style="height: 100%;"></div>
+                            </div>
+                            <div class="vital-label hunger-label">F</div>
+                        </div>
+                        <div class="vital-widget vital-thirst" title="ความสดชื่น / น้ำดื่ม (Water / Thirst)">
+                            <div class="vital-track">
+                                <div id="thirstBarFill" class="vital-fill thirst-fill" style="height: 100%;"></div>
+                            </div>
+                            <div class="vital-label thirst-label">W</div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Top Right: Clock, Weather, Gold & Action Badges -->
@@ -109,21 +139,6 @@
                     </div>
                 </div>
 
-                <!-- Dynamic RPG Quest Tracker Widget -->
-                <div id="hudQuestTracker" class="quest-tracker-widget" onclick="Game.toggleModal('questModal')" title="คลิกเพื่อดูสมุดภารกิจทั้งหมด">
-                    <div class="quest-tracker-header">
-                        <div class="quest-tracker-title-wrap">
-                            <span class="quest-tracker-badge">เควสต์</span>
-                            <span id="questTrackerTitle" class="quest-tracker-title">บทที่ 1: วิบัติสปอร์กลายพันธุ์</span>
-                        </div>
-                        <span id="questTrackerToggleBtn" class="quest-tracker-toggle-arrow">▼</span>
-                    </div>
-                    <div id="questTrackerBody" class="quest-tracker-body">
-                        <div id="questTrackerObjective" class="quest-tracker-objective">กำจัดแมลงปีศาจ (0/3)</div>
-                        <div id="questTrackerSubObjective" class="quest-tracker-sub-obj">เก็บสปอร์กลายพันธุ์ (0/2)</div>
-                        <div id="questTrackerHint" class="quest-tracker-hint">[เป้าหมาย]: ปราบแมลงในฟาร์ม</div>
-                    </div>
-                </div>
 
                 <div class="hud-actions-row">
                     <button id="btnSkillMastery" class="btn-hud-icon" onclick="Game.toggleSkillMasteryModal()" title="ผังความชำนาญและทักษะพิเศษ (K)" data-tooltip="ผังทักษะ (K)">
@@ -198,35 +213,7 @@
                 </div>
             </div>
 
-            <!-- Bottom Right: Vitals (HP + Energy + Hunger + Thirst) -->
-            <div class="hud-bottom-right">
-                <div class="vitals-container">
-                    <div class="vital-widget" title="พลังชีวิต (HP)">
-                        <div class="vital-track">
-                            <div id="hpBarFill" class="vital-fill hp-fill" style="height: 100%;"></div>
-                        </div>
-                        <div class="vital-label hp-label">HP</div>
-                    </div>
-                    <div class="vital-widget" title="ค่าพลังงาน (Energy)">
-                        <div class="vital-track">
-                            <div id="energyBarFill" class="vital-fill energy-fill" style="height: 100%;"></div>
-                        </div>
-                        <div class="vital-label">E</div>
-                    </div>
-                    <div class="vital-widget" title="ความอิ่มท้อง (Food / Hunger)">
-                        <div class="vital-track">
-                            <div id="hungerBarFill" class="vital-fill hunger-fill" style="height: 100%;"></div>
-                        </div>
-                        <div class="vital-label hunger-label">F</div>
-                    </div>
-                    <div class="vital-widget" title="ความสดชื่น / น้ำดื่ม (Water / Thirst)">
-                        <div class="vital-track">
-                            <div id="thirstBarFill" class="vital-fill thirst-fill" style="height: 100%;"></div>
-                        </div>
-                        <div class="vital-label thirst-label">W</div>
-                    </div>
-                </div>
-            </div>
+
         </div>
 
         <!-- FISHING MINIGAME OVERLAY (Stardew Style) -->
@@ -314,6 +301,35 @@
                     <span>ACT</span>
                     <small>ทำฟาร์ม</small>
                 </button>
+            </div>
+
+            <!-- Quick Touch Layout Customizer Button -->
+            <button id="btnTouchCustomize" class="btn-touch-customize" onclick="Game.openTouchLayoutEditor()" title="ปรับตำแหน่งและขนาดปุ่มสัมผัสอิสระ">
+                <span>ตั้งปุ่ม</span>
+            </button>
+        </div>
+
+        <!-- TOUCH CONTROLS LAYOUT CUSTOMIZER OVERLAY -->
+        <div id="touchLayoutEditorBar" class="touch-layout-editor-bar" style="display: none;">
+            <div class="layout-editor-header">
+                <div class="layout-editor-title">
+                    <span class="editor-main-title">โหมดจัดตำแหน่งปุ่มมือถือ (Touch Layout Editor)</span>
+                    <small class="editor-sub-title">แตะค้างแล้วลากปุ่มเพื่อย้ายตำแหน่งตามที่ถนัดบนหน้าจอ</small>
+                </div>
+                <div class="layout-editor-controls">
+                    <div class="layout-scale-group">
+                        <span class="scale-label">ขนาด:</span>
+                        <button class="btn-scale-tag" onclick="Game.setTouchControlsScale(0.85)">85%</button>
+                        <button class="btn-scale-tag active" id="btnScale100" onclick="Game.setTouchControlsScale(1.0)">100%</button>
+                        <button class="btn-scale-tag" onclick="Game.setTouchControlsScale(1.15)">115%</button>
+                        <button class="btn-scale-tag" onclick="Game.setTouchControlsScale(1.3)">130%</button>
+                    </div>
+                    <div class="layout-btn-group">
+                        <button class="btn-primary btn-save-layout" onclick="Game.saveTouchControlsLayout()">บันทึกตำแหน่ง</button>
+                        <button class="btn-secondary btn-reset-layout" onclick="Game.resetTouchControlsLayout()">รีเซ็ตค่าเริ่มต้น</button>
+                        <button class="btn-secondary btn-close-layout" onclick="Game.closeTouchLayoutEditor()">ปิด</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -903,6 +919,14 @@
                             <span id="menuBgmIcon" class="menu-card-key">BGM</span>
                         </button>
 
+                        <button class="btn-game-menu-card" onclick="Game.openTouchLayoutEditor(); Game.closeAllModals();">
+                            <div class="menu-card-text">
+                                <strong>ปรับแต่งปุ่มควบคุมมือถือ (Custom Touch Controls)</strong>
+                                <small>ย้ายตำแหน่งและปรับขนาดปุ่มตามถนัด</small>
+                            </div>
+                            <span class="menu-card-key">TOUCH</span>
+                        </button>
+
                         <button class="btn-game-menu-card" onclick="Game.toggleModal('controlsModal')">
                             <div class="menu-card-text">
                                 <strong>ปุ่มควบคุม & วิธีเล่น</strong>
@@ -1430,7 +1454,7 @@
         <div class="you-died-letterbox-bottom"></div>
     </div>
 
-    <!-- Main TypeScript Entry Point (Vite) -->
+    <!-- Main TypeScript Entry Point (Vite) -->
 </body>
 
 </html>
