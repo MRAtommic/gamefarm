@@ -27,8 +27,8 @@
             });
         }
     </script>
-  <script type="module" crossorigin src="./assets/index-CdqeEg-u.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-DHqqlTuU.css">
+  <script type="module" crossorigin src="./assets/index-DtM2UypB.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-zEuTMfcX.css">
 </head>
 
 <body>
@@ -141,37 +141,22 @@
 
 
                 <div class="hud-actions-row">
-                    <button id="btnSkillMastery" class="btn-hud-icon" onclick="Game.toggleSkillMasteryModal()" title="ผังความชำนาญและทักษะพิเศษ (K)" data-tooltip="ผังทักษะ (K)">
-                        <span class="btn-hud-emoji">ทักษะ</span><span class="badge-key">K</span>
-                    </button>
-                    <button class="btn-hud-icon" onclick="Game.toggleCompendiumModal()" title="สมุดสะสม & ความสำเร็จ (P)" data-tooltip="สารานุกรม (P)">
-                        <span class="btn-hud-emoji">สารานุกรม</span><span class="badge-key">P</span>
-                    </button>
-                    <button class="btn-hud-icon" onclick="Game.toggleMount()" title="ขี่ม้า / ลงจากม้า (R)" data-tooltip="ขี่ม้า (R)">
-                        <span class="btn-hud-emoji">ขี่ม้า</span><span class="badge-key">R</span>
+                    <button id="btnSkillMastery" class="btn-hud-icon" onclick="Game.toggleSkillMasteryModal()" title="ผังความชำนาญ 5 ศาสตร์ (G)" data-tooltip="ความชำนาญ (G)">
+                        <span class="btn-hud-emoji">ชำนาญ</span><span class="badge-key">G</span>
                     </button>
                     <button class="btn-hud-icon" onclick="Game.toggleModal('inventory')" title="กระเป๋าเป้และจัดของ (I)" data-tooltip="กระเป๋าเป้ (I)">
                         <span class="btn-hud-emoji">กระเป๋า</span><span class="badge-key">I</span>
                     </button>
-                    <button id="btnCampOut" class="btn-hud-icon" onclick="Game.openCampModal()" title="ตั้งแคมป์พักแรมกลางแจ้ง (T)" data-tooltip="ตั้งแคมป์ (T)">
-                        <span class="btn-hud-emoji">แคมป์</span><span class="badge-key">T</span>
+                    <button class="btn-hud-icon" onclick="Game.toggleWorldMap()" title="แผนที่โลก (M)" data-tooltip="แผนที่โลก (M)">
+                        <span class="btn-hud-emoji">แผนที่</span><span class="badge-key">M</span>
                     </button>
                     <button class="btn-hud-icon btn-hud-multiplayer" onclick="Game.openMultiplayerModal()" title="เล่นออนไลน์ & ลานประลองยุทธ์ (O)" data-tooltip="ออนไลน์ (O)">
                         <span class="btn-hud-emoji">ออนไลน์</span><span class="badge-key">O</span>
                     </button>
-                    <button class="btn-hud-icon" onclick="Game.toggleWorldMap()" title="แผนที่โลก (M)" data-tooltip="แผนที่โลก (M)">
-                        <span class="btn-hud-emoji">แผนที่</span><span class="badge-key">M</span>
+                    <button class="btn-hud-icon btn-hud-save" onclick="Auth.saveGame(null, true)" title="บันทึกเกมทันที (Quick Save)" data-tooltip="บันทึกเกม">
+                        <span class="btn-hud-emoji">เซฟ</span><span class="badge-key">SAVE</span>
                     </button>
-                    <button class="btn-hud-icon" onclick="Game.takeFarmSnapshot()" title="ถ่ายรูปฟาร์ม (Photo Mode)" data-tooltip="ถ่ายรูปฟาร์ม (C)">
-                        <span class="btn-hud-emoji">ภาพ</span><span class="badge-key">C</span>
-                    </button>
-                    <button class="btn-hud-icon btn-hud-save" onclick="Auth.saveGame(null, true)" title="บันทึกเกมทันที (Ctrl+S / Quick Save)" data-tooltip="บันทึกเกม (S)">
-                        <span class="btn-hud-emoji">เซฟ</span><span class="badge-key">S</span>
-                    </button>
-                    <button id="btnFullscreenToggle" class="btn-hud-icon btn-hud-fullscreen" onclick="Game.toggleFullscreen()" title="โหมดเต็มจอ (Fullscreen / F11)" data-tooltip="เต็มจอ (F11)">
-                        <span class="btn-hud-emoji">เต็มจอ</span><span class="badge-key">F11</span>
-                    </button>
-                    <button class="btn-hud-icon" onclick="Game.toggleModal('gameMenuModal')" title="เมนูหลักของเกม (Esc / Menu)" data-tooltip="เมนูหลัก (Esc)">
+                    <button class="btn-hud-icon" onclick="Game.toggleModal('gameMenuModal')" title="เมนูหลัก & เครื่องมือเสริม (Esc)" data-tooltip="เมนูหลัก (Esc)">
                         <span class="btn-hud-emoji">เมนู</span><span class="badge-key">ESC</span>
                     </button>
                 </div>
@@ -205,7 +190,7 @@
                 <div class="skill-wheel-center" onclick="Game.openSkillTreeModal()" title="คลิกเปิดผังสกิลและเปลี่ยนสายอาชีพ (กด K)">
                     <span class="skill-wheel-class-tag" id="skillClassTag">[ดาบ]</span>
                     <span class="skill-wheel-class-name" id="skillClassName">จอมดาบ</span>
-                    <span class="skill-wheel-sp" id="skillPointsBadge">5 SP</span>
+                    <span class="skill-wheel-sp" id="skillPointsBadge">2 SP</span>
                     <span class="skill-wheel-key">[K]</span>
                 </div>
                 <div class="active-skill-slots" id="activeSkillSlots">
@@ -847,9 +832,17 @@
                         <button class="btn-game-menu-card" onclick="Game.toggleModal('crafting')">
                             <div class="menu-card-text">
                                 <strong>โต๊ะคราฟ & ครัวทำอาหาร</strong>
-                                <small>กดปุ่ม C เพื่อเปิดด่วน</small>
+                                <small>กดปุ่ม U เพื่อเปิดด่วน</small>
                             </div>
-                            <span class="menu-card-key">C</span>
+                            <span class="menu-card-key">U</span>
+                        </button>
+
+                        <button class="btn-game-menu-card" onclick="Game.toggleSkillMasteryModal()">
+                            <div class="menu-card-text">
+                                <strong>ผังความชำนาญ (ฟาร์ม/ขุด/ตกปลา)</strong>
+                                <small>กดปุ่ม G เพื่อเปิดด่วน</small>
+                            </div>
+                            <span class="menu-card-key">G</span>
                         </button>
 
                         <button class="btn-game-menu-card" onclick="Game.toggleModal('questModal')">
@@ -916,6 +909,30 @@
                             <span id="menuBgmIcon" class="menu-card-key">BGM</span>
                         </button>
 
+                        <button id="btnCampOut" class="btn-game-menu-card" onclick="Game.openCampModal()">
+                            <div class="menu-card-text">
+                                <strong>ตั้งแคมป์พักแรมกลางแจ้ง (Camp)</strong>
+                                <small>กดปุ่ม T เพื่อพักผ่อนข้ามวัน</small>
+                            </div>
+                            <span class="menu-card-key">T</span>
+                        </button>
+
+                        <button class="btn-game-menu-card" onclick="Game.takeFarmSnapshot(); Game.closeAllModals();">
+                            <div class="menu-card-text">
+                                <strong>ถ่ายรูปฟาร์ม (Photo Mode)</strong>
+                                <small>กด Shift+C เพื่อบันทึกรูปฟาร์ม</small>
+                            </div>
+                            <span class="menu-card-key">SH+C</span>
+                        </button>
+
+                        <button id="btnFullscreenToggle" class="btn-game-menu-card" onclick="Game.toggleFullscreen()">
+                            <div class="menu-card-text">
+                                <strong>โหมดเต็มจอ (Fullscreen)</strong>
+                                <small>กดปุ่ม F11 เพื่อสลับโหมดเต็มจอ</small>
+                            </div>
+                            <span class="menu-card-key">F11</span>
+                        </button>
+
                         <button class="btn-game-menu-card" onclick="Game.openTouchLayoutEditor(); Game.closeAllModals();">
                             <div class="menu-card-text">
                                 <strong>ปรับแต่งปุ่มควบคุมมือถือ (Custom Touch Controls)</strong>
@@ -962,7 +979,9 @@
                         <div class="control-key-card"><kbd>Q</kbd><span>สมุดภารกิจเนื้อเรื่อง</span></div>
                         <div class="control-key-card"><kbd>B</kbd><span>กระดานล่าค่าหัวมหาบอส (Bounty Board)</span></div>
                         <div class="control-key-card"><kbd>I</kbd><span>เปิดกระเป๋าสัมภาระ (24 ช่อง)</span></div>
-                        <div class="control-key-card"><kbd>K</kbd><span>ผังสกิล & เปลี่ยนคลาส & อัปเกรด</span></div>
+                        <div class="control-key-card"><kbd>K</kbd><span>ผังสกิลต่อสู้ & เปลี่ยนสายอาชีพ</span></div>
+                        <div class="control-key-card"><kbd>G</kbd><span>ผังความชำนาญ (กสิกรรม/เหมือง/ตกปลา)</span></div>
+                        <div class="control-key-card"><kbd>U</kbd><span>โต๊ะคราฟ & ครัวทำอาหาร</span></div>
                         <div class="control-key-card"><kbd>M</kbd><span>แผนที่โลก / ผจญภัย</span></div>
                         <div class="control-key-card"><kbd>H</kbd><span>คนดูแลฟาร์ม & นายพราน</span></div>
                         <div class="control-key-card"><kbd>P</kbd><span>สมุดสะสมสิ่งของ & ตราความสำเร็จ</span></div>
@@ -1115,7 +1134,7 @@
                 <div class="modal-header">
                     <h2>ผังสกิลต่อสู้และสายอาชีพ (Combat Class & Skill Tree)</h2>
                     <div class="mastery-points-badge">
-                        แต้มสกิลคงเหลือ: <strong id="activeSkillPointsCount" style="color: #facc15;">5</strong> SP
+                        แต้มสกิลคงเหลือ: <strong id="activeSkillPointsCount" style="color: #facc15;">2</strong> SP
                     </div>
                     <button class="btn-close" onclick="Game.closeSkillTreeModal()">✕</button>
                 </div>
