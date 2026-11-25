@@ -109,7 +109,7 @@ export const Game: any = {
         maxHunger: 100,
         thirst: 100,
         maxThirst: 100,
-        gold: 600,
+        gold: 250,
         level: 1,
         xp: 0,
         waterCan: 10,
@@ -316,11 +316,11 @@ Game.init = function() {
         }
     }
 
-    // Ensure starter iron sword is available for existing saves
+    // Ensure starter weapon is available for existing saves without skipping Q2 progression
     if (this.player && this.player.inventory) {
-        const hasMelee = this.player.inventory.some((it: any) => it && (it.id === 'iron_sword' || it.id === 'volcano_sword' || it.id === 'excalibur_sword'));
-        if (!hasMelee) {
-            this.addItemToInventory('iron_sword', 1, 'ดาบเหล็กกล้านักผจญภัย');
+        const hasAnyWep = this.player.inventory.some((it: any) => it && (it.type === 'weapon' || WEAPONS[it.id]));
+        if (!hasAnyWep) {
+            this.addItemToInventory('slingshot', 1, 'หนังสติ๊กล่าสัตว์');
         }
         if (this.player.maxHp < 150) {
             this.player.maxHp = 150;
@@ -378,14 +378,13 @@ Game.initInventory = function() {
     this.player.inventory = [
         { id: 'hoe', type: 'tool', name: 'จอบ' },
         { id: 'water', type: 'tool', name: 'บัวรดน้ำ' },
-        { id: 'iron_sword', type: 'weapon', name: 'ดาบเหล็กกล้านักผจญภัย' },
         { id: 'slingshot', type: 'weapon', name: 'หนังสติ๊กล่าสัตว์' },
         { id: 'scythe', type: 'tool', name: 'เคียว' },
         { id: 'axe', type: 'tool', name: 'ขวานตัดไม้' },
-        { id: 'bread', type: 'food', name: 'ขนมปังอบสด', count: 5, energyRestore: 40 },
-        { id: 'milk', type: 'food', name: 'นมวัวสด', count: 3, energyRestore: 25 },
-        { id: 'wheat_seed', type: 'seed', cropId: 'wheat', name: 'เมล็ดข้าวสาลี', count: 12 },
-        { id: 'fishing_rod', type: 'tool', name: 'เบ็ดตกปลา' }
+        { id: 'fishing_rod', type: 'tool', name: 'เบ็ดตกปลา' },
+        { id: 'wheat_seed', type: 'seed', cropId: 'wheat', name: 'เมล็ดข้าวสาลี', count: 8 },
+        { id: 'bread', type: 'food', name: 'ขนมปังอบสด', count: 4, energyRestore: 40 },
+        { id: 'milk', type: 'food', name: 'นมวัวสด', count: 2, energyRestore: 25 }
     ];
     while (this.player.inventory.length < this.player.maxInventorySlots) {
         this.player.inventory.push(null);
@@ -2886,8 +2885,10 @@ Game.setupInputListeners = function() {
             this.toggleModal('bountyBoardModal');
         } else if (e.code === 'KeyI') {
             this.toggleModal('inventory');
-        } else if (e.code === 'KeyC') {
-            this.takeFarmSnapshot();
+        } else if (e.code === 'KeyU') {
+            this.toggleModal('crafting');
+        } else if (e.code === 'KeyG') {
+            this.toggleSkillMasteryModal();
         } else if (e.code === 'KeyM') {
             this.toggleWorldMap();
         } else if (e.code === 'KeyH') {
@@ -7513,9 +7514,9 @@ Game.updateTime = function(dt) {
         this.time.timer = 0;
         this.time.minute += 10;
 
-        // Gradual Hunger & Thirst Depletion over time
-        this.player.hunger = Math.max(0, (this.player.hunger !== undefined ? this.player.hunger : 100) - 0.25);
-        this.player.thirst = Math.max(0, (this.player.thirst !== undefined ? this.player.thirst : 100) - 0.40);
+        // Gradual Hunger & Thirst Depletion over time (balanced pace)
+        this.player.hunger = Math.max(0, (this.player.hunger !== undefined ? this.player.hunger : 100) - 0.14);
+        this.player.thirst = Math.max(0, (this.player.thirst !== undefined ? this.player.thirst : 100) - 0.22);
 
         // Starvation and Dehydration HP Penalty
         if (this.player.hunger <= 0 || this.player.thirst <= 0) {
@@ -7635,9 +7636,10 @@ Game.sleepAndPassDay = function(forceWarpToBed = false) {
 
     const isWetWeather = (this.time.weather === 'rain' || this.time.weather === 'thunder');
 
-    // Energy recovery (Deluxe bed bonus!)
-    const maxBonus = this.player.houseUpgrades.bed_deluxe ? 130 : 100;
-    this.player.maxEnergy = maxBonus;
+    // Energy recovery (preserve level-up maxEnergy + Deluxe bed bonus!)
+    const levelEnergy = 100 + Math.max(0, (this.player.level || 1) - 1) * 5;
+    const bedBonus = this.player.houseUpgrades?.bed_deluxe ? 30 : 0;
+    this.player.maxEnergy = levelEnergy + bedBonus;
     this.player.energy = this.player.maxEnergy;
     this.player.waterCan = this.player.waterCanMax;
 
@@ -7687,7 +7689,7 @@ Game.sleepAndPassDay = function(forceWarpToBed = false) {
 
     //  Pet Morning Greeting & Gift
     if (this.player.pet && Math.random() < 0.6) {
-        const petGifts = ['seed_strawberry', 'seed_pumpkin', 'stone', 'copper_ore', 'wheat_seed'];
+        const petGifts = ['strawberry_seed', 'pumpkin_seed', 'stone', 'copper_ore', 'wheat_seed'];
         const pGift = petGifts[Math.floor(Math.random() * petGifts.length)];
         this.addItemToInventory(pGift, 1);
         const pName = WORLD_ITEMS[pGift]?.name || pGift;
@@ -7705,7 +7707,8 @@ Game.sleepAndPassDay = function(forceWarpToBed = false) {
                     tile.crop.daysGrown += 1;
                     const cropInfo = CROPS[tile.crop.cropId];
                     if (cropInfo) {
-                        const step = cropInfo.growDays / 3;
+                        const effDays = Math.max(1, cropInfo.growDays - (this.player.shrineRestored ? 1 : 0));
+                        const step = effDays / 3;
                         tile.crop.stage = Math.min(3, Math.floor(tile.crop.daysGrown / step));
                         if (tile.crop.stage >= 3) tile.crop.ready = true;
                     }
@@ -7737,7 +7740,8 @@ Game.sleepAndPassDay = function(forceWarpToBed = false) {
                     t.crop.daysGrown += 1;
                     const cropInfo = CROPS[t.crop.cropId];
                     if (cropInfo) {
-                        const step = cropInfo.growDays / 3;
+                        const effDays = Math.max(1, cropInfo.growDays - (this.player.shrineRestored ? 1 : 0));
+                        const step = effDays / 3;
                         t.crop.stage = Math.min(3, Math.floor(t.crop.daysGrown / step));
                         if (t.crop.stage >= 3) t.crop.ready = true;
                     }
@@ -7982,7 +7986,7 @@ Game.openVoidShopModal = function() {
             { id: 'phoenix_feather', price: 1500 },
             { id: 'void_elixir', price: 350 },
             { id: 'mystery_geode', price: 120 },
-            { id: 'cosmic_fruit_seed', price: 250 },
+            { id: 'cosmic_fruit_seed', price: 400 },
             { id: 'diamond_crystal', price: 400 }
         ];
 
@@ -8431,14 +8435,22 @@ Game.getItemCount = function(id) {
 
 Game.addXp = function(amount) {
     this.player.xp += amount;
-    const nextLvlXp = LEVEL_XP[this.player.level + 1] || 99999;
-    if (this.player.xp >= nextLvlXp) {
-        this.player.level += 1;
+    let leveledUp = false;
+    while (true) {
+        const nextIdx = (this.player.level || 1) + 1;
+        const nextLvlXp = LEVEL_XP[nextIdx] || (130000 + Math.max(1, nextIdx - 25) * 20000);
+        if (this.player.xp < nextLvlXp) break;
+
+        this.player.level = (this.player.level || 1) + 1;
         this.player.skillPoints = (this.player.skillPoints || 0) + 1;
-        this.player.maxHp = 100 + (this.player.level - 1) * 15;
+        this.player.maxHp = 150 + (this.player.level - 1) * 15;
         this.player.hp = this.player.maxHp;
-        this.player.maxEnergy = 100 + (this.player.level - 1) * 5;
+        const bedBonus = this.player.houseUpgrades?.bed_deluxe ? 30 : 0;
+        this.player.maxEnergy = 100 + (this.player.level - 1) * 5 + bedBonus;
         this.player.energy = this.player.maxEnergy;
+        leveledUp = true;
+    }
+    if (leveledUp) {
         SoundEngine.levelUp();
         this.triggerScreenShake(4.0, 150);
         this.spawnParticles(this.player.x + 12, this.player.y + 14, '#facc15', 24);
@@ -13020,11 +13032,24 @@ Game.playerMeleeAttack = function(targetWorldX, targetWorldY, weapon) {
         comboStep: combo
     };
 
-    const attackRange = (weapon.range || 65) + (combo === 3 ? 18 : 0);
+    // Melee swing uses actual close/medium blade reach (not 500px beam range!) + forward cone arc
+    const baseMeleeReach = weapon.type === 'melee_beam' ? 76 : Math.min(weapon.range || 68, 96);
+    const attackRange = baseMeleeReach + (combo === 3 ? 18 : 0);
+    const isInMeleeArc = (ex: number, ey: number, maxR: number) => {
+        const d = Math.hypot(ex - originX, ey - originY);
+        if (d >= maxR) return false;
+        if (d <= 36) return true; // Point-blank always connects
+        let diff = Math.atan2(ey - originY, ex - originX) - angle;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        return Math.abs(diff) <= Math.PI * 0.62;
+    };
+
     const hasWarrior = (typeof this.hasRing === 'function' && this.hasRing('ring_warrior'));
     const forgeEnchant = (this.player.volcanoForgeEnchant || 0) * 30;
     const forgeCrit = (this.player.volcanoForgeEnchant || 0) * 0.15;
-    const baseCrit = (this.player.skillMastery?.critical_edge ? 0.38 : 0.22) + forgeCrit;
+    const weaponCritBonus = (weapon.id === 'cutlass_saber' || weapon.id === 'volcano_flame_sword') ? 0.35 : 0;
+    const baseCrit = (this.player.skillMastery?.critical_edge ? 0.38 : 0.22) + forgeCrit + weaponCritBonus;
     const buffCrit = this.player.buffs?.critBonus || 0;
     const critRate = (hasWarrior ? baseCrit + 0.18 : baseCrit) + buffCrit;
     const baseMult = this.player.skillMastery?.critical_edge ? 2.5 : 1.8;
@@ -13038,15 +13063,14 @@ Game.playerMeleeAttack = function(targetWorldX, targetWorldY, weapon) {
 
     // Check hit on breakables (Urns / Crates)
     if (typeof this.checkBreakablesInArea === 'function') {
-        this.checkBreakablesInArea(targetWorldX, targetWorldY, attackRange);
+        this.checkBreakablesInArea(originX + Math.cos(angle) * 32, originY + Math.sin(angle) * 32, attackRange);
     }
 
     // Check hit on Farm Demon Bugs
     if (this.currentScene === 'farm') {
         for (let bIdx = this.demonBugs.length - 1; bIdx >= 0; bIdx--) {
             const bug = this.demonBugs[bIdx];
-            const dist = Math.hypot((bug.x + 14) - originX, (bug.y + 14) - originY);
-            if (dist < attackRange) {
+            if (isInMeleeArc(bug.x + 14, bug.y + 14, attackRange)) {
                 bug.hp -= finalDamage;
                 bug.flashTimer = 160;
                 bug.squashX = 1.35;
@@ -13081,8 +13105,7 @@ Game.playerMeleeAttack = function(targetWorldX, targetWorldY, weapon) {
     if (this.currentScene !== 'farm') {
         for (let mIdx = this.worldMonsters.length - 1; mIdx >= 0; mIdx--) {
             const m = this.worldMonsters[mIdx];
-            const dist = Math.hypot((m.x + 14) - originX, (m.y + 12) - originY);
-            if (dist < attackRange) {
+            if (isInMeleeArc(m.x + 14, m.y + 12, attackRange)) {
                 const comboMult = this.getComboDamageMultiplier();
                 const actualDmg = Math.round(finalDamage * comboMult);
                 m.hp -= actualDmg;
@@ -13127,7 +13150,7 @@ Game.playerMeleeAttack = function(targetWorldX, targetWorldY, weapon) {
                 }
 
                 this.spawnParticles(m.x + 14, m.y + 12, isCrit ? '#facc15' : '#ef4444', isCrit ? 14 : 8);
-                this.addFloatingText((isCrit ? ' CRIT -' : ' -') + finalDamage, m.x, m.y - 12, isCrit ? '#fde047' : '#ef4444');
+                this.addFloatingText((isCrit ? ' CRIT -' : ' -') + actualDmg, m.x, m.y - 12, isCrit ? '#fde047' : '#ef4444');
 
                 if (m.hp <= 0) {
                     this.registerMonsterKill(m.type);
@@ -13137,17 +13160,19 @@ Game.playerMeleeAttack = function(targetWorldX, targetWorldY, weapon) {
                     if (cfg) {
                         let goldMult = (typeof this.hasRing === 'function' && this.hasRing('ring_lucky')) ? 1.35 : 1.0;
                         if (this.time.fortune?.id === 'bloodmoon') goldMult *= 2.0;
+                        if (this.player.masterMode) goldMult *= 2.0;
                         goldMult *= this.getComboGoldMultiplier();
 
                         const earnedGold = Math.round(cfg.gold * goldMult);
                         this.player.gold += earnedGold;
-                        const xpMult = (this.time.fortune?.id === 'bloodmoon') ? 1.5 : 1.0;
+                        const xpMult = ((this.time.fortune?.id === 'bloodmoon') ? 1.5 : 1.0) * (this.player.masterMode ? 2.0 : 1.0);
                         this.addXp(Math.round(cfg.xp * xpMult));
+                        const dropQty = this.player.masterMode ? 2 : 1;
                         cfg.drops.forEach(d => {
                             let dropBonus = (typeof this.hasRing === 'function' && this.hasRing('ring_lucky')) ? 0.15 : 0.0;
                             if (this.time.fortune?.id === 'starlight') dropBonus += 0.35;
                             if (Math.random() <= d.chance + dropBonus) {
-                                this.spawnDroppedItem(d.item, 1, m.x, m.y);
+                                this.spawnDroppedItem(d.item, dropQty, m.x, m.y);
                                 const dName = (WORLD_ITEMS && WORLD_ITEMS[d.item]?.name) || d.item;
                                 this.addFloatingText('ดรอป: ' + dName, m.x, m.y - 12, '#facc15');
                             }
@@ -13195,8 +13220,7 @@ Game.playerMeleeAttack = function(targetWorldX, targetWorldY, weapon) {
 
         // Check hit on Bosses
         if (this.boss && this.boss.alive) {
-            const distBoss = Math.hypot((this.boss.x + 32) - originX, (this.boss.y + 32) - originY);
-            if (distBoss < attackRange + 30) {
+            if (isInMeleeArc(this.boss.x + 32, this.boss.y + 32, attackRange + 32)) {
                 const comboMult = this.getComboDamageMultiplier();
                 const actualDmg = Math.round(finalDamage * comboMult);
                 this.boss.hp -= actualDmg;
@@ -13238,7 +13262,7 @@ Game.playerMeleeAttack = function(targetWorldX, targetWorldY, weapon) {
                 }
 
                 this.spawnParticles(originX + Math.cos(angle) * 35, originY + Math.sin(angle) * 35, isCrit ? '#facc15' : '#f59e0b', 14);
-                this.addFloatingText((isCrit ? ' CRIT -' : ' -') + finalDamage, this.boss.x + 20, this.boss.y - 10, isCrit ? '#fde047' : '#ef4444');
+                this.addFloatingText((isCrit ? ' CRIT -' : ' -') + actualDmg, this.boss.x + 20, this.boss.y - 10, isCrit ? '#fde047' : '#ef4444');
                 if (this.boss.hp <= 0) {
                     this.defeatBoss();
                 }
@@ -13337,17 +13361,18 @@ Game.playerMeleeAttack = function(targetWorldX, targetWorldY, weapon) {
         this.triggerScreenShake(4.0, 110);
         this.spawnParticles(beamOriginX, beamOriginY, '#38bdf8', 14);
         SoundEngine.thunder();
-    } else if (weapon.id === 'spire_blade') {
+    } else if (weapon.id === 'spire_blade' || weapon.id === 'cutlass_saber') {
         this.projectiles.push({
             x: beamOriginX,
             y: beamOriginY,
-            vx: Math.cos(angle) * 13,
-            vy: Math.sin(angle) * 13,
+            vx: Math.cos(angle) * (weapon.speed || 13),
+            vy: Math.sin(angle) * (weapon.speed || 13),
             angle: angle,
             damage: projDmg,
             rangeLeft: weapon.range,
-            type: 'holy_beam',
-            fromPlayer: true
+            type: weapon.id === 'cutlass_saber' ? 'crystal_shard' : 'holy_beam',
+            fromPlayer: true,
+            isCrit: isCrit
         });
         SoundEngine.shoot(true);
     }
@@ -13378,16 +13403,25 @@ Game.playerShootAt = function(targetWorldX, targetWorldY, weapon = null) {
         this.player.direction = dy > 0 ? 'down' : 'up';
     }
 
-    const bonusDmg = this.player.buffs?.damage || 0;
+    const forgeEnchant = (this.player.volcanoForgeEnchant || 0) * 30;
+    const forgeCrit = (this.player.volcanoForgeEnchant || 0) * 0.15;
+    const bonusDmg = (this.player.buffs?.damage || 0) + forgeEnchant;
     const isRifle = (weapon.id === 'rifle' || weapon.id === 'dragon_rifle');
     SoundEngine.shoot(isRifle);
 
-    // Ring of the Warrior & Critical Strike
+    // Ranged weapons share RPG crit, mastery, enchant, well-fed, and combo scaling!
     const hasWarriorRing = this.hasRing('ring_warrior');
-    const critChance = hasWarriorRing ? 0.25 : 0.08;
+    const baseCrit = (this.player.skillMastery?.critical_edge ? 0.34 : 0.16) + forgeCrit;
+    const buffCrit = this.player.buffs?.critBonus || 0;
+    const critChance = (hasWarriorRing ? baseCrit + 0.18 : baseCrit) + buffCrit;
     const isCrit = Math.random() < critChance;
-    const critMult = isCrit ? (hasWarriorRing ? 2.2 : 1.5) : 1.0;
-    const bulletDamage = Math.round((weapon.damage + bonusDmg) * critMult);
+    const baseMult = this.player.skillMastery?.critical_edge ? 2.5 : 1.8;
+    const critMult = isCrit ? (hasWarriorRing ? baseMult + 0.4 : baseMult) : 1.0;
+    const isWellFed = (this.player.hunger !== undefined ? this.player.hunger : 100) >= 75 &&
+                      (this.player.thirst !== undefined ? this.player.thirst : 100) >= 75;
+    const wellFedBonus = isWellFed ? 1.15 : 1.0;
+    const comboMult = this.getComboDamageMultiplier();
+    const bulletDamage = Math.round((weapon.damage + bonusDmg) * critMult * wellFedBonus * comboMult);
 
     if (isCrit) {
         this.addFloatingText(' CRIT!', originX, originY - 18, '#fbbf24');
@@ -13515,11 +13549,13 @@ Game.updateDemonBugs = function(dt) {
         this.waveAlertTimer -= dt;
     }
 
-    // Auto-spawn bug wave every 28 seconds
-    this.bugSpawnTimer += dt;
-    if (this.bugSpawnTimer >= 28000) {
-        this.bugSpawnTimer = 0;
-        this.triggerBugWave();
+    // Auto-spawn bug wave every 90s ONLY while farm blight is active (stops after purifying Boss Kathuros)
+    if (!this.player.questProgress?.kathurosDefeated) {
+        this.bugSpawnTimer += dt;
+        if (this.bugSpawnTimer >= 90000) {
+            this.bugSpawnTimer = 0;
+            this.triggerBugWave();
+        }
     }
 
     for (let i = this.demonBugs.length - 1; i >= 0; i--) {
@@ -13809,7 +13845,10 @@ Game.updateProjectiles = function(dt) {
                     if (dist < mHitDist) {
                         hit = true;
                         m.hp -= p.damage;
-                        if (p.fromPlayer) this.applyRuneCombatProc(m, p.damage);
+                        if (p.fromPlayer) {
+                            this.registerComboHit(!!p.isCrit);
+                            this.applyRuneCombatProc(m, p.damage);
+                        }
                         m.flashTimer = 140;
                         m.squashX = 1.35;
                         m.squashY = 0.72;
@@ -13819,6 +13858,7 @@ Game.updateProjectiles = function(dt) {
                         this.addFloatingText('-' + p.damage, m.x, m.y - 10, '#ef4444');
 
                         if (m.hp <= 0) {
+                            this.registerMonsterKill(m.type);
                             SoundEngine.monsterDie();
                             this.spawnParticles(m.x + 16, m.y + 16, '#9333ea', 18);
                             const cfg = WORLD_MONSTERS[m.type];
@@ -13827,12 +13867,16 @@ Game.updateProjectiles = function(dt) {
                                 if (p.fromPlayer && this.hasRing('ring_lucky')) {
                                     gReward = Math.round(gReward * 1.35);
                                 }
+                                if (p.fromPlayer && this.player.masterMode) gReward *= 2;
+                                gReward = Math.round(gReward * this.getComboGoldMultiplier());
                                 this.player.gold += gReward;
-                                this.addXp(cfg.xp);
+                                const xpGain = cfg.xp * (p.fromPlayer && this.player.masterMode ? 2 : 1);
+                                this.addXp(xpGain);
+                                const dropQty = (p.fromPlayer && this.player.masterMode) ? 2 : 1;
                                 cfg.drops.forEach(d => {
                                     const dropBonus = (p.fromPlayer && this.hasRing('ring_lucky')) ? 0.15 : 0;
                                     if (Math.random() <= (d.chance + dropBonus)) {
-                                        this.spawnDroppedItem(d.item, 1, m.x, m.y);
+                                        this.spawnDroppedItem(d.item, dropQty, m.x, m.y);
                                         const dName = (WORLD_ITEMS && WORLD_ITEMS[d.item]?.name) || d.item;
                                         this.addFloatingText('ดรอป: ' + dName, m.x, m.y - 12, '#facc15');
                                     }
@@ -13880,7 +13924,10 @@ Game.updateProjectiles = function(dt) {
                     if (distBoss < bossHitDist) {
                         hit = true;
                         this.boss.hp -= p.damage;
-                        if (p.fromPlayer) this.applyRuneCombatProc(this.boss, p.damage);
+                        if (p.fromPlayer) {
+                            this.registerComboHit(!!p.isCrit);
+                            this.applyRuneCombatProc(this.boss, p.damage);
+                        }
                         this.boss.flashTimer = 140;
                         this.boss.squashX = 1.25;
                         this.boss.squashY = 0.8;
@@ -14811,6 +14858,9 @@ Game.initTempestPlateauScene = function() {
 
 Game.damagePlayer = function(amount, source = null) {
     if (this.player.invincibleTimer > 0 || this.player.isDead) return;
+    if (this.player.masterMode) {
+        amount = Math.round(amount * 1.35);
+    }
 
     // GUARD & PERFECT PARRY SYSTEM
     if (this.player.isGuarding) {
@@ -14854,50 +14904,11 @@ Game.damagePlayer = function(amount, source = null) {
             this.spawnParticles(this.player.x + 12, this.player.y + 14, '#38bdf8', 12);
             this.spawnParticles(this.player.x + 12, this.player.y + 14, '#94a3b8', 8);
             this.player.hp -= blockedAmount;
-            this.player.hpRegenDelay = 3000;
+            this.player.hpRegenDelay = 6000;
             this.updateHpHUD();
 
             if (this.player.hp <= 0 && !this.player.isDead) {
-                if (this.checkPhoenixRevive()) return;
-                this.player.isDead = true;
-                this.player.hp = 0;
-                SoundEngine.youDied();
-                this.triggerScreenShake(12.0, 500);
-                this.triggerHitstop(120);
-
-                const lostGold = Math.floor((this.player.gold || 0) * 0.25);
-                this.player.gold -= lostGold;
-                this.player.bloodstain = {
-                    scene: this.currentScene,
-                    x: Math.round(this.player.x + 12),
-                    y: Math.round(this.player.y + 14),
-                    gold: lostGold
-                };
-
-                const overlay = document.getElementById('youDiedOverlay');
-                if (overlay) overlay.style.display = 'flex';
-                const goldEl = document.getElementById('youDiedLostGoldText');
-                if (goldEl) {
-                    goldEl.textContent = lostGold > 0 
-                        ? `★ เถ้าธุลีวิญญาณตกหล่น ณ จุดที่คุณตาย (-${lostGold} G) สามารถกลับไปเก็บคืนได้!` 
-                        : '★ พ่ายแพ้แก่ความมืดมิด...';
-                }
-
-                setTimeout(() => {
-                    if (overlay) overlay.style.display = 'none';
-                    this.player.hp = this.player.maxHp || 100;
-                    this.player.energy = 50;
-                    this.player.isDead = false;
-                    this.player.isGuarding = false;
-                    this.player.isDashing = false;
-                    this.player.guardBreakTimer = 0;
-                    this.keys = { up: false, down: false, left: false, right: false };
-                    this.switchScene('house', 18, 5);
-                    this.addFloatingText('★ ฟื้นคืนชีพ ณ บ้านพักชาวสวน... เถ้าธุลีวิญญาณรอการกอบกู้', this.player.x - 40, this.player.y - 30, '#facc15');
-                    this.updateHpHUD();
-                    this.updateEnergyHUD();
-                    this.updateHUD();
-                }, 2600);
+                this.handlePlayerDeath();
             }
             return;
         } else {
@@ -14935,7 +14946,7 @@ Game.damagePlayer = function(amount, source = null) {
     }
 
     this.player.hp -= amount;
-    this.player.hpRegenDelay = 3000;
+    this.player.hpRegenDelay = 6000;
     this.player.invincibleTimer = 850; // Generous 850ms i-frame window so player has time to react & escape swarms
     SoundEngine.hit();
     this.triggerScreenShake(5.5, 180);
@@ -14946,48 +14957,53 @@ Game.damagePlayer = function(amount, source = null) {
     this.updateHUD();
 
     if (this.player.hp <= 0 && !this.player.isDead) {
-        if (this.checkPhoenixRevive()) return;
-        this.player.isDead = true;
-        this.player.hp = 0;
-        SoundEngine.youDied();
-        this.triggerScreenShake(12.0, 500);
-        this.triggerHitstop(120);
-
-        // Friendly penalty: Drop Bloodstain (5% gold lost instead of 25%)
-        const lostGold = Math.floor((this.player.gold || 0) * 0.05);
-        this.player.gold -= lostGold;
-        this.player.bloodstain = {
-            scene: this.currentScene,
-            x: Math.round(this.player.x + 12),
-            y: Math.round(this.player.y + 14),
-            gold: lostGold
-        };
-
-        const overlay = document.getElementById('youDiedOverlay');
-        if (overlay) overlay.style.display = 'flex';
-        const goldEl = document.getElementById('youDiedLostGoldText');
-        if (goldEl) {
-            goldEl.textContent = lostGold > 0 
-                ? `★ เถ้าธุลีวิญญาณตกหล่น ณ จุดที่คุณตาย (-${lostGold} G) สามารถกลับไปเก็บคืนได้!` 
-                : '★ พ่ายแพ้แก่ความมืดมิด...';
-        }
-
-        setTimeout(() => {
-            if (overlay) overlay.style.display = 'none';
-            this.player.hp = this.player.maxHp || 100;
-            this.player.energy = 50;
-            this.player.isDead = false;
-            this.player.isGuarding = false;
-            this.player.isDashing = false;
-            this.player.guardBreakTimer = 0;
-            this.keys = { up: false, down: false, left: false, right: false };
-            this.switchScene('house', 18, 5);
-            this.addFloatingText('★ ฟื้นคืนชีพ ณ บ้านพักชาวสวน... เถ้าธุลีวิญญาณรอการกอบกู้', this.player.x - 40, this.player.y - 30, '#facc15');
-            this.updateHpHUD();
-            this.updateEnergyHUD();
-            this.updateHUD();
-        }, 2600);
+        this.handlePlayerDeath();
     }
+};
+
+Game.handlePlayerDeath = function() {
+    if (this.player.isDead) return;
+    if (this.checkPhoenixRevive()) return;
+    this.player.isDead = true;
+    this.player.hp = 0;
+    SoundEngine.youDied();
+    this.triggerScreenShake(12.0, 500);
+    this.triggerHitstop(120);
+
+    // Unified bloodstain penalty (5% gold lost, reclaimable on floor)
+    const lostGold = Math.floor((this.player.gold || 0) * 0.05);
+    this.player.gold -= lostGold;
+    this.player.bloodstain = {
+        scene: this.currentScene,
+        x: Math.round(this.player.x + 12),
+        y: Math.round(this.player.y + 14),
+        gold: lostGold
+    };
+
+    const overlay = document.getElementById('youDiedOverlay');
+    if (overlay) overlay.style.display = 'flex';
+    const goldEl = document.getElementById('youDiedLostGoldText');
+    if (goldEl) {
+        goldEl.textContent = lostGold > 0
+            ? `★ เถ้าธุลีวิญญาณตกหล่น ณ จุดที่คุณตาย (-${lostGold} G) สามารถกลับไปเก็บคืนได้!`
+            : '★ พ่ายแพ้แก่ความมืดมิด...';
+    }
+
+    setTimeout(() => {
+        if (overlay) overlay.style.display = 'none';
+        this.player.hp = this.player.maxHp || 150;
+        this.player.energy = Math.min(this.player.maxEnergy || 100, 60);
+        this.player.isDead = false;
+        this.player.isGuarding = false;
+        this.player.isDashing = false;
+        this.player.guardBreakTimer = 0;
+        this.keys = { up: false, down: false, left: false, right: false };
+        this.switchScene('house', 18, 5);
+        this.addFloatingText('★ ฟื้นคืนชีพ ณ บ้านพักชาวสวน... เถ้าธุลีวิญญาณรอการกอบกู้', this.player.x - 40, this.player.y - 30, '#facc15');
+        this.updateHpHUD();
+        this.updateEnergyHUD();
+        this.updateHUD();
+    }, 2600);
 };
 
 
@@ -16775,11 +16791,16 @@ Game.defeatBoss = function() {
     const registry = (window as any).BOSS_REGISTRY || {};
 
     const bData = registry[this.boss.id] || BOSS_KATHUROS;
-    const gReward = bData.gold || 1500;
-    const xReward = bData.xp || 800;
+    const masterMult = this.player.masterMode ? 2 : 1;
+    const gReward = (bData.gold || 1500) * masterMult;
+    const xReward = (bData.xp || 800) * masterMult;
 
     this.player.gold += gReward;
     this.addXp(xReward);
+    if (this.player.masterMode) {
+        this.spawnDroppedItem('diamond_crystal', 2, this.boss.x + 16, this.boss.y + 44);
+        this.spawnDroppedItem('ruby_gem', 2, this.boss.x + 48, this.boss.y + 44);
+    }
 
     if (this.boss.id === 'boss_luminarch') {
         this.spawnDroppedItem('luminarch_crystal_heart', 1, this.boss.x + 32, this.boss.y + 32);
@@ -21367,11 +21388,11 @@ Game.interactWithShrineAltar = function() {
     if (count >= 8) {
         if (!this.player.grandSovereignAwakened) {
             this.player.grandSovereignAwakened = true;
-            this.player.gold += 50000;
-            this.addXp(20000);
+            this.player.gold += 5000;
+            this.addXp(5000);
             this.triggerScreenShake(9.0, 500);
             SoundEngine.shrineEpilogue();
-            this.addFloatingText('★ ปลดผนึก 8 ศิลาเทพบรรพกาลสำเร็จ! ได้รับฉายา "มหาจักรพรรดิผู้พิทักษ์แห่งจักรวาลและแผ่นดินสุขาวดี" (+50,000 G, +20,000 XP)', this.player.x - 50, this.player.y - 30, '#fde047');
+            this.addFloatingText('★ ปลดผนึก 8 ศิลาเทพบรรพกาลสำเร็จ! ได้รับฉายา "มหาจักรพรรดิผู้พิทักษ์แห่งจักรวาลและแผ่นดินสุขาวดี" (+5,000 G, +5,000 XP)', this.player.x - 50, this.player.y - 30, '#fde047');
         }
         this.startShrineEpilogueCutscene();
     } else if (count >= 6) {
@@ -21398,10 +21419,12 @@ Game.startShrineEpilogueCutscene = function() {
         }, 300);
     });
 
-    this.player.shrineRestored = true;
-    this.player.gold += 25000;
-    this.addXp(10000);
-    this.updateHUD();
+    if (!this.player.shrineRestored) {
+        this.player.shrineRestored = true;
+        this.player.gold += 5000;
+        this.addXp(5000);
+        this.updateHUD();
+    }
 
     this.openModal('shrineEpilogueModal');
 };
@@ -21848,7 +21871,7 @@ export const CLASS_SKILLS: Record<string, ClassConfig> = {
 Game.initPlayerSkills = function() {
     if (!this.player) return;
     if (!this.player.activeClass) this.player.activeClass = 'warrior';
-    if (this.player.skillPoints === undefined) this.player.skillPoints = 5;
+    if (this.player.skillPoints === undefined) this.player.skillPoints = 2;
     if (!this.player.skillLevels) {
         this.player.skillLevels = {
             cyclone_slash: 1, flash_thrust: 1, ironclad_bastion: 1, judgement_blade: 1,
@@ -22335,13 +22358,13 @@ Game.updatePlayerSkills = function(dt) {
         if (this.player.hpRegenDelay && this.player.hpRegenDelay > 0) {
             this.player.hpRegenDelay = Math.max(0, this.player.hpRegenDelay - dt);
         } else if (this.player.hp < maxH) {
-            // Base recovery: 8 HP per second (ฟื้นฟู 8 HP/วินาทีเมื่อไม่ได้โดนโจมตีเกิน 3 วินาที)
-            let hpRate = 8;
+            // Balanced recovery: 2.5 HP/sec out of combat (6s delay) so potions & cooked food stay valuable
+            let hpRate = 2.5;
             if ((this.player.hunger !== undefined && this.player.hunger <= 0) || (this.player.thirst !== undefined && this.player.thirst <= 0)) {
-                hpRate *= 0.5; // โดนลดอัตราฟื้นฟูหากหิวจัด
+                hpRate *= 0.4;
             }
             if (this.currentScene === 'house') {
-                hpRate *= 1.5; // พักผ่อนในบ้านฟื้นฟูเร็วขึ้น 50%
+                hpRate = 8; // พักผ่อนในบ้านฟื้นฟูเร็ว
             }
             const prevHp = this.player.hp;
             this.player.hp = Math.min(maxH, this.player.hp + (hpRate * (dt / 1000)));

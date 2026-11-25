@@ -3571,13 +3571,13 @@ body {
     .btn-hud-icon .badge-key {
         display: none !important;
     }
-    /* Hide non-essential desktop buttons from mobile HUD */
-    #btnSkillMastery,
+    /* Hide non-essential desktop buttons from mobile HUD (all remain in Game Menu) */
+    .hud-actions-row #btnSkillMastery,
     .hud-actions-row button[data-tooltip*="สารานุกรม"],
     .hud-actions-row button[data-tooltip*="ขี่ม้า"],
-    #btnCampOut,
+    .hud-actions-row #btnCampOut,
     .hud-actions-row button[data-tooltip*="ถ่ายรูป"],
-    .btn-hud-save {
+    .hud-actions-row .btn-hud-save {
         display: none !important;
     }
 

@@ -41,7 +41,7 @@ export const CROPS: Record<string, CropData> = {
   banana: { id: 'banana', name: 'กล้วยหอมทอง (Golden Banana)', seedName: 'หน่อกล้วยทอง', buyPrice: 55, sellPrice: 140, growDays: 3, xp: 20, levelReq: 3, category: 'fruit' },
   golden_melon: { id: 'golden_melon', name: 'เมลอนทองคำเกาะโจรสลัด', seedName: 'เมล็ดเมลอนทองคำ', buyPrice: 120, sellPrice: 420, growDays: 5, xp: 45, levelReq: 4, category: 'fruit' },
   starfruit: { id: 'starfruit', name: 'ผลไม้ดวงดาวแคริบเบียน', seedName: 'เมล็ดผลไม้ดาว', buyPrice: 150, sellPrice: 550, growDays: 6, xp: 60, levelReq: 5, category: 'fruit' },
-  cosmic_fruit: { id: 'cosmic_fruit', name: 'ผลไม้ดวงดาวจักรวาล', seedName: 'เมล็ดพันธุ์ดาราจักร', buyPrice: 400, sellPrice: 1500, growDays: 3, xp: 85, levelReq: 3, category: 'fruit' }
+  cosmic_fruit: { id: 'cosmic_fruit', name: 'ผลไม้ดวงดาวจักรวาล', seedName: 'เมล็ดพันธุ์ดาราจักร', buyPrice: 400, sellPrice: 920, growDays: 5, xp: 85, levelReq: 5, category: 'fruit' }
 };
 
 export const ANIMALS: Record<string, AnimalData> = {
@@ -135,7 +135,9 @@ export const UPGRADES: Record<string, UpgradeData> = {
 };
 
 export const LEVEL_XP: number[] = [
-  0, 0, 120, 300, 600, 1000, 1600, 2400, 3500, 5000
+  0, 0, 120, 300, 600, 1000, 1600, 2400, 3500, 5000,
+  7000, 9500, 12500, 16000, 20000, 25000, 31000, 38000, 46000, 55000,
+  65000, 76000, 88000, 101000, 115000, 130000
 ];
 
 export const SEASONS = ['ฤดูใบไม้ผลิ', 'ฤดูร้อน', 'ฤดูใบไม้ร่วง', 'ฤดูหนาว'];
@@ -373,7 +375,7 @@ export const WEAPONS: Record<string, WeaponData> = {
   malakor_soul_scythe: {
     id: 'malakor_soul_scythe',
     name: 'เคียวมรณะสูบวิญญาณลอร์ดมาลาคอร์ (Malakor Soul Scythe)',
-    desc: 'เคียวแห่งความตาย ปล่อยคลื่นกะโหลกวิญญาณมืด และดูดเลือด 6% คืนแก่ผู้ใช้ พลังโจมตี 92',
+    desc: 'เคียวแห่งความตาย ปล่อยคลื่นกะโหลกวิญญาณมืด และดูดเลือด 8% คืนแก่ผู้ใช้ พลังโจมตี 92',
     type: 'melee_beam',
     damage: 92,
     speed: 12.5,
@@ -450,12 +452,12 @@ export const WEAPONS: Record<string, WeaponData> = {
   volcano_flame_sword: {
     id: 'volcano_flame_sword',
     name: 'ดาบเพลิงสุริยันอัคนี (Solar Magma Blade)',
-    desc: 'ดาบเพลิงศักดิ์สิทธิ์ใจกลางปล่องภูเขาไฟ ฟันคลื่นลูกไฟลาวาระเบิด พลังโจมตี 135 คริติคอล 35%!',
+    desc: 'ดาบเพลิงศักดิ์สิทธิ์ใจกลางปล่องภูเขาไฟ ฟันคลื่นลูกไฟลาวาระเบิด พลังโจมตี 120 คริติคอล +35%!',
     type: 'melee_beam',
-    damage: 135,
+    damage: 120,
     speed: 13.5,
     range: 520,
-    cooldown: 280,
+    cooldown: 320,
     bulletType: 'dragon_fire'
   }
 };
@@ -1065,14 +1067,14 @@ export const BOSS_KARZARAK: BossData = {
   id: 'boss_karzarak',
   name: 'คาร์ซาร็อค มังกรลาวายักษ์โบราณ',
   title: 'จ้าวแห่งปล่องภูเขาไฟเกาะสมบัติ (Karzarak the Ancient Magma Wyrm)',
-  hp: 2800,
-  maxHp: 2800,
+  hp: 14500,
+  maxHp: 14500,
   speed: 1.25,
-  damage: 38,
+  damage: 44,
   attackCooldown: 900,
   aggroDist: 480,
-  gold: 800,
-  xp: 1600,
+  gold: 1200,
+  xp: 2200,
   drops: [
     { item: 'magma_wyrm_scale', chance: 1.0, count: 3 },
     { item: 'volcano_flame_sword', chance: 1.0, count: 1 },
@@ -1109,7 +1111,7 @@ export const VOLCANO_FORGE_RECIPES: Record<string, VolcanoForgeRecipe> = {
   forge_solar_blade: {
     id: 'forge_solar_blade',
     name: 'ดาบเพลิงสุริยันอัคนี (Solar Magma Blade)',
-    desc: 'หลอมดาบเพลิงศักดิ์สิทธิ์ใจกลางภูเขาไฟ พลังโจมตี 135 คลื่นลูกไฟลาวา',
+    desc: 'หลอมดาบเพลิงศักดิ์สิทธิ์ใจกลางภูเขาไฟ พลังโจมตี 120 คลื่นลูกไฟลาวา คริติคอล +35%',
     costCinderShards: 15,
     materials: { magma_wyrm_scale: 2, gold_ore: 5 },
     resultItem: 'volcano_flame_sword',
@@ -1155,8 +1157,8 @@ export const QUESTS: Record<string, QuestData> = {
     targetNpc: 'gilbert',
     reqBugs: 3,
     reqSpores: 2,
-    rewardDesc: '200 G, ยาฟื้นพลังชีวิต x3, 100 XP',
-    goldReward: 100,
+    rewardDesc: '150 G, ยาฟื้นพลังชีวิต x3, 100 XP',
+    goldReward: 150,
     xpReward: 100,
     itemsReward: [
       { id: 'health_potion', count: 3, name: 'ยาฟื้นพลังชีวิตชั้นเลิศ' }
@@ -1169,8 +1171,8 @@ export const QUESTS: Record<string, QuestData> = {
     giver: 'lilian',
     targetType: 'collect',
     targetNpc: 'lilian',
-    rewardDesc: '350 G, เซรุ่มต้านสปอร์พิษ x2, ดาบเหล็กกล้า, 180 XP',
-    goldReward: 180,
+    rewardDesc: '250 G, เซรุ่มต้านสปอร์พิษ x2, ดาบเหล็กกล้า, 180 XP',
+    goldReward: 250,
     xpReward: 180,
     itemsReward: [
       { id: 'antidote_serum', count: 2, name: 'เซรุ่มต้านสปอร์พิษ' },
@@ -1186,8 +1188,8 @@ export const QUESTS: Record<string, QuestData> = {
     targetNpc: 'valeria',
     reqWolves: 3,
     reqRubies: 2,
-    rewardDesc: '500 G, ปืนล่าสัตว์โบราณ, 250 XP',
-    goldReward: 250,
+    rewardDesc: '350 G, ปืนล่าสัตว์โบราณ, 250 XP',
+    goldReward: 350,
     xpReward: 250,
     itemsReward: [
       { id: 'rifle', count: 1, name: 'ปืนล่าสัตว์โบราณ' }
@@ -1200,8 +1202,8 @@ export const QUESTS: Record<string, QuestData> = {
     giver: 'eldrin',
     targetType: 'hunt_mine',
     targetNpc: 'eldrin',
-    rewardDesc: '800 G, เซรุ่มต้านสปอร์พิษ x3, 400 XP',
-    goldReward: 350,
+    rewardDesc: '450 G, เซรุ่มต้านสปอร์พิษ x3, 350 XP',
+    goldReward: 450,
     xpReward: 350,
     itemsReward: [
       { id: 'antidote_serum', count: 3, name: 'เซรุ่มต้านสปอร์พิษ' }
@@ -1214,7 +1216,7 @@ export const QUESTS: Record<string, QuestData> = {
     giver: 'gilbert',
     targetType: 'boss',
     targetBoss: 'boss_kathuros',
-    rewardDesc: '500 G, ดาบศักดิ์สิทธิ์เอ็กซ์คาลิเบอร์, ฉายายอดวีรบุรุษนักสวนผู้กอบกู้แผ่นดิน, 1,200 XP',
+    rewardDesc: '500 G, ดาบศักดิ์สิทธิ์เอ็กซ์คาลิเบอร์, ฉายายอดวีรบุรุษนักสวนผู้กอบกู้แผ่นดิน, 800 XP',
     goldReward: 500,
     xpReward: 800,
     itemsReward: [
@@ -1228,7 +1230,7 @@ export const QUESTS: Record<string, QuestData> = {
     giver: 'eldrin',
     targetType: 'boss',
     targetBoss: 'boss_luminarch',
-    rewardDesc: '650 G, เพชรผลึกประกายรุ้ง x3, 1,500 XP',
+    rewardDesc: '650 G, เพชรผลึกประกายรุ้ง x3, 1,000 XP',
     goldReward: 650,
     xpReward: 1000,
     itemsReward: [
@@ -1242,7 +1244,7 @@ export const QUESTS: Record<string, QuestData> = {
     giver: 'lilian',
     targetType: 'boss',
     targetBoss: 'boss_hydrakis',
-    rewardDesc: '800 G, ยาฟื้นพลังชีวิตชั้นเลิศ x5, 1,800 XP',
+    rewardDesc: '800 G, ยาฟื้นพลังชีวิตชั้นเลิศ x5, 1,200 XP',
     goldReward: 800,
     xpReward: 1200,
     itemsReward: [
@@ -1256,7 +1258,7 @@ export const QUESTS: Record<string, QuestData> = {
     giver: 'valeria',
     targetType: 'boss',
     targetBoss: 'boss_ignistron',
-    rewardDesc: '1,000 G, อัญมณีทับทิมโลกันตร์ x5, 2,000 XP',
+    rewardDesc: '1,000 G, อัญมณีทับทิมโลกันตร์ x5, 1,400 XP',
     goldReward: 1000,
     xpReward: 1400,
     itemsReward: [
@@ -1270,7 +1272,7 @@ export const QUESTS: Record<string, QuestData> = {
     giver: 'kael',
     targetType: 'boss',
     targetBoss: 'boss_frostfang',
-    rewardDesc: '1,200 G, ผลึกน้ำแข็งบริสุทธิ์ x5, 2,500 XP',
+    rewardDesc: '1,200 G, ผลึกน้ำแข็งบริสุทธิ์ x5, 1,600 XP',
     goldReward: 1200,
     xpReward: 1600,
     itemsReward: [
@@ -1284,7 +1286,7 @@ export const QUESTS: Record<string, QuestData> = {
     giver: 'gilbert',
     targetType: 'boss',
     targetBoss: 'boss_malakor',
-    rewardDesc: '1,800 G, เคียวมรณะสูบวิญญาณลอร์ดมาลาคอร์, ฉายามหาผู้พิทักษ์แห่งจักรวาลและแผ่นดินสุขาวดี, 5,000 XP',
+    rewardDesc: '1,800 G, เคียวมรณะสูบวิญญาณลอร์ดมาลาคอร์, ฉายามหาผู้พิทักษ์แห่งจักรวาลและแผ่นดินสุขาวดี, 2,500 XP',
     goldReward: 1800,
     xpReward: 2500,
     itemsReward: [
@@ -1298,8 +1300,8 @@ export const QUESTS: Record<string, QuestData> = {
     giver: 'eldrin',
     targetType: 'purify',
     targetNpc: 'eldrin',
-    rewardDesc: 'ฉายามหาจักรพรรดิผู้พิทักษ์แห่งจักรวาลและแผ่นดินสุขาวดี, ปลดล็อก Master Mode (New Game+), บัฟพรแห่งเทพถาวร (พืชโตเร็วขึ้น 1 วัน & วิ่งเร็วขึ้น +35%), ทองคำ 3,500 G, 20,000 XP',
-    goldReward: 3500,
+    rewardDesc: 'ฉายามหาจักรพรรดิผู้พิทักษ์แห่งจักรวาลและแผ่นดินสุขาวดี, ปลดล็อก Master Mode (New Game+), บัฟพรแห่งเทพถาวร (พืชโตเร็วขึ้น 1 วัน & วิ่งเร็วขึ้น +25%), ทองคำ 5,000 G, 5,000 XP',
+    goldReward: 5000,
     xpReward: 5000,
     itemsReward: []
   }
@@ -1410,14 +1412,14 @@ export const FORGE_RECIPES: Record<string, ForgeRecipe> = {
   iron_sword: {
     id: 'iron_sword',
     name: 'ดาบเหล็กกล้านักผจญภัย',
-    desc: 'ดาบเหล็กฟันระยะประชิด พลังโจมตี 55',
+    desc: 'ดาบเหล็กฟันระยะประชิด พลังโจมตี 32',
     cost: 150,
     materials: { iron_ore: 2, wolf_fang: 1 }
   },
   rifle: {
     id: 'rifle',
     name: 'ปืนล่าสัตว์โบราณ',
-    desc: 'ปืนไรเฟิลยิงระยะไกล พลังโจมตี 75',
+    desc: 'ปืนไรเฟิลยิงระยะไกล พลังโจมตี 52',
     cost: 350,
     materials: { iron_ore: 4, cursed_wood: 2 }
   },
@@ -1431,70 +1433,70 @@ export const FORGE_RECIPES: Record<string, ForgeRecipe> = {
   excalibur_sword: {
     id: 'excalibur_sword',
     name: 'ดาบศักดิ์สิทธิ์เอ็กซ์คาลิเบอร์',
-    desc: 'ดาบศักดิ์สิทธิ์ ฟันคลื่นแสงทะลวงศัตรู พลังโจมตี 135!',
+    desc: 'ดาบศักดิ์สิทธิ์ ฟันคลื่นแสงทะลวงศัตรู พลังโจมตี 52',
     cost: 350,
     materials: { demon_heart: 1, ruby_gem: 2, mana_gem: 2 }
   },
   dragon_rifle: {
     id: 'dragon_rifle',
     name: 'ปืนมังกรเพลิง (Dragonfire Cannon)',
-    desc: 'ปืนมังกรยิงระเบิดเพลิง พลังโจมตี 160!',
+    desc: 'ปืนมังกรยิงระเบิดเพลิง พลังโจมตี 62',
     cost: 450,
     materials: { demon_heart: 1, cursed_wood: 3, ruby_gem: 2 }
   },
   volcano_sword: {
     id: 'volcano_sword',
     name: 'ดาบเพลิงลาวาภูเขาไฟ (Volcano Magma Blade)',
-    desc: 'ดาบเพลิงหลอมจากแก่นภูเขาไฟ ฟันติดไฟลุกท่วม พลังโจมตี 180!',
+    desc: 'ดาบเพลิงหลอมจากแก่นภูเขาไฟ ฟันคลื่นเพลิงลาวา พลังโจมตี 68',
     cost: 550,
     materials: { cinder_shard: 5, dragon_tooth: 1, ruby_gem: 2 }
   },
   luminarch_crystal_blade: {
     id: 'luminarch_crystal_blade',
     name: 'ดาบเลเซอร์ผลึกปริซึมลูมินาร์ค (Prismatic Laser Blade)',
-    desc: 'สุดยอดดาบคริสตัลโบราณ ปลดปล่อยเลเซอร์ปริซึมทะลวง พลังโจมตี 195!',
+    desc: 'สุดยอดดาบคริสตัลโบราณ ปลดปล่อยเลเซอร์ปริซึมทะลวง พลังโจมตี 60',
     cost: 550,
     materials: { luminarch_crystal_heart: 1, diamond_crystal: 2, gold_ore: 4 }
   },
   hydra_venom_bow: {
     id: 'hydra_venom_bow',
     name: 'คันธนูสามศรพิษพญาไฮดรา (Hydra Venom Bow)',
-    desc: 'คันธนูบึงพิษ แผลงศรกรดพิษกระจาย 3 ดอกพร้อมกัน พลังโจมตี 110x3!',
+    desc: 'คันธนูบึงพิษ แผลงศรกรดพิษกระจาย 3 ดอกพร้อมกัน พลังโจมตี 24x3',
     cost: 600,
     materials: { hydra_venom_gland: 1, hydra_scale: 4, swamp_herb: 3 }
   },
   volcano_magma_axe: {
     id: 'volcano_magma_axe',
     name: 'ขวานเพลิงโลกันตร์ลาวาอิกนิสทรอน (Molten Magma Axe)',
-    desc: 'ขวานหินลาวาคู่ ปลดปล่อยระเบิดเพลิงล้างผลาญ พลังโจมตี 230!',
+    desc: 'ขวานหินลาวาคู่ ปลดปล่อยระเบิดเพลิงล้างผลาญ พลังโจมตี 82',
     cost: 750,
     materials: { magma_dragon_horn: 1, flame_heart: 2, ruby_gem: 4 }
   },
   glacial_titan_hammer: {
     id: 'glacial_titan_hammer',
     name: 'ค้อนเหมันต์ไททันน้ำแข็งฟรอสต์แฟงก์ (Glacial Titan Hammer)',
-    desc: 'ค้อนน้ำแข็งพันปี ทุบคลื่นหอกน้ำแข็งแช่แข็ง พลังโจมตี 240!',
+    desc: 'ค้อนน้ำแข็งพันปี ทุบคลื่นหอกน้ำแข็งแช่แข็ง พลังโจมตี 88',
     cost: 800,
     materials: { glacial_titan_core: 1, frost_crystal: 4, diamond_crystal: 2 }
   },
   malakor_soul_scythe: {
     id: 'malakor_soul_scythe',
     name: 'เคียวมรณะสูบวิญญาณลอร์ดมาลาคอร์ (Malakor Soul Scythe)',
-    desc: 'เคียวแห่งความตาย ปล่อยคลื่นกะโหลกมืด และดูดเลือด 8% คืนแก่ผู้ใช้ พลังโจมตี 260!',
+    desc: 'เคียวแห่งความตาย ปล่อยคลื่นกะโหลกมืด และดูดเลือด 8% คืนแก่ผู้ใช้ พลังโจมตี 92',
     cost: 1000,
     materials: { death_lord_soul: 1, cursed_relic: 3, crown_of_despair: 1 }
   },
   sylvan_bow: {
     id: 'sylvan_bow',
     name: 'คันธนูใบไม้พฤกษาพันปี (Ancient Sylvan Bow)',
-    desc: 'คันธนูแห่งเทพพฤกษา แผลงศรใบไม้คมกริบ 4 ดอกรูปพัด ทะลวงศัตรู พลังโจมตี 160x4!',
+    desc: 'คันธนูแห่งเทพพฤกษา แผลงศรใบไม้คมกริบ 4 ดอกรูปพัด ทะลวงศัตรู พลังโจมตี 28x4',
     cost: 1150,
     materials: { ancient_tree_heart: 1, cursed_wood: 4, star_fruit: 3 }
   },
   tempest_blade: {
     id: 'tempest_blade',
     name: 'ดาบอัสนีบาตคลื่นสายฟ้า (Tempest Lightning Blade)',
-    desc: 'สุดยอดดาบสายฟ้าแห่งจ้าวพายุ ปล่อยลำแสงสายฟ้าผ่าทะลุทะลวง พลังโจมตี 320!',
+    desc: 'สุดยอดดาบสายฟ้าแห่งจ้าวพายุ ปล่อยลำแสงสายฟ้าผ่าทะลุทะลวง พลังโจมตี 105',
     cost: 1400,
     materials: { storm_core: 1, thunder_crystal: 5, gold_ore: 5 }
   },
