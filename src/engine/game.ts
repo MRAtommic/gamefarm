@@ -7033,10 +7033,10 @@ Game.handleTileInteract = function(type, tx, ty) {
             SoundEngine.miningHit();
             this.triggerScreenShake(5.0, 200);
             this.spawnParticles(tx * 32 + 16, ty * 32 + 16, '#c084fc', 30);
-            this.addItemToInventory('star_shard', 2, 'เศษอุกกาบาตดวงดาว');
+            this.addItemToInventory('star_shard', 1, 'เศษอุกกาบาตดวงดาว');
             this.addItemToInventory('star_core', 1, 'แก่นผลึกดวงดาว');
-            this.addItemToInventory('mystery_geode', 2, 'หินผลึกปิดผนึกปริศนา');
-            this.addItemToInventory('gold_ore', 3, 'แร่ทองคำดิบ');
+            this.addItemToInventory('mystery_geode', 1, 'หินผลึกปิดผนึกปริศนา');
+            this.addItemToInventory('gold_ore', 2, 'แร่ทองคำดิบ');
             this.addFloatingText('★ กะเทาะอุกกาบาตสำเร็จ! ได้รับ Star Shard, Star Core & Geodes! ★', this.player.x - 60, this.player.y - 25, '#c084fc');
             this.updateHUD();
         }
@@ -7287,10 +7287,10 @@ Game.handleTileInteract = function(type, tx, ty) {
         SoundEngine.chestOpen();
         this.spawnParticles(this.player.x + 10, this.player.y + 10, '#facc15', 25);
         const fNum = parseInt(type.replace('cave_milestone_chest_f', '')) || 5;
-        const rewardGold = fNum * 150;
+        const rewardGold = fNum * 65;
         this.player.gold += rewardGold;
         this.addItemToInventory('star_core', 1, 'แก่นพลังดวงดาว');
-        this.addItemToInventory('diamond_crystal', 2, 'เพชรผลึกดวงดาว');
+        this.addItemToInventory('diamond_crystal', 1, 'เพชรผลึกดวงดาว');
         this.addFloatingText(` เปิดหีบสมบัติชั้น ${fNum}! +${rewardGold} G และแก่นพลังดวงดาว!`, this.player.x - 35, this.player.y - 20, '#fde047');
         this.unlockCompendiumItem('star_core');
         this.unlockCompendiumItem('diamond_crystal');
@@ -7299,27 +7299,25 @@ Game.handleTileInteract = function(type, tx, ty) {
         SoundEngine.miningHit();
         this.triggerScreenShake(3.5, 120);
         this.spawnParticles(this.player.x + 10, this.player.y + 10, '#facc15', 12);
-        this.spawnDroppedItem('gold_ore', 2, this.player.x, this.player.y - 12);
-        this.spawnDroppedItem('iron_ore', 1, this.player.x, this.player.y - 12);
-        this.addXp(25);
-        this.addFloatingText(' ขุดได้ แร่ทองคำบริสุทธิ์ x2 (+25 XP)', this.player.x - 20, this.player.y - 15, '#fde047');
+        this.spawnDroppedItem('gold_ore', 1, this.player.x, this.player.y - 12);
+        this.addXp(18);
+        this.addFloatingText(' ขุดได้ แร่ทองคำดิบ x1 (+18 XP)', this.player.x - 20, this.player.y - 15, '#fde047');
         this.updateHUD();
     } else if (type === 'mana_node') {
         SoundEngine.miningHit();
         this.triggerScreenShake(3.5, 120);
         this.spawnParticles(this.player.x + 10, this.player.y + 10, '#38bdf8', 14);
-        this.spawnDroppedItem('mana_gem', 2, this.player.x, this.player.y - 12);
-        this.addXp(25);
-        this.addFloatingText(' ขุดได้ ผลึกมานาสีคราม x2 (+25 XP)', this.player.x - 20, this.player.y - 15, '#38bdf8');
+        this.spawnDroppedItem('mana_gem', 1, this.player.x, this.player.y - 12);
+        this.addXp(18);
+        this.addFloatingText(' ขุดได้ ผลึกมานาสีคราม x1 (+18 XP)', this.player.x - 20, this.player.y - 15, '#38bdf8');
         this.updateHUD();
     } else if (type === 'diamond_node') {
         SoundEngine.miningHit();
         this.triggerScreenShake(4.5, 150);
         this.spawnParticles(this.player.x + 10, this.player.y + 10, '#c084fc', 16);
         this.spawnDroppedItem('diamond_crystal', 1, this.player.x, this.player.y - 12);
-        this.spawnDroppedItem('gold_ore', 1, this.player.x, this.player.y - 12);
-        this.addXp(40);
-        this.addFloatingText(' ขุดพบ เพชรผลึกดวงดาว ล้ำค่า! (+40 XP)', this.player.x - 25, this.player.y - 15, '#e879f9');
+        this.addXp(30);
+        this.addFloatingText(' ขุดพบ เพชรผลึกดวงดาว ล้ำค่า! (+30 XP)', this.player.x - 25, this.player.y - 15, '#e879f9');
         this.updateHUD();
     } else if (type.startsWith('cave_chest_')) {
         if (this.chests[type]) {
@@ -7330,13 +7328,15 @@ Game.handleTileInteract = function(type, tx, ty) {
         SoundEngine.chestOpen();
         this.spawnParticles(this.player.x + 10, this.player.y + 10, '#38bdf8', 25);
         this.spawnParticles(this.player.x + 10, this.player.y + 10, '#facc15', 20);
-        const goldBonus = 400;
+        const goldBonus = 150;
         this.player.gold += goldBonus;
-        this.addItemToInventory('diamond_crystal', 1, 'เพชรผลึกดวงดาว');
-        this.addItemToInventory('gold_ore', 3, 'แร่ทองคำบริสุทธิ์');
-        this.addItemToInventory('mana_gem', 2, 'ผลึกมานาสีคราม');
-        this.addXp(80);
-        this.addFloatingText(' เปิดหีบสมบัติถ้ำผลึก! +' + goldBonus + ' G และเพชรล้ำค่า (+80 XP)', this.player.x - 35, this.player.y - 20, '#67e8f9');
+        if (Math.random() < 0.35) {
+            this.addItemToInventory('diamond_crystal', 1, 'เพชรผลึกดวงดาว');
+        }
+        this.addItemToInventory('gold_ore', 1, 'แร่ทองคำบริสุทธิ์');
+        this.addItemToInventory('mana_gem', 1, 'ผลึกมานาสีคราม');
+        this.addXp(45);
+        this.addFloatingText(' เปิดหีบสมบัติถ้ำผลึก! +' + goldBonus + ' G (+45 XP)', this.player.x - 35, this.player.y - 20, '#67e8f9');
         this.updateHUD();
     } else if (type.startsWith('dungeon_chest_') || (type.startsWith('chest_') && this.isCombatScene())) {
         this.openDungeonChest(type, tx, ty);
@@ -7569,11 +7569,24 @@ Game.updateTime = function(dt) {
                     this.time.day = 1;
                     this.time.seasonIndex = (this.time.seasonIndex + 1) % SEASONS.length;
                 }
-                // Daily Boss Respawn System (มหาบอสฟื้นคืนชีพทุก 1 วันในเกม)
+                // Boss Respawn Cooldown System (มหาบอสฟื้นคืนชีพหลังถูกปราบ 3 วัน)
                 if (this.player.defeatedBosses && Object.keys(this.player.defeatedBosses).length > 0) {
-                    this.player.defeatedBosses = {};
-                    this.player.bossDefeatDay = {};
-                    this.addFloatingText('★ มหาบอสทุกตัวฟื้นคืนชีพในเช้าวันใหม่แล้ว!', this.player.x, this.player.y - 45, '#ef4444');
+                    const totalDay = ((this.time.seasonIndex || 0) * DAYS_PER_SEASON) + (this.time.day || 1);
+                    const cycleDays = SEASONS.length * DAYS_PER_SEASON;
+                    let respawnedCount = 0;
+                    for (const bid of Object.keys(this.player.defeatedBosses)) {
+                        if (!this.player.defeatedBosses[bid]) continue;
+                        const defDay = this.player.bossDefeatDay?.[bid];
+                        const elapsed = defDay === undefined ? 3 : ((totalDay - defDay + cycleDays) % cycleDays);
+                        if (elapsed >= 3) {
+                            delete this.player.defeatedBosses[bid];
+                            if (this.player.bossDefeatDay) delete this.player.bossDefeatDay[bid];
+                            respawnedCount++;
+                        }
+                    }
+                    if (respawnedCount > 0) {
+                        this.addFloatingText(`★ มหาบอส ${respawnedCount} ตนฟื้นคืนชีพแล้ว!`, this.player.x, this.player.y - 45, '#ef4444');
+                    }
                 }
                 this.checkFestivalBanner();
                 SoundEngine.birdChirp();
@@ -7602,11 +7615,24 @@ Game.sleepAndPassDay = function(forceWarpToBed = false) {
         this.time.seasonIndex = (this.time.seasonIndex + 1) % SEASONS.length;
     }
 
-    // Daily Boss Respawn System (มหาบอสฟื้นคืนชีพทุก 1 วันในเกม)
+    // Boss Respawn Cooldown System (มหาบอสฟื้นคืนชีพหลังถูกปราบ 3 วัน)
     if (this.player.defeatedBosses && Object.keys(this.player.defeatedBosses).length > 0) {
-        this.player.defeatedBosses = {};
-        this.player.bossDefeatDay = {};
-        this.addFloatingText('★ มหาบอสทุกตัวฟื้นคืนชีพในเช้าวันใหม่แล้ว!', this.player.x, this.player.y - 45, '#ef4444');
+        const totalDay = ((this.time.seasonIndex || 0) * DAYS_PER_SEASON) + (this.time.day || 1);
+        const cycleDays = SEASONS.length * DAYS_PER_SEASON;
+        let respawnedCount = 0;
+        for (const bid of Object.keys(this.player.defeatedBosses)) {
+            if (!this.player.defeatedBosses[bid]) continue;
+            const defDay = this.player.bossDefeatDay?.[bid];
+            const elapsed = defDay === undefined ? 3 : ((totalDay - defDay + cycleDays) % cycleDays);
+            if (elapsed >= 3) {
+                delete this.player.defeatedBosses[bid];
+                if (this.player.bossDefeatDay) delete this.player.bossDefeatDay[bid];
+                respawnedCount++;
+            }
+        }
+        if (respawnedCount > 0) {
+            this.addFloatingText(`★ มหาบอส ${respawnedCount} ตนฟื้นคืนชีพแล้ว!`, this.player.x, this.player.y - 45, '#ef4444');
+        }
     }
 
     //  Season-specific Weather System
@@ -7983,11 +8009,11 @@ Game.openVoidShopModal = function() {
     const list = document.getElementById('voidShopItemsList');
     if (list) {
         const items = [
-            { id: 'phoenix_feather', price: 1500 },
-            { id: 'void_elixir', price: 350 },
-            { id: 'mystery_geode', price: 120 },
-            { id: 'cosmic_fruit_seed', price: 400 },
-            { id: 'diamond_crystal', price: 400 }
+            { id: 'phoenix_feather', price: 2800 },
+            { id: 'void_elixir', price: 550 },
+            { id: 'mystery_geode', price: 350 },
+            { id: 'cosmic_fruit_seed', price: 650 },
+            { id: 'diamond_crystal', price: 750 }
         ];
 
         let html = '';
@@ -8040,22 +8066,29 @@ Game.crackMysteryGeode = function() {
     this.spawnParticles(this.player.x + 16, this.player.y + 16, '#38bdf8', 25);
 
     const r = Math.random();
-    if (r < 0.15) {
+    if (r < 0.02) {
         this.addItemToInventory('ancient_relic', 1, 'โบราณวัตถุแห่งอารยธรรมสาบสูญ');
         this.addFloatingText('★ แจ็กพอต! พบโบราณวัตถุสาบสูญ! ★', this.player.x - 30, this.player.y - 25, '#fde047');
         SoundEngine.questComplete();
-    } else if (r < 0.35) {
-        this.addItemToInventory('diamond_crystal', 1, 'เพชรคริสตัลโบราณ');
-        this.addFloatingText('★ กะเทาะพบเพชรคริสตัลโบราณ! ★', this.player.x - 25, this.player.y - 25, '#38bdf8');
-    } else if (r < 0.60) {
+    } else if (r < 0.08) {
         this.addItemToInventory('star_shard', 1, 'เศษอุกกาบาตดวงดาว');
         this.addFloatingText('★ กะเทาะพบเศษอุกกาบาตดวงดาว! ★', this.player.x - 25, this.player.y - 25, '#c084fc');
-    } else if (r < 0.80) {
-        this.addItemToInventory('ruby_gem', 2, 'อัญมณีทับทิมเวทมนตร์');
-        this.addFloatingText('★ กะเทาะพบทับทิมเวทมนตร์ x2! ★', this.player.x - 25, this.player.y - 25, '#ef4444');
+    } else if (r < 0.18) {
+        this.addItemToInventory('diamond_crystal', 1, 'เพชรคริสตัลโบราณ');
+        this.addFloatingText('★ กะเทาะพบเพชรคริสตัลโบราณ! ★', this.player.x - 25, this.player.y - 25, '#38bdf8');
+    } else if (r < 0.35) {
+        this.addItemToInventory('ruby_gem', 1, 'อัญมณีทับทิมเวทมนตร์');
+        this.addFloatingText('★ กะเทาะพบทับทิมเวทมนตร์ x1 ★', this.player.x - 25, this.player.y - 25, '#ef4444');
+    } else if (r < 0.60) {
+        this.addItemToInventory('gold_ore', 1, 'แร่ทองคำดิบ');
+        this.addFloatingText('กะเทาะได้แร่ทองคำดิบ x1', this.player.x - 25, this.player.y - 25, '#facc15');
+    } else if (r < 0.85) {
+        this.addItemToInventory('iron_ore', 2, 'แร่เหล็กดิบ');
+        this.addFloatingText('กะเทาะได้แร่เหล็กดิบ x2', this.player.x - 25, this.player.y - 25, '#cbd5e1');
     } else {
-        this.addItemToInventory('gold_ore', 3, 'แร่ทองคำดิบ');
-        this.addFloatingText('★ กะเทาะพบแร่ทองคำดิบ x3! ★', this.player.x - 25, this.player.y - 25, '#facc15');
+        this.addItemToInventory('stone', 4, 'ก้อนหินเนื้อแน่น');
+        this.addItemToInventory('copper_ore', 1, 'แร่ทองแดงบริสุทธิ์');
+        this.addFloatingText('กะเทาะได้หินและแร่ทองแดง', this.player.x - 25, this.player.y - 25, '#94a3b8');
     }
     this.updateHUD();
 };
@@ -8165,17 +8198,17 @@ Game.registerComboHit = function(isCrit: boolean = false) {
 
 Game.getComboDamageMultiplier = function(): number {
     if (!this.combo || this.combo.count < 5 || this.combo.timer <= 0) return 1.0;
-    if (this.combo.count >= 30) return 2.0;
-    if (this.combo.count >= 20) return 1.5;
-    if (this.combo.count >= 10) return 1.25;
-    return 1.1;
+    if (this.combo.count >= 30) return 1.30;
+    if (this.combo.count >= 20) return 1.20;
+    if (this.combo.count >= 10) return 1.12;
+    return 1.05;
 };
 
 Game.getComboGoldMultiplier = function(): number {
     if (!this.combo || this.combo.count < 10 || this.combo.timer <= 0) return 1.0;
-    if (this.combo.count >= 30) return 2.0;
-    if (this.combo.count >= 20) return 1.5;
-    return 1.25;
+    if (this.combo.count >= 30) return 1.35;
+    if (this.combo.count >= 20) return 1.20;
+    return 1.10;
 };
 
 Game.updateCombatCombo = function(dt: number) {
@@ -13004,13 +13037,13 @@ Game.playerMeleeAttack = function(targetWorldX, targetWorldY, weapon) {
         comboCooldownMult = 0.88;
         SoundEngine.swordSlash(1);
     } else if (combo === 2) {
-        comboMult = 1.25;
-        comboCooldownMult = 0.92;
+        comboMult = 1.15;
+        comboCooldownMult = 0.94;
         SoundEngine.swordSlash(2);
         this.addFloatingText('[2x COMBO!]', originX, originY - 24, '#38bdf8');
     } else if (combo === 3) {
-        comboMult = 1.75;
-        comboCooldownMult = 1.15;
+        comboMult = 1.40;
+        comboCooldownMult = 1.18;
         forceCrit = true;
         this.triggerScreenShake(5.0, 150);
         this.spawnParticles(originX, originY, '#facc15', 20);
@@ -13046,14 +13079,15 @@ Game.playerMeleeAttack = function(targetWorldX, targetWorldY, weapon) {
     };
 
     const hasWarrior = (typeof this.hasRing === 'function' && this.hasRing('ring_warrior'));
-    const forgeEnchant = (this.player.volcanoForgeEnchant || 0) * 30;
-    const forgeCrit = (this.player.volcanoForgeEnchant || 0) * 0.15;
-    const weaponCritBonus = (weapon.id === 'cutlass_saber' || weapon.id === 'volcano_flame_sword') ? 0.35 : 0;
-    const baseCrit = (this.player.skillMastery?.critical_edge ? 0.38 : 0.22) + forgeCrit + weaponCritBonus;
+    const enchantLv = Math.min(3, this.player.volcanoForgeEnchant || 0);
+    const forgeEnchant = enchantLv * 12;
+    const forgeCrit = enchantLv * 0.05;
+    const weaponCritBonus = (weapon.id === 'cutlass_saber' || weapon.id === 'volcano_flame_sword') ? 0.20 : 0;
+    const baseCrit = (this.player.skillMastery?.critical_edge ? 0.28 : 0.14) + forgeCrit + weaponCritBonus;
     const buffCrit = this.player.buffs?.critBonus || 0;
     const critRate = (hasWarrior ? baseCrit + 0.18 : baseCrit) + buffCrit;
-    const baseMult = this.player.skillMastery?.critical_edge ? 2.5 : 1.8;
-    const critMult = hasWarrior ? baseMult + 0.4 : baseMult;
+    const baseMult = this.player.skillMastery?.critical_edge ? 2.0 : 1.5;
+    const critMult = hasWarrior ? baseMult + 0.25 : baseMult;
     const isCrit = forceCrit || (Math.random() < critRate);
     const bonusDmg = (this.player.buffs?.damage || 0) + forgeEnchant;
     const isWellFed = (this.player.hunger !== undefined ? this.player.hunger : 100) >= 75 &&
@@ -13177,8 +13211,8 @@ Game.playerMeleeAttack = function(targetWorldX, targetWorldY, weapon) {
                                 this.addFloatingText('ดรอป: ' + dName, m.x, m.y - 12, '#facc15');
                             }
                         });
-                        // 12% chance to drop Mystery Geode from monsters
-                        if (Math.random() < 0.12) {
+                        // 5% chance to drop Mystery Geode from monsters
+                        if (Math.random() < 0.05) {
                             this.spawnDroppedItem('mystery_geode', 1, m.x + 8, m.y + 8);
                             this.addFloatingText('★ ดรอป: หินผลึกปิดผนึกปริศนา! ★', m.x - 20, m.y - 25, '#38bdf8');
                         }
@@ -13270,8 +13304,8 @@ Game.playerMeleeAttack = function(targetWorldX, targetWorldY, weapon) {
         }
     }
 
-    // Boss Legendary Weapons & Excalibur Projectiles (Spawns ahead of melee arc to prevent double-dipping)
-    const projDmg = weapon.damage + bonusDmg;
+    // Boss Legendary Weapons & Excalibur Projectiles (Wave deals 55% of base weapon dmg to prevent 200% point-blank double-dip)
+    const projDmg = Math.max(10, Math.round((weapon.damage + bonusDmg) * 0.55));
     const beamOriginX = originX + Math.cos(angle) * 36;
     const beamOriginY = originY + Math.sin(angle) * 36;
 
@@ -13403,20 +13437,21 @@ Game.playerShootAt = function(targetWorldX, targetWorldY, weapon = null) {
         this.player.direction = dy > 0 ? 'down' : 'up';
     }
 
-    const forgeEnchant = (this.player.volcanoForgeEnchant || 0) * 30;
-    const forgeCrit = (this.player.volcanoForgeEnchant || 0) * 0.15;
+    const enchantLv = Math.min(3, this.player.volcanoForgeEnchant || 0);
+    const forgeEnchant = enchantLv * 12;
+    const forgeCrit = enchantLv * 0.05;
     const bonusDmg = (this.player.buffs?.damage || 0) + forgeEnchant;
     const isRifle = (weapon.id === 'rifle' || weapon.id === 'dragon_rifle');
     SoundEngine.shoot(isRifle);
 
     // Ranged weapons share RPG crit, mastery, enchant, well-fed, and combo scaling!
     const hasWarriorRing = this.hasRing('ring_warrior');
-    const baseCrit = (this.player.skillMastery?.critical_edge ? 0.34 : 0.16) + forgeCrit;
+    const baseCrit = (this.player.skillMastery?.critical_edge ? 0.26 : 0.12) + forgeCrit;
     const buffCrit = this.player.buffs?.critBonus || 0;
     const critChance = (hasWarriorRing ? baseCrit + 0.18 : baseCrit) + buffCrit;
     const isCrit = Math.random() < critChance;
-    const baseMult = this.player.skillMastery?.critical_edge ? 2.5 : 1.8;
-    const critMult = isCrit ? (hasWarriorRing ? baseMult + 0.4 : baseMult) : 1.0;
+    const baseMult = this.player.skillMastery?.critical_edge ? 2.0 : 1.5;
+    const critMult = isCrit ? (hasWarriorRing ? baseMult + 0.25 : baseMult) : 1.0;
     const isWellFed = (this.player.hunger !== undefined ? this.player.hunger : 100) >= 75 &&
                       (this.player.thirst !== undefined ? this.player.thirst : 100) >= 75;
     const wellFedBonus = isWellFed ? 1.15 : 1.0;
@@ -16786,35 +16821,35 @@ Game.defeatBoss = function() {
     if (!this.player.bossDefeatDay) this.player.bossDefeatDay = {};
 
     this.player.defeatedBosses[this.boss.id] = true;
-    this.player.bossDefeatDay[this.boss.id] = this.time.day;
+    this.player.bossDefeatDay[this.boss.id] = ((this.time.seasonIndex || 0) * DAYS_PER_SEASON) + (this.time.day || 1);
 
     const registry = (window as any).BOSS_REGISTRY || {};
 
     const bData = registry[this.boss.id] || BOSS_KATHUROS;
-    const masterMult = this.player.masterMode ? 2 : 1;
-    const gReward = (bData.gold || 1500) * masterMult;
-    const xReward = (bData.xp || 800) * masterMult;
+    const masterMult = this.player.masterMode ? 1.5 : 1;
+    const gReward = Math.round((bData.gold || 600) * masterMult);
+    const xReward = Math.round((bData.xp || 800) * masterMult);
 
     this.player.gold += gReward;
     this.addXp(xReward);
     if (this.player.masterMode) {
-        this.spawnDroppedItem('diamond_crystal', 2, this.boss.x + 16, this.boss.y + 44);
-        this.spawnDroppedItem('ruby_gem', 2, this.boss.x + 48, this.boss.y + 44);
+        this.spawnDroppedItem('diamond_crystal', 1, this.boss.x + 16, this.boss.y + 44);
+        this.spawnDroppedItem('ruby_gem', 1, this.boss.x + 48, this.boss.y + 44);
     }
 
     if (this.boss.id === 'boss_luminarch') {
         this.spawnDroppedItem('luminarch_crystal_heart', 1, this.boss.x + 32, this.boss.y + 32);
         this.spawnDroppedItem('sacred_shard_sun', 1, this.boss.x + 32, this.boss.y + 16);
-        this.spawnDroppedItem('diamond_crystal', 2, this.boss.x + 20, this.boss.y + 32);
-        this.spawnDroppedItem('gold_ore', 5, this.boss.x + 44, this.boss.y + 32);
+        this.spawnDroppedItem('diamond_crystal', 1, this.boss.x + 20, this.boss.y + 32);
+        this.spawnDroppedItem('gold_ore', 3, this.boss.x + 44, this.boss.y + 32);
         this.player.questProgress.luminarchDefeated = true;
         if (!this.player.sacredShards) this.player.sacredShards = {};
         this.player.sacredShards['sacred_shard_sun'] = true;
     } else if (this.boss.id === 'boss_hydrakis') {
         this.spawnDroppedItem('hydra_venom_gland', 1, this.boss.x + 32, this.boss.y + 32);
         this.spawnDroppedItem('sacred_shard_water', 1, this.boss.x + 32, this.boss.y + 16);
-        this.spawnDroppedItem('hydra_scale', 4, this.boss.x + 20, this.boss.y + 32);
-        this.spawnDroppedItem('swamp_herb', 5, this.boss.x + 44, this.boss.y + 32);
+        this.spawnDroppedItem('hydra_scale', 3, this.boss.x + 20, this.boss.y + 32);
+        this.spawnDroppedItem('swamp_herb', 3, this.boss.x + 44, this.boss.y + 32);
         this.player.questProgress.hydrakisDefeated = true;
         if (!this.player.sacredShards) this.player.sacredShards = {};
         this.player.sacredShards['sacred_shard_water'] = true;
@@ -16822,22 +16857,22 @@ Game.defeatBoss = function() {
         this.spawnDroppedItem('magma_dragon_horn', 1, this.boss.x + 32, this.boss.y + 32);
         this.spawnDroppedItem('sacred_shard_fire', 1, this.boss.x + 32, this.boss.y + 16);
         this.spawnDroppedItem('flame_heart', 2, this.boss.x + 20, this.boss.y + 32);
-        this.spawnDroppedItem('ruby_gem', 5, this.boss.x + 44, this.boss.y + 32);
+        this.spawnDroppedItem('ruby_gem', 3, this.boss.x + 44, this.boss.y + 32);
         this.player.questProgress.ignistronDefeated = true;
         if (!this.player.sacredShards) this.player.sacredShards = {};
         this.player.sacredShards['sacred_shard_fire'] = true;
     } else if (this.boss.id === 'boss_frostfang') {
         this.spawnDroppedItem('glacial_titan_core', 1, this.boss.x + 32, this.boss.y + 32);
         this.spawnDroppedItem('sacred_shard_frost', 1, this.boss.x + 32, this.boss.y + 16);
-        this.spawnDroppedItem('frost_crystal', 4, this.boss.x + 20, this.boss.y + 32);
-        this.spawnDroppedItem('diamond_crystal', 2, this.boss.x + 44, this.boss.y + 32);
+        this.spawnDroppedItem('frost_crystal', 3, this.boss.x + 20, this.boss.y + 32);
+        this.spawnDroppedItem('diamond_crystal', 1, this.boss.x + 44, this.boss.y + 32);
         this.player.questProgress.frostfangDefeated = true;
         if (!this.player.sacredShards) this.player.sacredShards = {};
         this.player.sacredShards['sacred_shard_frost'] = true;
     } else if (this.boss.id === 'boss_malakor') {
         this.spawnDroppedItem('death_lord_soul', 1, this.boss.x + 32, this.boss.y + 32);
         this.spawnDroppedItem('sacred_shard_shadow', 1, this.boss.x + 32, this.boss.y + 16);
-        this.spawnDroppedItem('cursed_relic', 3, this.boss.x + 20, this.boss.y + 32);
+        this.spawnDroppedItem('cursed_relic', 2, this.boss.x + 20, this.boss.y + 32);
         this.spawnDroppedItem('crown_of_despair', 1, this.boss.x + 44, this.boss.y + 32);
         this.player.questProgress.malakorDefeated = true;
         if (!this.player.sacredShards) this.player.sacredShards = {};
@@ -16846,8 +16881,8 @@ Game.defeatBoss = function() {
     } else if (this.boss.id === 'boss_sylvanus') {
         this.spawnDroppedItem('ancient_tree_heart', 1, this.boss.x + 32, this.boss.y + 32);
         this.spawnDroppedItem('sacred_shard_nature', 1, this.boss.x + 32, this.boss.y + 16);
-        this.spawnDroppedItem('star_fruit', 4, this.boss.x + 20, this.boss.y + 32);
-        this.spawnDroppedItem('wood', 12, this.boss.x + 44, this.boss.y + 32);
+        this.spawnDroppedItem('star_fruit', 2, this.boss.x + 20, this.boss.y + 32);
+        this.spawnDroppedItem('wood', 8, this.boss.x + 44, this.boss.y + 32);
         this.player.questProgress.sylvanusDefeated = true;
         if (!this.player.sacredShards) this.player.sacredShards = {};
         this.player.sacredShards['sacred_shard_nature'] = true;
@@ -16855,18 +16890,18 @@ Game.defeatBoss = function() {
     } else if (this.boss.id === 'boss_astreon') {
         this.spawnDroppedItem('storm_core', 1, this.boss.x + 32, this.boss.y + 32);
         this.spawnDroppedItem('sacred_shard_thunder', 1, this.boss.x + 32, this.boss.y + 16);
-        this.spawnDroppedItem('thunder_crystal', 5, this.boss.x + 20, this.boss.y + 32);
-        this.spawnDroppedItem('gold_ore', 6, this.boss.x + 44, this.boss.y + 32);
+        this.spawnDroppedItem('thunder_crystal', 3, this.boss.x + 20, this.boss.y + 32);
+        this.spawnDroppedItem('gold_ore', 4, this.boss.x + 44, this.boss.y + 32);
         this.player.questProgress.astreonDefeated = true;
         if (!this.player.sacredShards) this.player.sacredShards = {};
         this.player.sacredShards['sacred_shard_thunder'] = true;
         this.addFloatingText('★ สยบจ้าวแห่งพายุสายฟ้า ออสทริออน! ได้รับศิลาสายฟ้าบรรพกาล!', this.player.x - 40, this.player.y - 50, '#38bdf8');
     } else if (this.boss.id === 'boss_karzarak') {
-        this.spawnDroppedItem('magma_wyrm_scale', 3, this.boss.x + 32, this.boss.y + 32);
+        this.spawnDroppedItem('magma_wyrm_scale', 2, this.boss.x + 32, this.boss.y + 32);
         this.spawnDroppedItem('volcano_flame_sword', 1, this.boss.x + 32, this.boss.y + 16);
         this.spawnDroppedItem('ring_of_fire_walker', 1, this.boss.x + 16, this.boss.y + 32);
-        this.spawnDroppedItem('cinder_shard', 20, this.boss.x + 48, this.boss.y + 32);
-        this.spawnDroppedItem('pirate_doubloon', 15, this.boss.x + 32, this.boss.y + 48);
+        this.spawnDroppedItem('cinder_shard', 8, this.boss.x + 48, this.boss.y + 32);
+        this.spawnDroppedItem('pirate_doubloon', 6, this.boss.x + 32, this.boss.y + 48);
         if (!this.player.questProgress) this.player.questProgress = {};
         this.player.questProgress.karzarakDefeated = true;
         this.addFloatingText('[พิชิตมังกรลาวายักษ์ คาร์ซาร็อค สำเร็จ!] แท่นหลอมภูเขาไฟโบราณตื่นขึ้นแล้ว!', this.player.x - 50, this.player.y - 50, '#facc15');
@@ -16889,7 +16924,7 @@ Game.defeatBoss = function() {
         this.spawnDroppedItem('demon_heart', 1, this.boss.x + 32, this.boss.y + 32);
         this.spawnDroppedItem('sacred_shard_earth', 1, this.boss.x + 32, this.boss.y + 16);
         this.spawnDroppedItem('crown_of_despair', 1, this.boss.x + 20, this.boss.y + 32);
-        this.spawnDroppedItem('ruby_gem', 3, this.boss.x + 44, this.boss.y + 32);
+        this.spawnDroppedItem('ruby_gem', 2, this.boss.x + 44, this.boss.y + 32);
         this.player.questProgress.kathurosDefeated = true;
         this.player.questProgress.bossDefeated = true;
         if (!this.player.sacredShards) this.player.sacredShards = {};
@@ -21537,11 +21572,11 @@ Game.openSpireShopModal = function() {
     if (floorEl) floorEl.textContent = 'ชั้นปัจจุบัน: ' + (this.spireCurrentFloor || 1);
 
     const items = [
-        { id: 'spire_blade', name: 'ดาบสุริยันผลึกหอคอย (พลังโจมตี 260)', desc: 'ดาบเทวตำนาน ฟันคลื่นสุริยันทะลวงศัตรูอย่างรุนแรง', cost: 15 },
-        { id: 'spire_bow', name: 'ธนูประกายดาราผลึก (พลังโจมตี 130x3)', desc: 'คันธนูมิติ แผลงศรแสงดารา 3 ดอกพร้อมกัน', cost: 15 },
-        { id: 'spire_staff', name: 'คทาแก่นหอคอยมิติ (พลังโจมตี 300)', desc: 'คทามหาเวท ปลดปล่อยลูกพลังเนบิวลาระเบิดกว้าง', cost: 20 },
-        { id: 'diamond_crystal', name: 'เพชรผลึกประกายรุ้ง x3', desc: 'อัญมณีล้ำค่าใช้ตีอาวุธระดับสูงและขายได้ราคาสูง', cost: 5 },
-        { id: 'antidote_serum', name: 'เซรุ่มต้านสปอร์พิษ x5', desc: 'ฟื้นฟูพลังชีวิตและรักษาพิษทุกชนิด', cost: 3 }
+        { id: 'spire_blade', name: 'ดาบสุริยันผลึกหอคอย (พลังโจมตี 66)', desc: 'ดาบเทวตำนาน ฟันคลื่นสุริยันทะลวงศัตรูอย่างรุนแรง', cost: 35 },
+        { id: 'spire_bow', name: 'ธนูประกายดาราผลึก (พลังโจมตี 24x3)', desc: 'คันธนูมิติ แผลงศรแสงดารา 3 ดอกพร้อมกัน', cost: 35 },
+        { id: 'spire_staff', name: 'คทาแก่นหอคอยมิติ (พลังโจมตี 76)', desc: 'คทามหาเวท ปลดปล่อยลูกพลังเนบิวลาระเบิดกว้าง', cost: 45 },
+        { id: 'diamond_crystal', name: 'เพชรผลึกประกายรุ้ง', desc: 'อัญมณีล้ำค่าใช้ตีอาวุธระดับสูงและขายได้ราคาสูง', cost: 8 },
+        { id: 'antidote_serum', name: 'เซรุ่มต้านสปอร์พิษ', desc: 'ฟื้นฟูพลังชีวิตและรักษาพิษทุกชนิด', cost: 4 }
     ];
 
     listEl.innerHTML = '';
@@ -21823,10 +21858,10 @@ export const CLASS_SKILLS: Record<string, ClassConfig> = {
         tag: '[ดาบ]',
         desc: 'เน้นการฟันระยะประชิด คลื่นสะบั้นคมดาบรอบทิศ และเกราะเหล็กสะท้อนดาเมจ',
         skills: [
-            { id: 'cyclone_slash', slot: 1, name: 'คลื่นพายุคมดาบ', enName: 'Cyclone Slash', tag: '[ดาบ 1]', baseDmg: 140, dmgPerLv: 35, cd: 3500, energy: 12, desc: 'หมุนตัวฟัน 360 องศา ดูดศัตรูเข้ามาและสะบั้นรอบตัว รัศมี 140px (+สเกลพลังอาวุธ)' },
-            { id: 'flash_thrust', slot: 2, name: 'พุ่งทะลวงพริบตา', enName: 'Flash Thrust', tag: '[ดาบ 2]', baseDmg: 180, dmgPerLv: 45, cd: 4800, energy: 14, desc: 'พุ่งทะลวงไปข้างหน้าตามทิศทางเมาส์ 180px ฟันทะลวงศัตรูเป็นแนวกว้าง (+สเกลพลังอาวุธ)' },
-            { id: 'ironclad_bastion', slot: 3, name: 'ปราการเกราะเหล็ก', enName: 'Ironclad Bastion', tag: '[ดาบ 3]', baseDmg: 0, dmgPerLv: 0, cd: 10000, energy: 16, desc: 'กางบาเรียสีทอง ลดดาเมจที่ได้รับ 75% เป็นเวลา 6 วินาที พร้อมสะท้อนความเสียหาย 50%' },
-            { id: 'judgement_blade', slot: 4, name: 'สุริยันพิฆาตสะบั้นหล้า', enName: 'Judgement Blade', tag: '[ดาบ 4]', baseDmg: 550, dmgPerLv: 120, cd: 15000, energy: 24, isUltimate: true, desc: '[อัลติเมท] ดาบยักษ์สุริยันฟาดถล่มพื้น รัศมี 220px ระเบิดมหาดาเมจพร้อมทำให้บอสเสียหลักสตัน' }
+            { id: 'cyclone_slash', slot: 1, name: 'คลื่นพายุคมดาบ', enName: 'Cyclone Slash', tag: '[ดาบ 1]', baseDmg: 45, dmgPerLv: 15, cd: 4500, energy: 16, desc: 'หมุนตัวฟัน 360 องศา ดูดศัตรูเข้ามาและสะบั้นรอบตัว รัศมี 140px (+สเกลพลังอาวุธ)' },
+            { id: 'flash_thrust', slot: 2, name: 'พุ่งทะลวงพริบตา', enName: 'Flash Thrust', tag: '[ดาบ 2]', baseDmg: 65, dmgPerLv: 20, cd: 6000, energy: 18, desc: 'พุ่งทะลวงไปข้างหน้าตามทิศทางเมาส์ 180px ฟันทะลวงศัตรูเป็นแนวกว้าง (+สเกลพลังอาวุธ)' },
+            { id: 'ironclad_bastion', slot: 3, name: 'ปราการเกราะเหล็ก', enName: 'Ironclad Bastion', tag: '[ดาบ 3]', baseDmg: 0, dmgPerLv: 0, cd: 14000, energy: 22, desc: 'กางบาเรียสีทอง ลดดาเมจที่ได้รับ 55% เป็นเวลา 5 วินาที' },
+            { id: 'judgement_blade', slot: 4, name: 'สุริยันพิฆาตสะบั้นหล้า', enName: 'Judgement Blade', tag: '[ดาบ 4]', baseDmg: 180, dmgPerLv: 45, cd: 20000, energy: 35, isUltimate: true, desc: '[อัลติเมท] ดาบยักษ์สุริยันฟาดถล่มพื้น รัศมี 220px ทำลายเกราะและทำให้บอสเสียหลักสตัน' }
         ]
     },
     mage: {
@@ -21835,10 +21870,10 @@ export const CLASS_SKILLS: Record<string, ClassConfig> = {
         tag: '[เวท]',
         desc: 'เน้นพลังเวทมนตร์ธาตุ ไฟเผาผลาญ น้ำแข็งแช่แข็ง และฝนดาวตกกลืนนภา',
         skills: [
-            { id: 'pyroclast_orb', slot: 1, name: 'บอลเพลิงโลกันตร์', enName: 'Pyroclast Orb', tag: '[เวท 1]', baseDmg: 150, dmgPerLv: 40, cd: 3800, energy: 14, desc: 'ยิงบอลเพลิงขนาดใหญ่พุ่งตรงตามเมาส์ เมื่อกระทบจะระเบิดเป็นทะเลเพลิงรัศมี 110px' },
-            { id: 'glacial_ring', slot: 2, name: 'วงแหวนเหมันต์เยือกแข็ง', enName: 'Glacial Ring', tag: '[เวท 2]', baseDmg: 130, dmgPerLv: 35, cd: 5500, energy: 15, desc: 'ระเบิดไอเย็นรอบตัว รัศมี 160px แช่แข็งและสโลว์ศัตรู 80% นาน 4 วินาที' },
-            { id: 'prism_shield', slot: 3, name: 'ม่านพายุปริซึม', enName: 'Prism Shield', tag: '[เวท 3]', baseDmg: 65, dmgPerLv: 18, cd: 9500, energy: 16, desc: 'สร้างลูกแก้วปริซึม 3 ลูกโคจรรอบตัว คอยยิงเลเซอร์ใส่มอนสเตอร์รอบข้างอัตโนมัติ 10 วินาที' },
-            { id: 'meteor_cataclysm', slot: 4, name: 'ฝนดาวตกกลืนนภา', enName: 'Meteor Cataclysm', tag: '[เวท 4]', baseDmg: 650, dmgPerLv: 140, cd: 16000, energy: 26, isUltimate: true, desc: '[อัลติเมท] อัญเชิญห่าอุกกาบาตยักษ์ 6 ลูกร่วงถล่มจุดเล็งเมาส์ ระเบิดล้างบางทั่วสนามรบ' }
+            { id: 'pyroclast_orb', slot: 1, name: 'บอลเพลิงโลกันตร์', enName: 'Pyroclast Orb', tag: '[เวท 1]', baseDmg: 55, dmgPerLv: 18, cd: 4800, energy: 18, desc: 'ยิงบอลเพลิงขนาดใหญ่พุ่งตรงตามเมาส์ เมื่อกระทบจะระเบิดเป็นทะเลเพลิงรัศมี 110px' },
+            { id: 'glacial_ring', slot: 2, name: 'วงแหวนเหมันต์เยือกแข็ง', enName: 'Glacial Ring', tag: '[เวท 2]', baseDmg: 45, dmgPerLv: 15, cd: 7000, energy: 18, desc: 'ระเบิดไอเย็นรอบตัว รัศมี 160px แช่แข็งและสโลว์ศัตรู นาน 3.5 วินาที' },
+            { id: 'prism_shield', slot: 3, name: 'ม่านพายุปริซึม', enName: 'Prism Shield', tag: '[เวท 3]', baseDmg: 25, dmgPerLv: 8, cd: 12000, energy: 20, desc: 'สร้างลูกแก้วปริซึม 3 ลูกโคจรรอบตัว คอยยิงเลเซอร์ใส่มอนสเตอร์รอบข้างอัตโนมัติ 10 วินาที' },
+            { id: 'meteor_cataclysm', slot: 4, name: 'ฝนดาวตกกลืนนภา', enName: 'Meteor Cataclysm', tag: '[เวท 4]', baseDmg: 160, dmgPerLv: 40, cd: 22000, energy: 38, isUltimate: true, desc: '[อัลติเมท] อัญเชิญห่าอุกกาบาต 6 ลูกร่วงถล่มจุดเล็งเมาส์ ระเบิดต่อเนื่องทั่วสนามรบ' }
         ]
     },
     ranger: {
@@ -21847,10 +21882,10 @@ export const CLASS_SKILLS: Record<string, ClassConfig> = {
         tag: '[พราน]',
         desc: 'เน้นความว่องไว ยิงธนูกระจาย วางกับดักหนามพิษ และศรอัสนีบาตทะลวงเกราะ',
         skills: [
-            { id: 'arrow_barrage', slot: 1, name: 'ฝนธนูเจาะเกราะ', enName: 'Arrow Barrage', tag: '[พราน 1]', baseDmg: 55, dmgPerLv: 15, cd: 3400, energy: 12, desc: 'ยิงห่าธนูเจาะเกราะ 7 ดอกพุ่งตรงตามทิศทางเมาส์ ทะลวงศัตรูทั้งหมดในเส้นทาง' },
-            { id: 'venom_trap', slot: 2, name: 'กับดักลวดหนามพิษ', enName: 'Venom Trap', tag: '[พราน 2]', baseDmg: 160, dmgPerLv: 40, cd: 5200, energy: 14, desc: 'วางกับดักสปอร์พิษบนพื้น รัศมี 90px ตรึงขาศัตรูและทำพิษรุนแรงกัดกร่อนเกราะบอส' },
-            { id: 'shadow_dash', slot: 3, name: 'ก้าวเงาล่องหน', enName: 'Shadow Dash', tag: '[พราน 3]', baseDmg: 0, dmgPerLv: 0, cd: 7000, energy: 10, desc: 'ก้าวเงาล่องหน ไร้เทียมทานสมบูรณ์ (I-Frames 1.8 วิ) พร้อมวิ่งไวขึ้น +60%' },
-            { id: 'dragonpiercer', slot: 4, name: 'ธนูอัสนีพิฆาตมังกร', enName: 'Dragonpiercer', tag: '[พราน 4]', baseDmg: 580, dmgPerLv: 130, cd: 15000, energy: 24, isUltimate: true, desc: '[อัลติเมท] รวมพลังยิงศรสายฟ้ายักษ์เจาะทะลุสิ่งกีดขวาง 800px แนวกว้าง ช็อตสตันศัตรูทั้งหมด' }
+            { id: 'arrow_barrage', slot: 1, name: 'ฝนธนูเจาะเกราะ', enName: 'Arrow Barrage', tag: '[พราน 1]', baseDmg: 45, dmgPerLv: 14, cd: 4500, energy: 16, desc: 'ยิงห่าธนูเจาะเกราะ 7 ดอกพุ่งตรงตามทิศทางเมาส์ ทะลวงศัตรูทั้งหมดในเส้นทาง' },
+            { id: 'venom_trap', slot: 2, name: 'กับดักลวดหนามพิษ', enName: 'Venom Trap', tag: '[พราน 2]', baseDmg: 55, dmgPerLv: 18, cd: 6500, energy: 18, desc: 'วางกับดักสปอร์พิษบนพื้น รัศมี 90px ตรึงขาศัตรูและทำพิษต่อเนื่อง' },
+            { id: 'shadow_dash', slot: 3, name: 'ก้าวเงาล่องหน', enName: 'Shadow Dash', tag: '[พราน 3]', baseDmg: 0, dmgPerLv: 0, cd: 10000, energy: 16, desc: 'ก้าวเงาล่องหนหลบการโจมตี (I-Frames 1.2 วิ) พร้อมวิ่งไวขึ้น +60%' },
+            { id: 'dragonpiercer', slot: 4, name: 'ธนูอัสนีพิฆาตมังกร', enName: 'Dragonpiercer', tag: '[พราน 4]', baseDmg: 190, dmgPerLv: 48, cd: 20000, energy: 35, isUltimate: true, desc: '[อัลติเมท] รวมพลังยิงศรสายฟ้ายักษ์เจาะทะลุ 800px แนวกว้าง ช็อตศัตรูทั้งหมด' }
         ]
     },
     paladin: {
@@ -21859,10 +21894,10 @@ export const CLASS_SKILLS: Record<string, ClassConfig> = {
         tag: '[เทวะ]',
         desc: 'เน้นพลังศักดิ์สิทธิ์แห่งแสง ฟื้นฟูพลังชีวิต ปักเสาคุ้มภัย และทัณฑ์สวรรค์พิพากษา',
         skills: [
-            { id: 'radiant_spear', slot: 1, name: 'หอกแสงพิพากษา', enName: 'Radiant Spear', tag: '[เทวะ 1]', baseDmg: 150, dmgPerLv: 40, cd: 3600, energy: 12, desc: 'ปาหอกแสงศักดิ์สิทธิ์พุ่งตรงตามเมาส์ ระเบิดคลื่นแสงกระแทก 100px เมื่อกระทบ' },
-            { id: 'divine_heal', slot: 2, name: 'อวยพรเทวะชำระล้าง', enName: 'Divine Benediction', tag: '[เทวะ 2]', baseDmg: 0, dmgPerLv: 0, cd: 8000, energy: 18, desc: 'สวดภาวนาฟื้นฟู HP +120 (+35/Lv) ฟื้นพลังงาน +30 SP และลบล้างพิษ/สโลว์ทั้งหมด' },
-            { id: 'sanctuary_pylon', slot: 3, name: 'เสาเพลิงชำระล้าง', enName: 'Sanctuary Pylon', tag: '[เทวะ 3]', baseDmg: 75, dmgPerLv: 20, cd: 9500, energy: 16, desc: 'ปักเสาอาณาเขตศักดิ์สิทธิ์ รัศมี 120px ปล่อยคลื่นแสงเผาผลาญศัตรูทุก 0.5 วินาที' },
-            { id: 'wrath_heavens', slot: 4, name: 'มหาทัณฑ์เทวาสะท้านภพ', enName: 'Wrath of the Heavens', tag: '[เทวะ 4]', baseDmg: 600, dmgPerLv: 135, cd: 16000, energy: 25, isUltimate: true, desc: '[อัลติเมท] เสาแสงสวรรค์ขนาดมหึมารัศมี 220px ฟาดผ่าลงมา ถล่มศัตรูและลดพลังโจมตีบอส 40%' }
+            { id: 'radiant_spear', slot: 1, name: 'หอกแสงพิพากษา', enName: 'Radiant Spear', tag: '[เทวะ 1]', baseDmg: 55, dmgPerLv: 18, cd: 4600, energy: 16, desc: 'ปาหอกแสงศักดิ์สิทธิ์พุ่งตรงตามเมาส์ ระเบิดคลื่นแสงกระแทก 100px เมื่อกระทบ' },
+            { id: 'divine_heal', slot: 2, name: 'อวยพรเทวะชำระล้าง', enName: 'Divine Benediction', tag: '[เทวะ 2]', baseDmg: 0, dmgPerLv: 0, cd: 12000, energy: 24, desc: 'สวดภาวนาฟื้นฟู HP +55 (+18/Lv) ฟื้นพลังงาน +20 SP และลบล้างสโลว์' },
+            { id: 'sanctuary_pylon', slot: 3, name: 'เสาเพลิงชำระล้าง', enName: 'Sanctuary Pylon', tag: '[เทวะ 3]', baseDmg: 28, dmgPerLv: 9, cd: 12000, energy: 20, desc: 'ปักเสาอาณาเขตศักดิ์สิทธิ์ รัศมี 120px ปล่อยคลื่นแสงเผาผลาญศัตรูทุก 0.5 วินาที' },
+            { id: 'wrath_heavens', slot: 4, name: 'มหาทัณฑ์เทวาสะท้านภพ', enName: 'Wrath of the Heavens', tag: '[เทวะ 4]', baseDmg: 195, dmgPerLv: 48, cd: 21000, energy: 36, isUltimate: true, desc: '[อัลติเมท] เสาแสงสวรรค์รัศมี 220px ฟาดผ่าลงมา ถล่มศัตรูและทำให้บอสเสียหลัก' }
         ]
     }
 };
@@ -21966,10 +22001,10 @@ Game.castWarriorSkill = function(skill, lv) {
         this.triggerScreenShake(6.0, 160);
         this.spawnParticles(px, py, '#facc15', 25);
         this.player.buffs = this.player.buffs || {};
-        this.player.buffs.defense = 0.75;
-        setTimeout(() => { if (this.player.buffs) this.player.buffs.defense = 0; }, 6000);
-        this.activeSkillVisuals.push({ type: 'shield_barrier', x: px, y: py, radius: 55, timer: 6000, maxTimer: 6000, targetPlayer: true });
-        this.addFloatingText('★ [ดาบ 3] ปราการเกราะเหล็ก! (ลดดาเมจ 75% นาน 6s)', px - 50, py - 30, '#facc15');
+        this.player.buffs.defense = 0.55;
+        setTimeout(() => { if (this.player.buffs) this.player.buffs.defense = 0; }, 5000);
+        this.activeSkillVisuals.push({ type: 'shield_barrier', x: px, y: py, radius: 55, timer: 5000, maxTimer: 5000, targetPlayer: true });
+        this.addFloatingText('★ [ดาบ 3] ปราการเกราะเหล็ก! (ลดดาเมจ 55% นาน 5s)', px - 50, py - 30, '#facc15');
     } else if (skill.id === 'judgement_blade') {
         this.triggerScreenShake(12.0, 550);
         this.triggerHitstop(160);
@@ -22011,7 +22046,7 @@ Game.castMageSkill = function(skill, lv) {
         this.spawnParticles(px, py, '#e0f2fe', 22);
         this.activeSkillVisuals.push({ type: 'frost_ring', x: px, y: py, radius: 160, timer: 700, maxTimer: 700 });
         this.damageEnemiesInRadius(px, py, 160, dmg, '★ แช่แข็งเยือกแข็ง! -' + dmg, '#38bdf8', (e) => {
-            e.slowTimer = 4000;
+            e.slowTimer = 3500;
         });
         this.addFloatingText('★ [เวท 2] วงแหวนเหมันต์เยือกแข็ง! -' + dmg, px - 45, py - 30, '#38bdf8');
     } else if (skill.id === 'prism_shield') {
@@ -22027,7 +22062,7 @@ Game.castMageSkill = function(skill, lv) {
         const nearestEnemy = this.findNearestCombatTarget(520);
         const targetCenterX = nearestEnemy ? nearestEnemy.x : ((this.mouseWorld && this.mouseWorld.x !== 0) ? this.mouseWorld.x : (this.boss ? this.boss.x + 32 : px));
         const targetCenterY = nearestEnemy ? nearestEnemy.y : ((this.mouseWorld && this.mouseWorld.y !== 0) ? this.mouseWorld.y : (this.boss ? this.boss.y + 32 : py));
-        const meteorDmg = Math.round(dmg * 0.55);
+        const meteorDmg = Math.round(dmg * 0.38);
 
         for (let m = 0; m < 6; m++) {
             const mx = targetCenterX - 110 + Math.random() * 220;
@@ -22072,13 +22107,13 @@ Game.castRangerSkill = function(skill, lv) {
         this.activeSkillVisuals.push({ type: 'poison_trap', x: px, y: py, radius: 90, timer: 9000, maxTimer: 9000, damage: dmg });
         this.addFloatingText('★ [พราน 2] วางกับดักหนามพิษ! -' + dmg, px - 35, py - 25, '#22c55e');
     } else if (skill.id === 'shadow_dash') {
-        this.player.invincibleTimer = 1800; // 1.8s invincibility
+        this.player.invincibleTimer = 1200; // 1.2s invincibility
         this.player.speed = 4.5;
-        setTimeout(() => { if (this.player) this.player.speed = 2.8; }, 2500);
+        setTimeout(() => { if (this.player) this.player.speed = 2.8; }, 2200);
         this.spawnParticles(px, py, '#475569', 25);
         this.spawnParticles(px, py, '#a855f7', 20);
         this.activeSkillVisuals.push({ type: 'shadow_trail', x: px, y: py, timer: 500, maxTimer: 500 });
-        this.addFloatingText('★ [พราน 3] ก้าวเงาล่องหน! (อมตะ 1.8s & วิ่งไว +60%)', px - 40, py - 25, '#94a3b8');
+        this.addFloatingText('★ [พราน 3] ก้าวเงาล่องหน! (อมตะ 1.2s & วิ่งไว +60%)', px - 40, py - 25, '#94a3b8');
     } else if (skill.id === 'dragonpiercer') {
         this.triggerScreenShake(11.0, 450);
         this.spawnParticles(px, py, '#38bdf8', 30);
@@ -22114,15 +22149,15 @@ Game.castPaladinSkill = function(skill, lv) {
         this.activeSkillVisuals.push({ type: 'radiant_burst', x: px, y: py, angle: baseAng, timer: 500, maxTimer: 500 });
         this.addFloatingText('★ [เทวะ 1] หอกแสงพิพากษา! -' + dmg, px - 35, py - 25, '#facc15');
     } else if (skill.id === 'divine_heal') {
-        const healAmt = 120 + (lv - 1) * 35;
+        const healAmt = 55 + (lv - 1) * 18;
         this.player.hp = Math.min(this.player.maxHp || 100, this.player.hp + healAmt);
-        this.player.energy = Math.min(this.player.maxEnergy || 100, (this.player.energy || 0) + 30);
+        this.player.energy = Math.min(this.player.maxEnergy || 100, (this.player.energy || 0) + 20);
         this.player.slowTimer = 0;
         this.triggerScreenShake(4.5, 140);
         this.spawnParticles(px, py, '#4ade80', 25);
         this.spawnParticles(px, py, '#fef08a', 20);
         this.activeSkillVisuals.push({ type: 'heal_aura', x: px, y: py, timer: 800, maxTimer: 800, targetPlayer: true });
-        this.addFloatingText('★ [เทวะ 2] อวยพรเทวะ! +' + healAmt + ' HP (+30 SP)', px - 35, py - 25, '#4ade80');
+        this.addFloatingText('★ [เทวะ 2] อวยพรเทวะ! +' + healAmt + ' HP (+20 SP)', px - 35, py - 25, '#4ade80');
     } else if (skill.id === 'sanctuary_pylon') {
         this.triggerScreenShake(5.5, 160);
         this.spawnParticles(px, py, '#facc15', 25);
@@ -22319,9 +22354,9 @@ Game.calculateSkillDamage = function(skill: any, lv: number): number {
     const wellFedMult = isWellFed ? 1.15 : 1.0;
 
     if (skill.isUltimate) {
-        return Math.round(((skill.baseDmg * 3.2) + ((lv - 1) * skill.dmgPerLv * 2.8) + (weaponDmg * 2.6) + (pLevel * 22) + buffDmg) * wellFedMult);
+        return Math.round(((skill.baseDmg * 1.35) + ((lv - 1) * skill.dmgPerLv * 1.35) + (weaponDmg * 1.8) + (pLevel * 8) + buffDmg) * wellFedMult);
     }
-    return Math.round(((skill.baseDmg * 2.5) + ((lv - 1) * skill.dmgPerLv * 2.0) + (weaponDmg * 1.5) + (pLevel * 10) + buffDmg) * wellFedMult);
+    return Math.round(((skill.baseDmg * 1.1) + ((lv - 1) * skill.dmgPerLv * 1.1) + (weaponDmg * 1.15) + (pLevel * 5) + buffDmg) * wellFedMult);
 };
 
 Game.pullEnemiesInRadius = function(x: number, y: number, radius: number, pullForce: number) {
@@ -23914,8 +23949,9 @@ Game.mineCinderShardNode = function(tx: number, ty: number) {
     const tile = this.map[ty][tx];
     SoundEngine.miningHit();
     this.spawnParticles(tx * 32 + 16, ty * 32 + 16, '#f97316', 16);
-    this.addItemToInventory('cinder_shard', Math.floor(Math.random() * 2) + 2, 'เศษผลึกเพลิง (Cinder Shard)', 0);
-    if (Math.random() < 0.4) {
+    const shardAmt = Math.random() < 0.35 ? 2 : 1;
+    this.addItemToInventory('cinder_shard', shardAmt, 'เศษผลึกเพลิง (Cinder Shard)', 0);
+    if (Math.random() < 0.25) {
         this.addItemToInventory('gold_ore', 1, 'แร่ทองคำดิบ', 0);
     }
     this.addFloatingText('+เศษผลึกเพลิง (Cinder Shard)', tx * 32 - 20, ty * 32 - 15, '#f97316');
@@ -24211,8 +24247,12 @@ Game.renderVolcanoForgeModal = function() {
         return;
     }
 
+    const enchantLv = this.player.volcanoForgeEnchant || 0;
+    const MAX_ENCHANT_LV = 3;
+
     recipeList.forEach((recipe: any) => {
-        let canCraft = cinderCount >= recipe.costCinderShards;
+        const isEnchantMaxed = (recipe.type === 'enchant' && enchantLv >= MAX_ENCHANT_LV);
+        let canCraft = !isEnchantMaxed && (cinderCount >= recipe.costCinderShards);
         let matReqStr = `${recipe.costCinderShards} เศษผลึกเพลิง`;
 
         if (recipe.materials) {
@@ -24224,19 +24264,22 @@ Game.renderVolcanoForgeModal = function() {
             }
         }
 
+        const titleSuffix = recipe.type === 'enchant' ? ` (ระดับ ${enchantLv}/${MAX_ENCHANT_LV})` : '';
+        const btnText = isEnchantMaxed ? 'สลักครบสูงสุดแล้ว (MAX)' : (canCraft ? 'หลอมสร้าง' : 'วัตถุดิบไม่พอ');
+
         html += `
             <div class="volcano-forge-card">
                 <div class="forge-card-header">
-                    <strong class="forge-card-title">${recipe.name}</strong>
+                    <strong class="forge-card-title">${recipe.name}${titleSuffix}</strong>
                     <span class="forge-card-price">${recipe.costCinderShards} Shards</span>
                 </div>
                 <p class="forge-card-desc">${recipe.desc}</p>
-                <div class="forge-card-reqs" style="color: ${canCraft ? '#4ade80' : '#ef4444'}; font-size: 12px; margin-bottom: 6px;">
-                    ต้องใช้: ${matReqStr}
+                <div class="forge-card-reqs" style="color: ${isEnchantMaxed ? '#facc15' : (canCraft ? '#4ade80' : '#ef4444')}; font-size: 12px; margin-bottom: 6px;">
+                    ${isEnchantMaxed ? '★ เสริมพลังรูนภูเขาไฟครบขีดจำกัดสูงสุดแล้ว (+36 DMG, +15% Crit)' : 'ต้องใช้: ' + matReqStr}
                 </div>
                 <div class="forge-card-footer">
                     <button class="btn-primary forge-craft-btn" ${canCraft ? '' : 'disabled'} onclick="Game.craftVolcanoForgeRecipe('${recipe.id}')">
-                        ${canCraft ? 'หลอมสร้าง' : 'วัตถุดิบไม่พอ'}
+                        ${btnText}
                     </button>
                 </div>
             </div>
@@ -24267,6 +24310,12 @@ Game.craftVolcanoForgeRecipe = function(recipeId: string) {
         }
     }
 
+    if (recipe.type === 'enchant' && (this.player.volcanoForgeEnchant || 0) >= 3) {
+        SoundEngine.errorClick();
+        this.addFloatingText('สลักรูนเถ้าภูเขาไฟครบสูงสุด 3 ระดับแล้ว!', this.player.x, this.player.y - 15, '#facc15');
+        return;
+    }
+
     if (recipe.type !== 'enchant' && this.isInventoryFull()) {
         SoundEngine.errorClick();
         this.addFloatingText('กระเป๋าเต็มแล้ว!', this.player.x, this.player.y - 15, '#ef4444');
@@ -24284,7 +24333,7 @@ Game.craftVolcanoForgeRecipe = function(recipeId: string) {
         this.player.volcanoForgeEnchant = (this.player.volcanoForgeEnchant || 0) + 1;
         SoundEngine.levelUp();
         this.spawnParticles(this.player.x + 12, this.player.y + 16, '#ea580c', 25);
-        this.addFloatingText('สลักรูนเถ้าภูเขาไฟสำเร็จ! เสริมพลังรบ +30 DMG, +15% Crit!', this.player.x - 40, this.player.y - 25, '#facc15');
+        this.addFloatingText(`สลักรูนเถ้าภูเขาไฟระดับ ${this.player.volcanoForgeEnchant}/3! (+12 DMG, +5% Crit)`, this.player.x - 40, this.player.y - 25, '#facc15');
     } else if (recipe.resultItem) {
         this.addItemToInventory(recipe.resultItem, recipe.resultCount || 1, recipe.name, 0);
         SoundEngine.craft();

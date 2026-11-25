@@ -128,10 +128,10 @@ export const FISH: Record<string, FishData> = {
 };
 
 export const UPGRADES: Record<string, UpgradeData> = {
-  watering_can_pro: { id: 'watering_can_pro', name: 'บัวรดน้ำทองแดง', price: 300, desc: 'บรรจุน้ำได้มากขึ้น 2 เท่า และรดได้กว้างขึ้น', levelReq: 2 },
-  backpack_1: { id: 'backpack_1', name: 'กระเป๋าเป้หนัง (+12 ช่อง)', price: 400, desc: 'เพิ่มความจุช่องเก็บของ', levelReq: 2 },
-  coop_expansion: { id: 'coop_expansion', name: 'ขยายโรงเลี้ยงสัตว์ (+4 ตัว)', price: 600, desc: 'เลี้ยงสัตว์ในฟาร์มได้เพิ่มขึ้น', levelReq: 3 },
-  auto_sprinkler: { id: 'auto_sprinkler', name: 'สปริงเกอร์รดน้ำ', price: 800, desc: 'รดน้ำอัตโนมัติทุกเช้า 4 ช่องรอบตัว', levelReq: 4 }
+  watering_can_pro: { id: 'watering_can_pro', name: 'บัวรดน้ำทองแดง', price: 600, desc: 'บรรจุน้ำได้มากขึ้น 2 เท่า และรดได้กว้างขึ้น', levelReq: 2 },
+  backpack_1: { id: 'backpack_1', name: 'กระเป๋าเป้หนัง (+12 ช่อง)', price: 900, desc: 'เพิ่มความจุช่องเก็บของ', levelReq: 2 },
+  coop_expansion: { id: 'coop_expansion', name: 'ขยายโรงเลี้ยงสัตว์ (+4 ตัว)', price: 1400, desc: 'เลี้ยงสัตว์ในฟาร์มได้เพิ่มขึ้น', levelReq: 3 },
+  auto_sprinkler: { id: 'auto_sprinkler', name: 'สปริงเกอร์รดน้ำ', price: 1800, desc: 'รดน้ำอัตโนมัติทุกเช้า 4 ช่องรอบตัว', levelReq: 4 }
 };
 
 export const LEVEL_XP: number[] = [
@@ -147,7 +147,7 @@ export const HOUSE_DECOR_UPGRADES: Record<string, UpgradeData> = {
   bed_deluxe: {
     id: 'bed_deluxe',
     name: 'เตียงขนนกหรูหรา (Deluxe Bed)',
-    price: 500,
+    price: 1500,
     desc: 'เตียงคิงไซส์ เพิ่ม Max Energy ถาวร +30 (สูงสุด 130) และฟื้นฟูเต็ม 100% ทุกเช้า',
     effectType: 'maxEnergy',
     value: 30
@@ -155,7 +155,7 @@ export const HOUSE_DECOR_UPGRADES: Record<string, UpgradeData> = {
   fireplace: {
     id: 'fireplace',
     name: 'เตาผิงหินโบราณ (Stone Fireplace)',
-    price: 600,
+    price: 1800,
     desc: 'เตาผิงก่อหินให้ความอบอุ่นทั่วบ้าน ลดการเสียพลังงานในการทำงานลง 20%',
     effectType: 'energySave',
     value: 0.2
@@ -163,7 +163,7 @@ export const HOUSE_DECOR_UPGRADES: Record<string, UpgradeData> = {
   refrigerator: {
     id: 'refrigerator',
     name: 'ตู้เย็นถนอมอาหาร (Modern Fridge)',
-    price: 450,
+    price: 1200,
     desc: 'ตู้เย็นสีพาสเทล อาหารที่รับประทานฟื้นพลังงานเพิ่มขึ้น +50%',
     effectType: 'foodBoost',
     value: 0.5
@@ -171,7 +171,7 @@ export const HOUSE_DECOR_UPGRADES: Record<string, UpgradeData> = {
   tea_table: {
     id: 'tea_table',
     name: 'ชุดโต๊ะน้ำชาไม้สัก (Oak Tea Table)',
-    price: 350,
+    price: 900,
     desc: 'โต๊ะกลมพร้อมกาน้ำชา ฟื้นฟูพลังงานอัตโนมัติ 1 หน่วยทุก 10 วินาทีเมื่ออยู่ในบ้าน',
     effectType: 'homeRegen',
     value: 1
@@ -179,7 +179,7 @@ export const HOUSE_DECOR_UPGRADES: Record<string, UpgradeData> = {
   persian_rug: {
     id: 'persian_rug',
     name: 'พรมทอมือเปอร์เซีย (Royal Rug)',
-    price: 300,
+    price: 750,
     desc: 'พรมหรูหรากลางห้อง เพิ่มความเร็วเดินในบ้าน +30% และเพิ่มค่า XP จากการทำฟาร์มทั้งหมด +15%',
     effectType: 'xpBoost',
     value: 0.15
@@ -268,196 +268,196 @@ export const WEAPONS: Record<string, WeaponData> = {
     name: 'หนังสติ๊กล่าสัตว์ (Hunter Slingshot)',
     desc: 'ยิงลูกหิน เล็งเป้าหมายอัตโนมัติ ยิงด้วยคลิกซ้าย ปุ่ม A หรือแตะหน้าจอ',
     type: 'ranged',
-    damage: 24,
+    damage: 20,
     speed: 12.0,
     range: 680,
-    cooldown: 280,
+    cooldown: 300,
     bulletType: 'stone'
   },
   rifle: {
     id: 'rifle',
     name: 'ปืนล่าสัตว์โบราณ (Hunting Rifle)',
-    desc: 'ปืนไรเฟิลล่าสัตว์ พลังยิงทะลวงสูงและระยะยิงไกลมาก',
+    desc: 'ปืนไรเฟิลล่าสัตว์ พลังยิงทะลวงสูงและระยะยิงไกลมาก พลังโจมตี 42',
     type: 'ranged',
-    damage: 52,
+    damage: 42,
     speed: 14.0,
     range: 720,
-    cooldown: 520,
+    cooldown: 540,
     bulletType: 'rifle'
   },
   iron_sword: {
     id: 'iron_sword',
     name: 'ดาบเหล็กกล้านักผจญภัย (Iron Sword)',
-    desc: 'ดาบฟันระยะประชิด ฟันศัตรูด้านหน้าเป็นวงกว้าง (คลิกซ้าย / Space / ปุ่ม A)',
+    desc: 'ดาบฟันระยะประชิด พลังโจมตี 28 ฟันศัตรูด้านหน้าเป็นวงกว้าง',
     type: 'melee',
-    damage: 32,
+    damage: 28,
     speed: 0,
     range: 88,
-    cooldown: 300
+    cooldown: 320
   },
   excalibur_sword: {
     id: 'excalibur_sword',
     name: 'ดาบศักดิ์สิทธิ์เอ็กซ์คาลิเบอร์ (Holy Excalibur)',
-    desc: 'ดาบในตำนาน ฟันคลื่นแสงศักดิ์สิทธิ์ทะลวง พลังโจมตี 52',
+    desc: 'ดาบในตำนาน ฟันคลื่นแสงศักดิ์สิทธิ์ทะลวง พลังโจมตี 38',
     type: 'melee_beam',
-    damage: 52,
+    damage: 38,
     speed: 12.0,
     range: 480,
-    cooldown: 350,
+    cooldown: 360,
     bulletType: 'holy_beam'
   },
   dragon_rifle: {
     id: 'dragon_rifle',
     name: 'ปืนมังกรเพลิง (Dragonfire Cannon)',
-    desc: 'ยิงระเบิดเพลิงมังกร ระเบิดล้างผลาญกลุ่มศัตรู พลังโจมตี 62',
+    desc: 'ยิงระเบิดเพลิงมังกร ระเบิดล้างผลาญกลุ่มศัตรู พลังโจมตี 48',
     type: 'ranged',
-    damage: 62,
+    damage: 48,
     speed: 12.0,
     range: 520,
-    cooldown: 520,
+    cooldown: 540,
     bulletType: 'dragon_fire'
   },
   luminarch_crystal_blade: {
     id: 'luminarch_crystal_blade',
     name: 'ดาบเลเซอร์ผลึกปริซึมลูมินาร์ค (Prismatic Laser Blade)',
-    desc: 'ดาบผลึกโบราณ ฟันปลดปล่อยลำแสงเลเซอร์ปริซึมทะลวง พลังโจมตี 60',
+    desc: 'ดาบผลึกโบราณ ฟันปลดปล่อยลำแสงเลเซอร์ปริซึมทะลวง พลังโจมตี 44',
     type: 'melee_beam',
-    damage: 60,
+    damage: 44,
     speed: 13.0,
     range: 480,
-    cooldown: 340,
+    cooldown: 350,
     bulletType: 'crystal_shard'
   },
   hydra_venom_bow: {
     id: 'hydra_venom_bow',
     name: 'คันธนูสามศรพิษพญาไฮดรา (Hydra Venom Bow)',
-    desc: 'คันธนูมังกรบึงพิษ แผลงศรกรดพิษกระจาย 3 ดอกพร้อมกัน (24x3 DMG)',
+    desc: 'คันธนูมังกรบึงพิษ แผลงศรกรดพิษกระจาย 3 ดอกพร้อมกัน (18x3 DMG)',
     type: 'ranged',
-    damage: 24,
+    damage: 18,
     speed: 12.0,
     range: 450,
-    cooldown: 480,
+    cooldown: 500,
     bulletType: 'poison_glob'
   },
   volcano_sword: {
     id: 'volcano_sword',
     name: 'ดาบเพลิงลาวาภูเขาไฟ (Volcano Magma Blade)',
-    desc: 'ดาบเพลิงหลอมจากแก่นภูเขาไฟ ฟันคลื่นเพลิงลาวา พลังโจมตี 68',
+    desc: 'ดาบเพลิงหลอมจากแก่นภูเขาไฟ ฟันคลื่นเพลิงลาวา พลังโจมตี 48',
     type: 'melee_beam',
-    damage: 68,
+    damage: 48,
     speed: 12.0,
     range: 480,
-    cooldown: 340,
+    cooldown: 360,
     bulletType: 'dragon_fire'
   },
   volcano_magma_axe: {
     id: 'volcano_magma_axe',
     name: 'ขวานเพลิงโลกันตร์ลาวาอิกนิสทรอน (Molten Magma Axe)',
-    desc: 'ขวานหินลาวาคู่ ระเบิดคลื่นเพลิงล้างผลาญกลุ่มศัตรู พลังโจมตี 82',
+    desc: 'ขวานหินลาวาคู่ ระเบิดคลื่นเพลิงล้างผลาญกลุ่มศัตรู พลังโจมตี 56',
     type: 'melee_beam',
-    damage: 82,
+    damage: 56,
     speed: 11.0,
     range: 460,
-    cooldown: 400,
+    cooldown: 420,
     bulletType: 'dragon_fire'
   },
   glacial_titan_hammer: {
     id: 'glacial_titan_hammer',
     name: 'ค้อนเหมันต์ไททันน้ำแข็งฟรอสต์แฟงก์ (Glacial Titan Hammer)',
-    desc: 'ค้อนน้ำแข็งพันปี ทุบพื้นสร้างคลื่นหอกน้ำแข็งแช่แข็งศัตรู พลังโจมตี 88',
+    desc: 'ค้อนน้ำแข็งพันปี ทุบพื้นสร้างคลื่นหอกน้ำแข็งแช่แข็งศัตรู พลังโจมตี 62',
     type: 'melee_beam',
-    damage: 88,
+    damage: 62,
     speed: 11.5,
     range: 480,
-    cooldown: 440,
+    cooldown: 460,
     bulletType: 'ice_shard'
   },
   malakor_soul_scythe: {
     id: 'malakor_soul_scythe',
     name: 'เคียวมรณะสูบวิญญาณลอร์ดมาลาคอร์ (Malakor Soul Scythe)',
-    desc: 'เคียวแห่งความตาย ปล่อยคลื่นกะโหลกวิญญาณมืด และดูดเลือด 8% คืนแก่ผู้ใช้ พลังโจมตี 92',
+    desc: 'เคียวแห่งความตาย ปล่อยคลื่นกะโหลกวิญญาณมืด และดูดเลือด 8% คืนแก่ผู้ใช้ พลังโจมตี 64',
     type: 'melee_beam',
-    damage: 92,
+    damage: 64,
     speed: 12.5,
     range: 500,
-    cooldown: 360,
+    cooldown: 380,
     bulletType: 'shadow_skull'
   },
   sylvan_bow: {
     id: 'sylvan_bow',
     name: 'คันธนูใบไม้พฤกษาพันปี (Ancient Sylvan Bow)',
-    desc: 'คันธนูแห่งเทพพฤกษา แผลงศรใบไม้คมกริบ 4 ดอกรูปพัด ทะลวงศัตรู (28x4 DMG)',
+    desc: 'คันธนูแห่งเทพพฤกษา แผลงศรใบไม้คมกริบ 4 ดอกรูปพัด ทะลวงศัตรู (19x4 DMG)',
     type: 'ranged',
-    damage: 28,
+    damage: 19,
     speed: 13.0,
     range: 550,
-    cooldown: 420,
+    cooldown: 440,
     bulletType: 'petal_blade'
   },
   tempest_blade: {
     id: 'tempest_blade',
     name: 'ดาบอัสนีบาตคลื่นสายฟ้า (Tempest Lightning Blade)',
-    desc: 'สุดยอดดาบสายฟ้าแห่งจ้าวพายุ ปลดปล่อยคลื่นลำแสงสายฟ้าผ่าทะลวงศัตรู พลังโจมตี 105',
+    desc: 'สุดยอดดาบสายฟ้าแห่งจ้าวพายุ ปลดปล่อยคลื่นลำแสงสายฟ้าผ่าทะลวงศัตรู พลังโจมตี 72',
     type: 'melee_beam',
-    damage: 105,
+    damage: 72,
     speed: 14.0,
     range: 560,
-    cooldown: 350,
+    cooldown: 370,
     bulletType: 'lightning_beam'
   },
   spire_blade: {
     id: 'spire_blade',
     name: 'ดาบสุริยันผลึกหอคอย (Spire Solar Blade)',
-    desc: 'ดาบในตำนานแห่งหอคอยผลึก ฟันคลื่นสุริยันทะลวงศัตรู พลังโจมตี 95',
+    desc: 'ดาบในตำนานแห่งหอคอยผลึก ฟันคลื่นสุริยันทะลวงศัตรู พลังโจมตี 66',
     type: 'melee_beam',
-    damage: 95,
+    damage: 66,
     speed: 13.0,
     range: 520,
-    cooldown: 340,
+    cooldown: 360,
     bulletType: 'holy_beam'
   },
   spire_bow: {
     id: 'spire_bow',
     name: 'ธนูประกายดาราผลึก (Spire Star Bow)',
-    desc: 'คันธนูมิติ แผลงศรแสงดารา 3 ดอก (34x3 DMG)',
+    desc: 'คันธนูมิติ แผลงศรแสงดารา 3 ดอก (24x3 DMG)',
     type: 'ranged',
-    damage: 34,
+    damage: 24,
     speed: 13.5,
     range: 540,
-    cooldown: 380,
+    cooldown: 400,
     bulletType: 'crystal_shard'
   },
   spire_staff: {
     id: 'spire_staff',
     name: 'คทาแก่นหอคอยมิติ (Spire Nebula Staff)',
-    desc: 'คทามหาเวท ปลดปล่อยลูกพลังเนบิวลาระเบิดกว้าง พลังโจมตี 110',
+    desc: 'คทามหาเวท ปลดปล่อยลูกพลังเนบิวลาระเบิดกว้าง พลังโจมตี 76',
     type: 'ranged',
-    damage: 110,
+    damage: 76,
     speed: 11.0,
     range: 500,
-    cooldown: 420,
+    cooldown: 440,
     bulletType: 'dragon_fire'
   },
   cutlass_saber: {
     id: 'cutlass_saber',
     name: 'ดาบโจรสลัดคัตลาสอาถรรพ์ (Corsair Cutlass)',
-    desc: 'ดาบโค้งเหล็กกล้าแห่งแคริบเบียน ฟันคลื่นจันทร์เสี้ยววารี พลังโจมตี 100 ติดคริติคอล 35%!',
+    desc: 'ดาบโค้งเหล็กกล้าแห่งแคริบเบียน ฟันคลื่นจันทร์เสี้ยววารี พลังโจมตี 62 ติดคริติคอล +20%!',
     type: 'melee_beam',
-    damage: 100,
+    damage: 62,
     speed: 13.5,
     range: 500,
-    cooldown: 320,
+    cooldown: 350,
     bulletType: 'crystal_shard'
   },
   volcano_flame_sword: {
     id: 'volcano_flame_sword',
     name: 'ดาบเพลิงสุริยันอัคนี (Solar Magma Blade)',
-    desc: 'ดาบเพลิงศักดิ์สิทธิ์ใจกลางปล่องภูเขาไฟ ฟันคลื่นลูกไฟลาวาระเบิด พลังโจมตี 120 คริติคอล +35%!',
+    desc: 'ดาบเพลิงศักดิ์สิทธิ์ใจกลางปล่องภูเขาไฟ ฟันคลื่นลูกไฟลาวาระเบิด พลังโจมตี 78 คริติคอล +20%!',
     type: 'melee_beam',
-    damage: 120,
+    damage: 78,
     speed: 13.5,
     range: 520,
-    cooldown: 320,
+    cooldown: 350,
     bulletType: 'dragon_fire'
   }
 };
@@ -522,22 +522,22 @@ export const WORLD_ITEMS: Record<string, MaterialItem> = {
   shadow_pelt: { id: 'shadow_pelt', name: 'หนังหมาป่าเงา', sellPrice: 50, desc: 'ขนสัตว์สีดำเงา สำหรับตัดเย็บชุดเกราะ' },
   wolf_fang: { id: 'wolf_fang', name: 'เขี้ยวหมาป่าอาถรรพ์', sellPrice: 60, desc: 'เขี้ยวแหลมคม สำหรับตีดาบและอาวุธ' },
   iron_ore: { id: 'iron_ore', name: 'แร่เหล็กดิบ', sellPrice: 35, desc: 'แร่เหล็กบริสุทธิ์ สำหรับหลอมอาวุธที่เตาตีเหล็ก' },
-  ruby_gem: { id: 'ruby_gem', name: 'อัญมณีทับทิมเวทมนตร์', sellPrice: 120, desc: 'ทับทิมเปล่งแสงสีเลือด บรรจุพลังเวทโบราณ' },
-  cursed_wood: { id: 'cursed_wood', name: 'ไม้โบราณต้องสาป', sellPrice: 65, desc: 'กิ่งไม้จากต้นไม้ปีศาจ มีพลังวิญญาณสถิต' },
-  mana_gem: { id: 'mana_gem', name: 'ผลึกมานาสีคราม', sellPrice: 95, desc: 'ผลึกแก้วสีฟ้าเรืองแสง ใช้สร้างอุปกรณ์ขั้นสูง' },
-  starflower_herb: { id: 'starflower_herb', name: 'สมุนไพรดวงดาว', sellPrice: 40, desc: 'ดอกไม้สมุนไพรเรืองแสง นำไปต้มเป็นยาฟื้นพลังชีวิต' },
-  blight_spore: { id: 'blight_spore', name: 'สปอร์กลายพันธุ์ (Blight Spore)', sellPrice: 65, desc: 'สปอร์สีม่วงแดงเรืองแสงที่ตกจากแมลงกลายพันธุ์ ใช้ศึกษาและปรุงเซรุ่มแก้พิษ' },
-  antidote_serum: { id: 'antidote_serum', name: 'เซรุ่มต้านสปอร์พิษ (Antidote Serum)', sellPrice: 160, energyRestore: 50, hpRestore: 80, desc: 'เซรุ่มสูตรพิเศษของหมอยาลิเลียน ดื่มฟื้นฟู HP +80 และ พลังงาน +50 พร้อมชำระล้างพิษสปอร์' },
-  health_potion: { id: 'health_potion', name: 'ยาฟื้นพลังชีวิตชั้นเลิศ', sellPrice: 80, energyRestore: 30, hpRestore: 60, desc: 'ดื่มเพื่อฟื้นฟู HP +60 และพลังงาน +30' },
-  gold_ore: { id: 'gold_ore', name: 'แร่ทองคำดิบ', sellPrice: 70, desc: 'แร่ทองคำประกายระยิบระยับ ขุดได้จากถ้ำลึก' },
-  diamond_crystal: { id: 'diamond_crystal', name: 'เพชรคริสตัลโบราณ', sellPrice: 260, desc: 'อัญมณีล้ำค่าและแข็งแกร่งที่สุดในถ้ำ' },
-  bat_wing: { id: 'bat_wing', name: 'ปีกค้างคาวถ้ำ', sellPrice: 40, desc: 'ปีกค้างคาว ใช้ปรุงยาหรือขายเป็นเงิน' },
-  crystal_core: { id: 'crystal_core', name: 'แก่นคริสตัลสไลม์', sellPrice: 65, desc: 'แก่นผลึกเวทมนตร์เรืองแสง' },
-  demon_heart: { id: 'demon_heart', name: 'หัวใจจอมอสูรคาธูรอส', sellPrice: 1000, desc: 'หัวใจที่ยังเต้นของราชาปีศาจ วัตถุดิบสร้างอาวุธระดับตำนาน' },
-  crown_of_despair: { id: 'crown_of_despair', name: 'มงกุฎแห่งความสิ้นหวัง', sellPrice: 1200, desc: 'มงกุฎทองคำโบราณ หลักฐานแห่งการปราบราชาปีศาจ' },
-  cinder_shard: { id: 'cinder_shard', name: 'เศษผลึกเพลิง (Cinder Shard)', sellPrice: 200, desc: 'ผลึกหินลาวาคุกรุ่นจากถ้ำภูเขาไฟ ใช้สลักรูนไฟและหลอมอาวุธเพลิง' },
-  dragon_tooth: { id: 'dragon_tooth', name: 'เขี้ยวมังกรโบราณ (Dragon Tooth)', sellPrice: 450, desc: 'เขี้ยวมังกรเพลิงโบราณที่แข็งแกร่งดั่งเหล็กกล้า วัตถุดิบสร้างดาบเพลิงลาวา' },
-  volcano_sword: { id: 'volcano_sword', name: 'ดาบเพลิงลาวาภูเขาไฟ (Volcano Magma Blade)', sellPrice: 2400, desc: 'ดาบเพลิงหลอมจากแก่นภูเขาไฟ ฟันคลื่นเพลิงลาวาลุกท่วม พลังโจมตี 180!' },
+  ruby_gem: { id: 'ruby_gem', name: 'อัญมณีทับทิมเวทมนตร์', sellPrice: 80, desc: 'ทับทิมเปล่งแสงสีเลือด บรรจุพลังเวทโบราณ' },
+  cursed_wood: { id: 'cursed_wood', name: 'ไม้โบราณต้องสาป', sellPrice: 45, desc: 'กิ่งไม้จากต้นไม้ปีศาจ มีพลังวิญญาณสถิต' },
+  mana_gem: { id: 'mana_gem', name: 'ผลึกมานาสีคราม', sellPrice: 65, desc: 'ผลึกแก้วสีฟ้าเรืองแสง ใช้สร้างอุปกรณ์ขั้นสูง' },
+  starflower_herb: { id: 'starflower_herb', name: 'สมุนไพรดวงดาว', sellPrice: 30, desc: 'ดอกไม้สมุนไพรเรืองแสง นำไปต้มเป็นยาฟื้นพลังชีวิต' },
+  blight_spore: { id: 'blight_spore', name: 'สปอร์กลายพันธุ์ (Blight Spore)', sellPrice: 40, desc: 'สปอร์สีม่วงแดงเรืองแสงที่ตกจากแมลงกลายพันธุ์ ใช้ศึกษาและปรุงเซรุ่มแก้พิษ' },
+  antidote_serum: { id: 'antidote_serum', name: 'เซรุ่มต้านสปอร์พิษ (Antidote Serum)', sellPrice: 100, energyRestore: 50, hpRestore: 80, desc: 'เซรุ่มสูตรพิเศษของหมอยาลิเลียน ดื่มฟื้นฟู HP +80 และ พลังงาน +50 พร้อมชำระล้างพิษสปอร์' },
+  health_potion: { id: 'health_potion', name: 'ยาฟื้นพลังชีวิตชั้นเลิศ', sellPrice: 60, energyRestore: 30, hpRestore: 60, desc: 'ดื่มเพื่อฟื้นฟู HP +60 และพลังงาน +30' },
+  gold_ore: { id: 'gold_ore', name: 'แร่ทองคำดิบ', sellPrice: 50, desc: 'แร่ทองคำประกายระยิบระยับ ขุดได้จากถ้ำลึก' },
+  diamond_crystal: { id: 'diamond_crystal', name: 'เพชรคริสตัลโบราณ', sellPrice: 160, desc: 'อัญมณีล้ำค่าและแข็งแกร่งที่สุดในถ้ำ' },
+  bat_wing: { id: 'bat_wing', name: 'ปีกค้างคาวถ้ำ', sellPrice: 25, desc: 'ปีกค้างคาว ใช้ปรุงยาหรือขายเป็นเงิน' },
+  crystal_core: { id: 'crystal_core', name: 'แก่นคริสตัลสไลม์', sellPrice: 45, desc: 'แก่นผลึกเวทมนตร์เรืองแสง' },
+  demon_heart: { id: 'demon_heart', name: 'หัวใจจอมอสูรคาธูรอส', sellPrice: 450, desc: 'หัวใจที่ยังเต้นของราชาปีศาจ วัตถุดิบสร้างอาวุธระดับตำนาน' },
+  crown_of_despair: { id: 'crown_of_despair', name: 'มงกุฎแห่งความสิ้นหวัง', sellPrice: 550, desc: 'มงกุฎทองคำโบราณ หลักฐานแห่งการปราบราชาปีศาจ' },
+  cinder_shard: { id: 'cinder_shard', name: 'เศษผลึกเพลิง (Cinder Shard)', sellPrice: 90, desc: 'ผลึกหินลาวาคุกรุ่นจากถ้ำภูเขาไฟ ใช้สลักรูนไฟและหลอมอาวุธเพลิง' },
+  dragon_tooth: { id: 'dragon_tooth', name: 'เขี้ยวมังกรโบราณ (Dragon Tooth)', sellPrice: 240, desc: 'เขี้ยวมังกรเพลิงโบราณที่แข็งแกร่งดั่งเหล็กกล้า วัตถุดิบสร้างดาบเพลิงลาวา' },
+  volcano_sword: { id: 'volcano_sword', name: 'ดาบเพลิงลาวาภูเขาไฟ (Volcano Magma Blade)', sellPrice: 1100, desc: 'ดาบเพลิงหลอมจากแก่นภูเขาไฟ ฟันคลื่นเพลิงลาวาลุกท่วม พลังโจมตี 48' },
   wood: { id: 'wood', name: 'ท่อนไม้', sellPrice: 8, desc: 'ท่อนไม้เนื้อแข็ง ได้จากการตัดต้นไม้ ใช้สร้างกล่องและสิ่งประดิษฐ์' },
   chest: { id: 'chest', name: 'กล่องเก็บของไม้', sellPrice: 50, desc: 'นำไปวางบนพื้นดินเพื่อเปิดเก็บของได้ 16 ช่อง' },
   axe: { id: 'axe', name: 'ขวานตัดไม้', sellPrice: 80, desc: 'ใช้ตัดต้นไม้เพื่อเก็บท่อนไม้' },
@@ -548,12 +548,12 @@ export const WORLD_ITEMS: Record<string, MaterialItem> = {
   // Deep Mine Minerals
   stone: { id: 'stone', name: 'ก้อนหินเนื้อแน่น', sellPrice: 4, desc: 'หินธรรมชาติจากการขุดเหมือง ใช้ก่อสร้างและประดิษฐ์เครื่องจักร' },
   copper_ore: { id: 'copper_ore', name: 'แร่ทองแดงบริสุทธิ์', sellPrice: 20, desc: 'แร่โลหะสีส้ม พบในเหมืองชั้นต้น ใช้สร้างสปริงเกอร์และเครื่องแปรรูป' },
-  star_core: { id: 'star_core', name: 'แก่นผลึกดวงดาว', sellPrice: 500, desc: 'อัญมณีเรืองแสงล้ำค่าจากเหมืองชั้นลึกที่สุด มีพลังงานเวทมหาศาล' },
-  phoenix_feather: { id: 'phoenix_feather', name: 'ขนนกฟีนิกซ์ศักดิ์สิทธิ์ (Phoenix Feather)', sellPrice: 2000, desc: 'ขนนกเรืองแสงสีทองอร่าม หากพลังชีวิตหมดลงจะชุบชีวิตฟื้นคืนชีพเต็ม 100% ทันที!' },
-  void_elixir: { id: 'void_elixir', name: 'โอสถแห่งความว่างเปล่า (Void Elixir)', sellPrice: 500, energyRestore: 100, hpRestore: 100, desc: 'โอสถสีม่วงเรืองแสง ดื่มเพื่อฟื้นฟู HP/Energy เต็มเปี่ยมและวิ่งเร็วขึ้น 60 วินาที' },
-  mystery_geode: { id: 'mystery_geode', name: 'หินผลึกปิดผนึกปริศนา (Mystery Geode)', sellPrice: 150, desc: 'หินเปลือกแข็งเรืองแสง นำไปกะเทาะที่โรงตีเหล็กหรือกดสำรวจเพื่อลุ้นรับอัญมณีล้ำค่า!' },
-  ancient_relic: { id: 'ancient_relic', name: 'โบราณวัตถุแห่งอารยธรรมสาบสูญ', sellPrice: 850, desc: 'โบราณวัตถุแกะสลักลวดลายลึกลับ นักสะสมและนักประวัติศาสตร์ให้ราคาสูงยิ่ง' },
-  star_shard: { id: 'star_shard', name: 'เศษอุกกาบาตดวงดาว (Star Shard)', sellPrice: 350, desc: 'เศษหินอุกกาบาตเรืองแสงสีฟ้าอมม่วง ปล่อยไอความร้อนจากห้วงอวกาศ' },
+  star_core: { id: 'star_core', name: 'แก่นผลึกดวงดาว', sellPrice: 280, desc: 'อัญมณีเรืองแสงล้ำค่าจากเหมืองชั้นลึกที่สุด มีพลังงานเวทมหาศาล' },
+  phoenix_feather: { id: 'phoenix_feather', name: 'ขนนกฟีนิกซ์ศักดิ์สิทธิ์ (Phoenix Feather)', sellPrice: 1400, desc: 'ขนนกเรืองแสงสีทองอร่าม หากพลังชีวิตหมดลงจะชุบชีวิตฟื้นคืนชีพเต็ม 100% ทันที!' },
+  void_elixir: { id: 'void_elixir', name: 'โอสถแห่งความว่างเปล่า (Void Elixir)', sellPrice: 280, energyRestore: 100, hpRestore: 100, desc: 'โอสถสีม่วงเรืองแสง ดื่มเพื่อฟื้นฟู HP/Energy เต็มเปี่ยมและวิ่งเร็วขึ้น 60 วินาที' },
+  mystery_geode: { id: 'mystery_geode', name: 'หินผลึกปิดผนึกปริศนา (Mystery Geode)', sellPrice: 80, desc: 'หินเปลือกแข็งเรืองแสง นำไปกะเทาะที่โรงตีเหล็กหรือกดสำรวจเพื่อลุ้นรับแร่และอัญมณีหายาก!' },
+  ancient_relic: { id: 'ancient_relic', name: 'โบราณวัตถุแห่งอารยธรรมสาบสูญ', sellPrice: 500, desc: 'โบราณวัตถุแกะสลักลวดลายลึกลับ นักสะสมและนักประวัติศาสตร์ให้ราคาสูงยิ่ง' },
+  star_shard: { id: 'star_shard', name: 'เศษอุกกาบาตดวงดาว (Star Shard)', sellPrice: 200, desc: 'เศษหินอุกกาบาตเรืองแสงสีฟ้าอมม่วง ปล่อยไอความร้อนจากห้วงอวกาศ' },
   cosmic_fruit_seed: { id: 'cosmic_fruit_seed', name: 'เมล็ดพันธุ์ดาราจักร (Cosmic Star Seed)', sellPrice: 200, desc: 'เมล็ดพืชเรืองแสง ปลูกได้ทุกฤดู โตเร็ว ให้ผลไม้ดวงดาวมูลค่ามหาศาล' },
   cosmic_fruit: { id: 'cosmic_fruit', name: 'ผลไม้ดวงดาวจักรวาล (Cosmic Star Fruit)', sellPrice: 1500, energyRestore: 120, hpRestore: 120, desc: 'ผลไม้สีทองอร่ามดั่งแสงดารา กลิ่นหอมฟุ้ง รับประทานฟื้นฟูพลังทั้งหมด!' },
 
@@ -576,26 +576,26 @@ export const WORLD_ITEMS: Record<string, MaterialItem> = {
   aged_cheese: { id: 'aged_cheese', name: 'เชดดาร์ชีสบ่มพิเศษ', sellPrice: 220, energyRestore: 70, desc: 'ชีสแท้บ่มด้วยเครื่องอัด รสชาติเข้มข้น หอมมันกลมกล่อม' },
 
   // วัตถุดิบและไอเทมระดับตำนานจากมหาบอสทั้ง 6 (Mega Boss Legendary Artifacts)
-  luminarch_crystal_heart: { id: 'luminarch_crystal_heart', name: 'หัวใจผลึกปริซึมลูมินาร์ค', sellPrice: 1200, desc: 'หัวใจคริสตัลบริสุทธิ์จากโกเลมโบราณ ส่องประกายแสงรุ้ง 7 สี มีพลังงานเวทมนตร์ไร้ขีดจำกัด' },
-  hydra_venom_gland: { id: 'hydra_venom_gland', name: 'ต่อมพิษพญาไฮดราโบราณ', sellPrice: 1350, desc: 'ต่อมพิษเข้มข้นสูงสุดจากพญาไฮดราแห่งบึงมืด ใช้สกัดยาแก้สารพัดพิษและชุบคมดาบ' },
-  hydra_scale: { id: 'hydra_scale', name: 'เกล็ดมังกรบึงพิษ', sellPrice: 120, desc: 'เกล็ดหนาสีเขียวมรกต ทนทานต่อกรดและความร้อน' },
-  magma_dragon_horn: { id: 'magma_dragon_horn', name: 'เขามังกรอัคนีเพลิงอิกนิสทรอน', sellPrice: 1600, desc: 'เขามังกรลาวาที่ยังคุกรุ่นด้วยเปลวเพลิงโลกันตร์ วัตถุดิบสร้างสุดยอดดาบเพลิง' },
-  flame_heart: { id: 'flame_heart', name: 'แก่นเพลิงลาวาเดือด', sellPrice: 350, desc: 'ผลึกหินลาวาที่มีเปลวเพลิงลุกไหม้ชั่วนิรันดร์' },
-  glacial_titan_core: { id: 'glacial_titan_core', name: 'แก่นเหมันต์ไททันน้ำแข็ง', sellPrice: 1400, desc: 'ผลึกน้ำแข็งพันปีที่ไม่มีวันละลาย แผ่ไอความเย็นยะเยือกฟื้นฟูจิตใจ' },
-  frost_crystal: { id: 'frost_crystal', name: 'ผลึกน้ำแข็งบริสุทธิ์', sellPrice: 150, desc: 'เกล็ดน้ำแข็งรูปดาวที่สกัดได้จากยอดเขาเหมันต์' },
-  death_lord_soul: { id: 'death_lord_soul', name: 'ดวงวิญญาณมรณะลอร์ดมาลาคอร์', sellPrice: 1500, desc: 'ดวงวิญญาณเรืองแสงสีม่วงทมิฬ กักเก็บพลังอำนาจแห่งความตายและความเป็นอมตะ' },
-  cursed_relic: { id: 'cursed_relic', name: 'โบราณวัตถุต้องสาป', sellPrice: 280, desc: 'แผ่นศิลาจารึกอักขระโบราณของกษัตริย์ไร้นาม' },
-  swamp_herb: { id: 'swamp_herb', name: 'บัวสมุนไพรหนองน้ำ', sellPrice: 60, energyRestore: 40, desc: 'ดอกบัวสมุนไพรหายาก ขึ้นในบึงพิษ ช่วยสลายพิษและเพิ่มพลังชีวิต' },
-  frost_berry: { id: 'frost_berry', name: 'เบอร์รี่หิมะเยือกแข็ง', sellPrice: 75, energyRestore: 45, desc: 'ผลไม้สีฟ้าฉ่ำน้ำ เติบโตบนยอดเขาหิมะ รสชาติหวานเย็นสดชื่น' },
+  luminarch_crystal_heart: { id: 'luminarch_crystal_heart', name: 'หัวใจผลึกปริซึมลูมินาร์ค', sellPrice: 550, desc: 'หัวใจคริสตัลบริสุทธิ์จากโกเลมโบราณ ส่องประกายแสงรุ้ง 7 สี มีพลังงานเวทมนตร์ไร้ขีดจำกัด' },
+  hydra_venom_gland: { id: 'hydra_venom_gland', name: 'ต่อมพิษพญาไฮดราโบราณ', sellPrice: 600, desc: 'ต่อมพิษเข้มข้นสูงสุดจากพญาไฮดราแห่งบึงมืด ใช้สกัดยาแก้สารพัดพิษและชุบคมดาบ' },
+  hydra_scale: { id: 'hydra_scale', name: 'เกล็ดมังกรบึงพิษ', sellPrice: 75, desc: 'เกล็ดหนาสีเขียวมรกต ทนทานต่อกรดและความร้อน' },
+  magma_dragon_horn: { id: 'magma_dragon_horn', name: 'เขามังกรอัคนีเพลิงอิกนิสทรอน', sellPrice: 700, desc: 'เขามังกรลาวาที่ยังคุกรุ่นด้วยเปลวเพลิงโลกันตร์ วัตถุดิบสร้างสุดยอดดาบเพลิง' },
+  flame_heart: { id: 'flame_heart', name: 'แก่นเพลิงลาวาเดือด', sellPrice: 180, desc: 'ผลึกหินลาวาที่มีเปลวเพลิงลุกไหม้ชั่วนิรันดร์' },
+  glacial_titan_core: { id: 'glacial_titan_core', name: 'แก่นเหมันต์ไททันน้ำแข็ง', sellPrice: 650, desc: 'ผลึกน้ำแข็งพันปีที่ไม่มีวันละลาย แผ่ไอความเย็นยะเยือกฟื้นฟูจิตใจ' },
+  frost_crystal: { id: 'frost_crystal', name: 'ผลึกน้ำแข็งบริสุทธิ์', sellPrice: 85, desc: 'เกล็ดน้ำแข็งรูปดาวที่สกัดได้จากยอดเขาเหมันต์' },
+  death_lord_soul: { id: 'death_lord_soul', name: 'ดวงวิญญาณมรณะลอร์ดมาลาคอร์', sellPrice: 700, desc: 'ดวงวิญญาณเรืองแสงสีม่วงทมิฬ กักเก็บพลังอำนาจแห่งความตายและความเป็นอมตะ' },
+  cursed_relic: { id: 'cursed_relic', name: 'โบราณวัตถุต้องสาป', sellPrice: 130, desc: 'แผ่นศิลาจารึกอักขระโบราณของกษัตริย์ไร้นาม' },
+  swamp_herb: { id: 'swamp_herb', name: 'บัวสมุนไพรหนองน้ำ', sellPrice: 40, energyRestore: 40, desc: 'ดอกบัวสมุนไพรหายาก ขึ้นในบึงพิษ ช่วยสลายพิษและเพิ่มพลังชีวิต' },
+  frost_berry: { id: 'frost_berry', name: 'เบอร์รี่หิมะเยือกแข็ง', sellPrice: 45, energyRestore: 45, desc: 'ผลไม้สีฟ้าฉ่ำน้ำ เติบโตบนยอดเขาหิมะ รสชาติหวานเย็นสดชื่น' },
 
-  // อาวุธระดับตำนานจากมหาบอสทั้ง 5 (Boss Legendary Weapons)
-  luminarch_crystal_blade: { id: 'luminarch_crystal_blade', name: 'ดาบเลเซอร์ผลึกปริซึมลูมินาร์ค', sellPrice: 2000, desc: 'สุดยอดดาบคริสตัลโบราณ ฟันปล่อยลำแสงเลเซอร์ปริซึมทะลวง พลังโจมตี 195!' },
-  hydra_venom_bow: { id: 'hydra_venom_bow', name: 'คันธนูสามศรพิษพญาไฮดรา', sellPrice: 2200, desc: 'คันธนูมังกรบึงพิษ แผลงศรกรดพิษกระจาย 3 ดอกพร้อมกัน พลังโจมตี 110x3!' },
-  volcano_magma_axe: { id: 'volcano_magma_axe', name: 'ขวานเพลิงโลกันตร์ลาวาอิกนิสทรอน', sellPrice: 2400, desc: 'ขวานหินลาวาคู่ ระเบิดคลื่นเพลิงล้างผลาญกลุ่มศัตรู พลังโจมตี 230!' },
-  glacial_titan_hammer: { id: 'glacial_titan_hammer', name: 'ค้อนเหมันต์ไททันน้ำแข็งฟรอสต์แฟงก์', sellPrice: 2500, desc: 'ค้อนน้ำแข็งพันปี ทุบพื้นสร้างคลื่นหอกน้ำแข็งแช่แข็งศัตรู พลังโจมตี 240!' },
-  malakor_soul_scythe: { id: 'malakor_soul_scythe', name: 'เคียวมรณะสูบวิญญาณลอร์ดมาลาคอร์', sellPrice: 3000, desc: 'เคียวแห่งความตาย ปล่อยคลื่นกะโหลกวิญญาณมืด และดูดเลือด 8% คืนแก่ผู้ใช้ พลังโจมตี 260!' },
-  sylvan_bow: { id: 'sylvan_bow', name: 'คันธนูใบไม้พฤกษาพันปี (Ancient Sylvan Bow)', sellPrice: 3200, desc: 'คันธนูแห่งเทพพฤกษา แผลงศรใบไม้คมกริบ 4 ดอกรูปพัด ทะลวงศัตรู พลังโจมตี 160x4!' },
-  tempest_blade: { id: 'tempest_blade', name: 'ดาบอัสนีบาตคลื่นสายฟ้า (Tempest Lightning Blade)', sellPrice: 3600, desc: 'สุดยอดดาบสายฟ้าแห่งจ้าวพายุ ปลดปล่อยคลื่นสายฟ้าผ่าทะลวงศัตรู พลังโจมตี 320!' },
+  // อาวุธระดับตำนานจากมหาบอส (Boss Legendary Weapons)
+  luminarch_crystal_blade: { id: 'luminarch_crystal_blade', name: 'ดาบเลเซอร์ผลึกปริซึมลูมินาร์ค', sellPrice: 1000, desc: 'สุดยอดดาบคริสตัลโบราณ ฟันปล่อยลำแสงเลเซอร์ปริซึมทะลวง พลังโจมตี 44' },
+  hydra_venom_bow: { id: 'hydra_venom_bow', name: 'คันธนูสามศรพิษพญาไฮดรา', sellPrice: 1050, desc: 'คันธนูมังกรบึงพิษ แผลงศรกรดพิษกระจาย 3 ดอกพร้อมกัน พลังโจมตี 18x3' },
+  volcano_magma_axe: { id: 'volcano_magma_axe', name: 'ขวานเพลิงโลกันตร์ลาวาอิกนิสทรอน', sellPrice: 1200, desc: 'ขวานหินลาวาคู่ ระเบิดคลื่นเพลิงล้างผลาญกลุ่มศัตรู พลังโจมตี 56' },
+  glacial_titan_hammer: { id: 'glacial_titan_hammer', name: 'ค้อนเหมันต์ไททันน้ำแข็งฟรอสต์แฟงก์', sellPrice: 1250, desc: 'ค้อนน้ำแข็งพันปี ทุบพื้นสร้างคลื่นหอกน้ำแข็งแช่แข็งศัตรู พลังโจมตี 62' },
+  malakor_soul_scythe: { id: 'malakor_soul_scythe', name: 'เคียวมรณะสูบวิญญาณลอร์ดมาลาคอร์', sellPrice: 1400, desc: 'เคียวแห่งความตาย ปล่อยคลื่นกะโหลกวิญญาณมืด และดูดเลือด 8% คืนแก่ผู้ใช้ พลังโจมตี 64' },
+  sylvan_bow: { id: 'sylvan_bow', name: 'คันธนูใบไม้พฤกษาพันปี (Ancient Sylvan Bow)', sellPrice: 1450, desc: 'คันธนูแห่งเทพพฤกษา แผลงศรใบไม้คมกริบ 4 ดอกรูปพัด ทะลวงศัตรู พลังโจมตี 19x4' },
+  tempest_blade: { id: 'tempest_blade', name: 'ดาบอัสนีบาตคลื่นสายฟ้า (Tempest Lightning Blade)', sellPrice: 1600, desc: 'สุดยอดดาบสายฟ้าแห่งจ้าวพายุ ปลดปล่อยคลื่นสายฟ้าผ่าทะลวงศัตรู พลังโจมตี 72' },
 
   // อาหารเสบียงรบจากผลผลิตฟาร์ม (Combat Rations & Food Buffs)
   farmer_stew: { id: 'farmer_stew', name: 'สตูว์เนื้อผักรวมพลังใจชาวสวน', sellPrice: 280, energyRestore: 120, desc: 'สตูว์ร้อนๆ รสชาติเข้มข้น เพิ่มพลังโจมตีอาวุธทุกชนิด +35 นาน 3 นาที!' },
@@ -605,7 +605,7 @@ export const WORLD_ITEMS: Record<string, MaterialItem> = {
   // แหวนและเครื่องประดับสถิตพลัง (Equippable Power Rings & Accessories)
   ring_glow: { id: 'ring_glow', name: 'แหวนเรืองแสงสุริยัน (Sun Glow Ring)', sellPrice: 450, desc: 'แหวนทองคำสลักอำพัน ส่องรัศมีแสงสว่างรอบตัวในถ้ำมืดและสุสานใต้ดิน (+80 รัศมีแสง)' },
   ring_magnet: { id: 'ring_magnet', name: 'แหวนแม่เหล็กดูดทรัพย์ (Magneto Ring)', sellPrice: 500, desc: 'แหวนแร่เหล็กโบราณ ปล่อยคลื่นแม่เหล็กดูดไอเทมบนพื้นเข้าตัวจากระยะไกลขึ้น 3 เท่า!' },
-  ring_warrior: { id: 'ring_warrior', name: 'แหวนนักรบผู้กล้า (Warrior Bravery Ring)', sellPrice: 650, desc: 'แหวนเหล็กกล้าประดับทับทิม เพิ่มโอกาสโจมตีติดคริติคอล +18% และพลังทำลายคริติคอล 2.2 เท่า' },
+  ring_warrior: { id: 'ring_warrior', name: 'แหวนนักรบผู้กล้า (Warrior Bravery Ring)', sellPrice: 650, desc: 'แหวนเหล็กกล้าประดับทับทิม เพิ่มโอกาสโจมตีติดคริติคอล +18% และเพิ่มตัวคูณคริติคอล +0.25x' },
   ring_vampiric: { id: 'ring_vampiric', name: 'แหวนแวมไพร์สูบโลหิต (Vampiric Leech Ring)', sellPrice: 850, desc: 'แหวนโลหิตต้องสาป ฟื้นฟูพลังชีวิตผู้ใช้ 4% จากความเสียหายทุกครั้งที่ฟันโดนศัตรู' },
   ring_lucky: { id: 'ring_lucky', name: 'แหวนนำโชคจอมพราน (Fortune Hunter Ring)', sellPrice: 750, desc: 'แหวนมรกตนำโชค มอนสเตอร์ดรอปเหรียญทองเพิ่มขึ้น +35% และเพิ่มอัตราการดรอปไอเทมหายาก' },
 
@@ -616,18 +616,18 @@ export const WORLD_ITEMS: Record<string, MaterialItem> = {
   rune_vampiric: { id: 'rune_vampiric', name: 'รูนกลืนวิญญาณ (Vampiric Rune)', sellPrice: 300, desc: 'ศิลาเวทมนตร์สูบวิญญาณ สลักลงอาวุธดูดพลังชีวิต 8% ของความเสียหายที่ทำได้' },
 
   // แก่นศิลาศักดิ์สิทธิ์ทั้ง 6 ธาตุ (The 6 Sacred Shards)
-  sacred_shard_earth: { id: 'sacred_shard_earth', name: 'แก่นศิลาปฐพีศักดิ์สิทธิ์ (Sacred Earth Shard)', sellPrice: 1000, desc: 'แก่นแท้แห่งธาตุดิน ได้รับจากการปราบราชินีสปอร์คาธูรอส' },
-  sacred_shard_sun: { id: 'sacred_shard_sun', name: 'แก่นศิลาสุริยันศักดิ์สิทธิ์ (Sacred Sun Shard)', sellPrice: 1000, desc: 'แก่นแท้แห่งแสงสว่าง ได้รับจากการปราบโกเลมลูมินาร์ค' },
-  sacred_shard_water: { id: 'sacred_shard_water', name: 'แก่นศิลาวารีศักดิ์สิทธิ์ (Sacred Water Shard)', sellPrice: 1000, desc: 'แก่นแท้แห่งสายน้ำ ได้รับจากการปราบพญาไฮดราคิส' },
-  sacred_shard_fire: { id: 'sacred_shard_fire', name: 'แก่นศิลาเพลิงศักดิ์สิทธิ์ (Sacred Fire Shard)', sellPrice: 1000, desc: 'แก่นแท้แห่งเพลิงโลกันตร์ ได้รับจากการปราบมังกรอิกนิสทรอน' },
-  sacred_shard_frost: { id: 'sacred_shard_frost', name: 'แก่นศิลาเหมันต์ศักดิ์สิทธิ์ (Sacred Frost Shard)', sellPrice: 1000, desc: 'แก่นแท้แห่งความเย็นเยือก ได้รับจากการปราบไททันฟรอสต์แฟงก์' },
-  sacred_shard_shadow: { id: 'sacred_shard_shadow', name: 'แก่นศิลาทมิฬศักดิ์สิทธิ์ (Sacred Shadow Shard)', sellPrice: 1000, desc: 'แก่นแท้แห่งมิติเงา ได้รับจากการปราบนครมรณะลอร์ดมาลาคอร์' },
-  sacred_shard_nature: { id: 'sacred_shard_nature', name: 'แก่นศิลาพฤกษาศักดิ์สิทธิ์ (Sacred Nature Shard)', sellPrice: 1200, desc: 'แก่นแท้แห่งพงไพร ได้รับจากการปราบเทพพฤกษาโบราณ ซิลวาเนีย' },
-  sacred_shard_thunder: { id: 'sacred_shard_thunder', name: 'แก่นศิลาอัสนีศักดิ์สิทธิ์ (Sacred Thunder Shard)', sellPrice: 1500, desc: 'แก่นแท้แห่งสายฟ้า ได้รับจากการปราบจ้าวพายุ ออสทริออน' },
-  ancient_tree_heart: { id: 'ancient_tree_heart', name: 'หัวใจพฤกษาบรรพกาล', sellPrice: 1800, desc: 'หัวใจไม้ศักดิ์สิทธิ์พันปี แผ่พลังชีวิตบริสุทธิ์ของผืนป่าโบราณ' },
-  storm_core: { id: 'storm_core', name: 'แก่นอัสนีบาตคำราม', sellPrice: 2000, desc: 'แก่นสายฟ้าทรงอานุภาพที่กักเก็บกระแสไฟฟ้าแรงสูงนับล้านโวลต์' },
-  star_fruit: { id: 'star_fruit', name: 'ผลไม้ดวงดาราพฤกษา', sellPrice: 120, energyRestore: 60, desc: 'ผลไม้เรืองแสงสีทองรูปดาว หวานหอมฟื้นฟูพลังกายและจิตใจได้อย่างยอดเยี่ยม' },
-  thunder_crystal: { id: 'thunder_crystal', name: 'ผลึกสายฟ้าอัสนีบาต', sellPrice: 180, desc: 'แร่ผลึกสีฟ้าครามที่สะสมประจุไฟฟ้าสถิตจากยอดเขาพายุ' },
+  sacred_shard_earth: { id: 'sacred_shard_earth', name: 'แก่นศิลาปฐพีศักดิ์สิทธิ์ (Sacred Earth Shard)', sellPrice: 400, desc: 'แก่นแท้แห่งธาตุดิน ได้รับจากการปราบราชินีสปอร์คาธูรอส' },
+  sacred_shard_sun: { id: 'sacred_shard_sun', name: 'แก่นศิลาสุริยันศักดิ์สิทธิ์ (Sacred Sun Shard)', sellPrice: 400, desc: 'แก่นแท้แห่งแสงสว่าง ได้รับจากการปราบโกเลมลูมินาร์ค' },
+  sacred_shard_water: { id: 'sacred_shard_water', name: 'แก่นศิลาวารีศักดิ์สิทธิ์ (Sacred Water Shard)', sellPrice: 400, desc: 'แก่นแท้แห่งสายน้ำ ได้รับจากการปราบพญาไฮดราคิส' },
+  sacred_shard_fire: { id: 'sacred_shard_fire', name: 'แก่นศิลาเพลิงศักดิ์สิทธิ์ (Sacred Fire Shard)', sellPrice: 400, desc: 'แก่นแท้แห่งเพลิงโลกันตร์ ได้รับจากการปราบมังกรอิกนิสทรอน' },
+  sacred_shard_frost: { id: 'sacred_shard_frost', name: 'แก่นศิลาเหมันต์ศักดิ์สิทธิ์ (Sacred Frost Shard)', sellPrice: 400, desc: 'แก่นแท้แห่งความเย็นเยือก ได้รับจากการปราบไททันฟรอสต์แฟงก์' },
+  sacred_shard_shadow: { id: 'sacred_shard_shadow', name: 'แก่นศิลาทมิฬศักดิ์สิทธิ์ (Sacred Shadow Shard)', sellPrice: 400, desc: 'แก่นแท้แห่งมิติเงา ได้รับจากการปราบนครมรณะลอร์ดมาลาคอร์' },
+  sacred_shard_nature: { id: 'sacred_shard_nature', name: 'แก่นศิลาพฤกษาศักดิ์สิทธิ์ (Sacred Nature Shard)', sellPrice: 500, desc: 'แก่นแท้แห่งพงไพร ได้รับจากการปราบเทพพฤกษาโบราณ ซิลวาเนีย' },
+  sacred_shard_thunder: { id: 'sacred_shard_thunder', name: 'แก่นศิลาอัสนีศักดิ์สิทธิ์ (Sacred Thunder Shard)', sellPrice: 600, desc: 'แก่นแท้แห่งสายฟ้า ได้รับจากการปราบจ้าวพายุ ออสทริออน' },
+  ancient_tree_heart: { id: 'ancient_tree_heart', name: 'หัวใจพฤกษาบรรพกาล', sellPrice: 800, desc: 'หัวใจไม้ศักดิ์สิทธิ์พันปี แผ่พลังชีวิตบริสุทธิ์ของผืนป่าโบราณ' },
+  storm_core: { id: 'storm_core', name: 'แก่นอัสนีบาตคำราม', sellPrice: 900, desc: 'แก่นสายฟ้าทรงอานุภาพที่กักเก็บกระแสไฟฟ้าแรงสูงนับล้านโวลต์' },
+  star_fruit: { id: 'star_fruit', name: 'ผลไม้ดวงดาราพฤกษา', sellPrice: 90, energyRestore: 60, desc: 'ผลไม้เรืองแสงสีทองรูปดาว หวานหอมฟื้นฟูพลังกายและจิตใจได้อย่างยอดเยี่ยม' },
+  thunder_crystal: { id: 'thunder_crystal', name: 'ผลึกสายฟ้าอัสนีบาต', sellPrice: 110, desc: 'แร่ผลึกสีฟ้าครามที่สะสมประจุไฟฟ้าสถิตจากยอดเขาพายุ' },
 
   // วัตถุสิ่งปลูกสร้างตกแต่งฟาร์ม (Farm Placeable Items)
   wood_fence: { id: 'wood_fence', name: 'รั้วไม้กั้นคอก (Wood Fence)', sellPrice: 5, desc: 'รั้วไม้แปรรูป วางกั้นอาณาเขตบนฟาร์ม สัตว์และมอนสเตอร์ไม่สามารถเดินผ่านได้' },
@@ -670,9 +670,9 @@ export const WORLD_ITEMS: Record<string, MaterialItem> = {
   seashell: { id: 'seashell', name: 'เปลือกหอยมุกสีรุ้ง (Pearl Seashell)', sellPrice: 45, desc: 'เปลือกหอยแวววาว เก็บได้ตามชายหาดเกาะเขตร้อน' },
   message_bottle: { id: 'message_bottle', name: 'ขวดแก้วลายแทงสมบัติ', sellPrice: 75, desc: 'ขวดแก้วลอยน้ำที่มีลายแทงซากเรืออับปางซ่อนอยู่ด้านใน' },
   crab_meat: { id: 'crab_meat', name: 'เนื้อปูยักษ์สด (Stoneback Crab Meat)', sellPrice: 85, desc: 'เนื้อปูทะเลสดแน่นหวาน นำไปทอดเป็นทอดมันปูยักษ์' },
-  cutlass_saber: { id: 'cutlass_saber', name: 'ดาบโจรสลัดคัตลาสอาถรรพ์ (Corsair Cutlass)', sellPrice: 2500, desc: 'ดาบโค้งเหล็กกล้าแห่งแคริบเบียน ฟันคลื่นจันทร์เสี้ยววารี พลังโจมตี 100 ติดคริติคอล 35%!' },
-  pirate_tricorn_hat: { id: 'pirate_tricorn_hat', name: 'หมวกกัปตันโจรสลัดสามมุม (Captain Tricorn)', sellPrice: 1800, desc: '[หมวกแฟชั่น & บัฟ] สวมใส่เพิ่มโอกาสหลบหลีก +20% และเดินไวขึ้น +25%' },
-  parrot_egg: { id: 'parrot_egg', name: 'ไข่นกแก้วมาคอว์โจรสลัด (Parrot Egg)', sellPrice: 3000, desc: 'ฟักเป็นนกแก้วคู่หูโจรสลัด บินตามเก็บของและจิกศัตรู' },
+  cutlass_saber: { id: 'cutlass_saber', name: 'ดาบโจรสลัดคัตลาสอาถรรพ์ (Corsair Cutlass)', sellPrice: 1200, desc: 'ดาบโค้งเหล็กกล้าแห่งแคริบเบียน ฟันคลื่นจันทร์เสี้ยววารี พลังโจมตี 62 ติดคริติคอล +20%!' },
+  pirate_tricorn_hat: { id: 'pirate_tricorn_hat', name: 'หมวกกัปตันโจรสลัดสามมุม (Captain Tricorn)', sellPrice: 900, desc: '[หมวกแฟชั่น & บัฟ] สวมใส่เพิ่มโอกาสหลบหลีก +20% และเดินไวขึ้น +25%' },
+  parrot_egg: { id: 'parrot_egg', name: 'ไข่นกแก้วมาคอว์โจรสลัด (Parrot Egg)', sellPrice: 1500, desc: 'ฟักเป็นนกแก้วคู่หูโจรสลัด บินตามเก็บของและจิกศัตรู' },
   island_warp_totem: { id: 'island_warp_totem', name: 'เสาวาร์ปเกาะเขตร้อน (Island Warp Totem)', sellPrice: 250, desc: 'กดใช้เพื่อเทเลพอร์ตข้ามมิติมายังเกาะเขตร้อนได้ทันทีจากทุกที่' },
   tropical_delight_drink: { id: 'tropical_delight_drink', name: 'ค็อกเทลเขตร้อนสูตรกัปตัน', sellPrice: 350, energyRestore: 160, hpRestore: 100, desc: 'เครื่องดื่มผลไม้เขตร้อนเย็นฉ่ำ ดื่มเพื่อวิ่งเร็วขึ้น +60% นาน 5 นาที!' },
   crab_cakes: { id: 'crab_cakes', name: 'ทอดมันปูยักษ์เกาะสมบัติ (Crab Cakes)', sellPrice: 380, energyRestore: 130, hpRestore: 70, desc: 'เนื้อปูคลุกเคล้าเครื่องเทศทอดกรอบ รสเลิศ' },
@@ -681,10 +681,10 @@ export const WORLD_ITEMS: Record<string, MaterialItem> = {
   lionfish: { id: 'lionfish', name: 'ปลาสิงโตครีบเพลิง', sellPrice: 135, desc: 'ปลาทะเลครีบหนามแหลมคม ลวดลายงดงามดั่งเปลวไฟ' },
   manta_ray: { id: 'manta_ray', name: 'ปลากระเบนราหูยักษ์', sellPrice: 260, desc: 'กระเบนทะเลลึกตัวมหึมา ร่อนใต้เกลียวคลื่น' },
   hammerhead_shark: { id: 'hammerhead_shark', name: 'ฉลามหัวค้อนเกาะสมบัติ', sellPrice: 700, desc: 'ราชันแห่งท้องทะเลเขตร้อน ฉลามในตำนานที่เฝ้าซากเรืออับปาง' },
-  magma_wyrm_scale: { id: 'magma_wyrm_scale', name: 'เกล็ดมังกรลาวายักษ์ (Magma Scale)', sellPrice: 1800, desc: 'เกล็ดหนาทนความร้อนนับพันองศา ดร็อปจากคาร์ซาร็อค ใช้หลอมอาวุธที่แท่นหลอมภูเขาไฟ' },
-  volcano_flame_sword: { id: 'volcano_flame_sword', name: 'ดาบเพลิงสุริยันอัคนี (Solar Magma Blade)', sellPrice: 4500, desc: 'ดาบโบราณใจกลางภูเขาไฟ พลังโจมตี 135 คลื่นลูกไฟลาวา' },
-  ring_of_fire_walker: { id: 'ring_of_fire_walker', name: 'แหวนผู้เดินบนลาวา (Firewalker Band)', sellPrice: 3200, desc: '[เครื่องประดับ] ป้องกันความเสียหายจากไฟและบ่อลาวา 100% พร้อมวิ่งไวขึ้น 15%' },
-  volcano_cinder_forge_stone: { id: 'volcano_cinder_forge_stone', name: 'ศิลาหลอมอัคนีขั้นสูง', sellPrice: 1200, desc: 'ใช้ผสานพลังเสริมออปชันขั้นสูงสุดที่แท่นหลอมภูเขาไฟ' }
+  magma_wyrm_scale: { id: 'magma_wyrm_scale', name: 'เกล็ดมังกรลาวายักษ์ (Magma Scale)', sellPrice: 650, desc: 'เกล็ดหนาทนความร้อนนับพันองศา ดร็อปจากคาร์ซาร็อค ใช้หลอมอาวุธที่แท่นหลอมภูเขาไฟ' },
+  volcano_flame_sword: { id: 'volcano_flame_sword', name: 'ดาบเพลิงสุริยันอัคนี (Solar Magma Blade)', sellPrice: 1800, desc: 'ดาบโบราณใจกลางภูเขาไฟ พลังโจมตี 78 คลื่นลูกไฟลาวา คริติคอล +20%' },
+  ring_of_fire_walker: { id: 'ring_of_fire_walker', name: 'แหวนผู้เดินบนลาวา (Firewalker Band)', sellPrice: 1400, desc: '[เครื่องประดับ] ป้องกันความเสียหายจากไฟและบ่อลาวา 100% พร้อมวิ่งไวขึ้น 15%' },
+  volcano_cinder_forge_stone: { id: 'volcano_cinder_forge_stone', name: 'ศิลาหลอมอัคนีขั้นสูง', sellPrice: 600, desc: 'ใช้ผสานพลังเสริมออปชันขั้นสูงสุดที่แท่นหลอมภูเขาไฟ' }
 };
 
 export const WORLD_MONSTERS: Record<string, WorldMonsterData> = {
@@ -723,7 +723,7 @@ export const WORLD_MONSTERS: Record<string, WorldMonsterData> = {
     damage: 20,
     attackCooldown: 1400,
     aggroDist: 150,
-    drops: [{ item: 'cursed_wood', chance: 1.0 }, { item: 'mana_gem', chance: 0.75 }],
+    drops: [{ item: 'cursed_wood', chance: 0.85 }, { item: 'mana_gem', chance: 0.30 }],
     gold: 24,
     xp: 28
   },
@@ -736,7 +736,7 @@ export const WORLD_MONSTERS: Record<string, WorldMonsterData> = {
     damage: 8,
     attackCooldown: 700,
     aggroDist: 190,
-    drops: [{ item: 'bat_wing', chance: 1.0 }, { item: 'ruby_gem', chance: 0.5 }],
+    drops: [{ item: 'bat_wing', chance: 0.75 }, { item: 'ruby_gem', chance: 0.14 }],
     gold: 8,
     xp: 12
   },
@@ -749,7 +749,7 @@ export const WORLD_MONSTERS: Record<string, WorldMonsterData> = {
     damage: 14,
     attackCooldown: 1200,
     aggroDist: 160,
-    drops: [{ item: 'crystal_core', chance: 1.0 }, { item: 'mana_gem', chance: 0.65 }, { item: 'diamond_crystal', chance: 0.35 }],
+    drops: [{ item: 'crystal_core', chance: 0.70 }, { item: 'mana_gem', chance: 0.25 }, { item: 'diamond_crystal', chance: 0.08 }],
     gold: 16,
     xp: 20
   },
@@ -775,7 +775,7 @@ export const WORLD_MONSTERS: Record<string, WorldMonsterData> = {
     damage: 14,
     attackCooldown: 800,
     aggroDist: 200,
-    drops: [{ item: 'crystal_core', chance: 1.0 }, { item: 'diamond_crystal', chance: 0.45 }],
+    drops: [{ item: 'crystal_core', chance: 0.75 }, { item: 'diamond_crystal', chance: 0.12 }],
     gold: 18,
     xp: 22
   },
@@ -788,7 +788,7 @@ export const WORLD_MONSTERS: Record<string, WorldMonsterData> = {
     damage: 20,
     attackCooldown: 1300,
     aggroDist: 180,
-    drops: [{ item: 'flame_heart', chance: 1.0 }, { item: 'ruby_gem', chance: 0.8 }],
+    drops: [{ item: 'flame_heart', chance: 0.35 }, { item: 'ruby_gem', chance: 0.25 }],
     gold: 25,
     xp: 32
   },
@@ -814,7 +814,7 @@ export const WORLD_MONSTERS: Record<string, WorldMonsterData> = {
     damage: 19,
     attackCooldown: 1100,
     aggroDist: 180,
-    drops: [{ item: 'iron_ore', chance: 1.0 }, { item: 'cursed_relic', chance: 1.0 }],
+    drops: [{ item: 'iron_ore', chance: 0.75 }, { item: 'cursed_relic', chance: 0.35 }],
     gold: 24,
     xp: 30
   },
@@ -840,7 +840,7 @@ export const WORLD_MONSTERS: Record<string, WorldMonsterData> = {
     damage: 32,
     attackCooldown: 1200,
     aggroDist: 260,
-    drops: [{ item: 'spire_shard', chance: 1.0 }, { item: 'diamond_crystal', chance: 0.6 }],
+    drops: [{ item: 'spire_shard', chance: 0.85 }, { item: 'diamond_crystal', chance: 0.20 }],
     gold: 65,
     xp: 70
   },
@@ -866,7 +866,7 @@ export const WORLD_MONSTERS: Record<string, WorldMonsterData> = {
     damage: 26,
     attackCooldown: 850,
     aggroDist: 220,
-    drops: [{ item: 'pirate_doubloon', chance: 1.0 }, { item: 'skeleton_key', chance: 0.4 }, { item: 'gold_ore', chance: 0.6 }],
+    drops: [{ item: 'pirate_doubloon', chance: 0.55 }, { item: 'skeleton_key', chance: 0.20 }, { item: 'gold_ore', chance: 0.30 }],
     gold: 45,
     xp: 50
   },
@@ -879,8 +879,8 @@ export const WORLD_MONSTERS: Record<string, WorldMonsterData> = {
     damage: 20,
     attackCooldown: 700,
     aggroDist: 240,
-    drops: [{ item: 'cinder_shard', chance: 0.8 }, { item: 'coal', chance: 0.6 }],
-    gold: 30,
+    drops: [{ item: 'cinder_shard', chance: 0.30 }, { item: 'coal', chance: 0.45 }],
+    gold: 25,
     xp: 35
   },
   magma_duggy: {
@@ -892,8 +892,8 @@ export const WORLD_MONSTERS: Record<string, WorldMonsterData> = {
     damage: 28,
     attackCooldown: 850,
     aggroDist: 200,
-    drops: [{ item: 'cinder_shard', chance: 0.9 }, { item: 'iron_ore', chance: 0.6 }],
-    gold: 42,
+    drops: [{ item: 'cinder_shard', chance: 0.35 }, { item: 'iron_ore', chance: 0.45 }],
+    gold: 35,
     xp: 48
   },
   lava_lurker: {
@@ -905,7 +905,7 @@ export const WORLD_MONSTERS: Record<string, WorldMonsterData> = {
     damage: 36,
     attackCooldown: 1000,
     aggroDist: 220,
-    drops: [{ item: 'cinder_shard', chance: 1.0 }, { item: 'magma_wyrm_scale', chance: 0.25 }, { item: 'gold_ore', chance: 0.6 }],
+    drops: [{ item: 'cinder_shard', chance: 0.50 }, { item: 'magma_wyrm_scale', chance: 0.08 }, { item: 'gold_ore', chance: 0.30 }],
     gold: 65,
     xp: 75
   }
@@ -915,13 +915,13 @@ export const BOSS_KATHUROS: BossData = {
   id: 'boss_kathuros',
   name: 'ราชินีสปอร์ปีศาจ คาธูรอส',
   title: 'เจ้านรกแห่งวิหารโบราณ (Queen of Blight Kathuros)',
-  hp: 2600,
-  maxHp: 2600,
+  hp: 3200,
+  maxHp: 3200,
   speed: 1.0,
-  damage: 18,
+  damage: 24,
   attackCooldown: 1200,
   aggroDist: 380,
-  gold: 180,
+  gold: 150,
   xp: 450,
   drops: [
     { item: 'demon_heart', chance: 1.0, count: 1 },
@@ -934,17 +934,17 @@ export const BOSS_LUMINARCH: BossData = {
   id: 'boss_luminarch',
   name: 'โกเลมผลึกคริสตัลโบราณ ลูมินาร์ค',
   title: 'ผู้พิทักษ์หุบเหวปริซึม (Ancient Crystal Golem Luminarch)',
-  hp: 4500,
-  maxHp: 4500,
+  hp: 5800,
+  maxHp: 5800,
   speed: 0.85,
-  damage: 24,
+  damage: 30,
   attackCooldown: 1400,
   aggroDist: 380,
-  gold: 280,
+  gold: 240,
   xp: 650,
   drops: [
     { item: 'luminarch_crystal_heart', chance: 1.0, count: 1 },
-    { item: 'diamond_crystal', chance: 1.0, count: 2 },
+    { item: 'diamond_crystal', chance: 1.0, count: 1 },
     { item: 'gold_ore', chance: 1.0, count: 3 }
   ]
 };
@@ -953,18 +953,18 @@ export const BOSS_HYDRAKIS: BossData = {
   id: 'boss_hydrakis',
   name: 'พญาไฮดราหนองน้ำพิษ ไฮดราคิส',
   title: 'มัจจุราชสามเศียรแห่งบึงมืด (Hydrakis the Venom Marsh Hydra)',
-  hp: 5400,
-  maxHp: 5400,
+  hp: 6800,
+  maxHp: 6800,
   speed: 1.05,
-  damage: 26,
+  damage: 34,
   attackCooldown: 1100,
   aggroDist: 380,
-  gold: 340,
+  gold: 300,
   xp: 750,
   drops: [
     { item: 'hydra_venom_gland', chance: 1.0, count: 1 },
     { item: 'hydra_scale', chance: 1.0, count: 3 },
-    { item: 'swamp_herb', chance: 1.0, count: 4 }
+    { item: 'swamp_herb', chance: 1.0, count: 3 }
   ]
 };
 
@@ -972,18 +972,18 @@ export const BOSS_IGNISTRON: BossData = {
   id: 'boss_ignistron',
   name: 'ราชันย์มังกรลาวาเพลิงอัคนี อิกนิสทรอน',
   title: 'เจ้าอสูรเพลิงโลกันตร์ (Ignistron the Molten Flame Drake)',
-  hp: 7200,
-  maxHp: 7200,
+  hp: 9200,
+  maxHp: 9200,
   speed: 1.15,
-  damage: 30,
+  damage: 38,
   attackCooldown: 1000,
   aggroDist: 400,
-  gold: 420,
+  gold: 380,
   xp: 900,
   drops: [
     { item: 'magma_dragon_horn', chance: 1.0, count: 1 },
     { item: 'flame_heart', chance: 1.0, count: 2 },
-    { item: 'ruby_gem', chance: 1.0, count: 4 }
+    { item: 'ruby_gem', chance: 1.0, count: 3 }
   ]
 };
 
@@ -991,18 +991,18 @@ export const BOSS_FROSTFANG: BossData = {
   id: 'boss_frostfang',
   name: 'จอมอสูรไททันน้ำแข็ง ฟรอสต์แฟงก์',
   title: 'เจ้าพายุเหมันต์นิรันดร์ (Frostfang the Glacial Titan)',
-  hp: 7600,
-  maxHp: 7600,
+  hp: 10000,
+  maxHp: 10000,
   speed: 0.95,
-  damage: 32,
+  damage: 40,
   attackCooldown: 1200,
   aggroDist: 380,
-  gold: 480,
+  gold: 420,
   xp: 950,
   drops: [
     { item: 'glacial_titan_core', chance: 1.0, count: 1 },
     { item: 'frost_crystal', chance: 1.0, count: 3 },
-    { item: 'diamond_crystal', chance: 1.0, count: 2 }
+    { item: 'diamond_crystal', chance: 1.0, count: 1 }
   ]
 };
 
@@ -1010,13 +1010,13 @@ export const BOSS_MALAKOR: BossData = {
   id: 'boss_malakor',
   name: 'ลอร์ดมรณะกระดูกอสูร มาลาคอร์',
   title: 'ราชาไร้นามแห่งสุสานต้องสาป (Lord Malakor the Undead Overlord)',
-  hp: 9500,
-  maxHp: 9500,
+  hp: 12500,
+  maxHp: 12500,
   speed: 1.0,
-  damage: 36,
+  damage: 44,
   attackCooldown: 1100,
   aggroDist: 380,
-  gold: 600,
+  gold: 520,
   xp: 1200,
   drops: [
     { item: 'death_lord_soul', chance: 1.0, count: 1 },
@@ -1029,18 +1029,18 @@ export const BOSS_SYLVANUS: BossData = {
   id: 'boss_sylvanus',
   name: 'เทพพฤกษาบรรพกาล ซิลวาเนีย',
   title: 'เทวีผู้พิทักษ์ไพรสณฑ์โบราณ (Sylvanus Ancient Forest Sovereign)',
-  hp: 11000,
-  maxHp: 11000,
+  hp: 15000,
+  maxHp: 15000,
   speed: 0.95,
-  damage: 38,
+  damage: 48,
   attackCooldown: 1000,
   aggroDist: 420,
-  gold: 750,
+  gold: 650,
   xp: 1400,
   drops: [
     { item: 'ancient_tree_heart', chance: 1.0, count: 1 },
     { item: 'sacred_shard_nature', chance: 1.0, count: 1 },
-    { item: 'star_fruit', chance: 1.0, count: 4 }
+    { item: 'star_fruit', chance: 1.0, count: 2 }
   ]
 };
 
@@ -1048,18 +1048,18 @@ export const BOSS_ASTREON: BossData = {
   id: 'boss_astreon',
   name: 'จ้าวแห่งพายุสายฟ้า ออสทริออน',
   title: 'ราชันย์แห่งสายฟ้าและวายุคลั่ง (Astreon Sovereign of Tempest)',
-  hp: 13500,
-  maxHp: 13500,
+  hp: 18500,
+  maxHp: 18500,
   speed: 1.45,
-  damage: 42,
+  damage: 54,
   attackCooldown: 850,
   aggroDist: 450,
-  gold: 950,
+  gold: 800,
   xp: 1800,
   drops: [
     { item: 'storm_core', chance: 1.0, count: 1 },
     { item: 'sacred_shard_thunder', chance: 1.0, count: 1 },
-    { item: 'thunder_crystal', chance: 1.0, count: 5 }
+    { item: 'thunder_crystal', chance: 1.0, count: 3 }
   ]
 };
 
@@ -1067,20 +1067,20 @@ export const BOSS_KARZARAK: BossData = {
   id: 'boss_karzarak',
   name: 'คาร์ซาร็อค มังกรลาวายักษ์โบราณ',
   title: 'จ้าวแห่งปล่องภูเขาไฟเกาะสมบัติ (Karzarak the Ancient Magma Wyrm)',
-  hp: 14500,
-  maxHp: 14500,
+  hp: 22000,
+  maxHp: 22000,
   speed: 1.25,
-  damage: 44,
+  damage: 58,
   attackCooldown: 900,
   aggroDist: 480,
-  gold: 1200,
+  gold: 950,
   xp: 2200,
   drops: [
-    { item: 'magma_wyrm_scale', chance: 1.0, count: 3 },
+    { item: 'magma_wyrm_scale', chance: 1.0, count: 2 },
     { item: 'volcano_flame_sword', chance: 1.0, count: 1 },
     { item: 'ring_of_fire_walker', chance: 1.0, count: 1 },
-    { item: 'cinder_shard', chance: 1.0, count: 20 },
-    { item: 'pirate_doubloon', chance: 1.0, count: 15 }
+    { item: 'cinder_shard', chance: 1.0, count: 8 },
+    { item: 'pirate_doubloon', chance: 1.0, count: 6 }
   ]
 };
 
@@ -1111,9 +1111,9 @@ export const VOLCANO_FORGE_RECIPES: Record<string, VolcanoForgeRecipe> = {
   forge_solar_blade: {
     id: 'forge_solar_blade',
     name: 'ดาบเพลิงสุริยันอัคนี (Solar Magma Blade)',
-    desc: 'หลอมดาบเพลิงศักดิ์สิทธิ์ใจกลางภูเขาไฟ พลังโจมตี 120 คลื่นลูกไฟลาวา คริติคอล +35%',
-    costCinderShards: 15,
-    materials: { magma_wyrm_scale: 2, gold_ore: 5 },
+    desc: 'หลอมดาบเพลิงศักดิ์สิทธิ์ใจกลางภูเขาไฟ พลังโจมตี 78 คลื่นลูกไฟลาวา คริติคอล +20%',
+    costCinderShards: 25,
+    materials: { magma_wyrm_scale: 4, gold_ore: 10 },
     resultItem: 'volcano_flame_sword',
     resultCount: 1,
     type: 'weapon'
@@ -1122,27 +1122,27 @@ export const VOLCANO_FORGE_RECIPES: Record<string, VolcanoForgeRecipe> = {
     id: 'forge_fire_ring',
     name: 'แหวนผู้เดินบนลาวา (Firewalker Band)',
     desc: 'เครื่องประดับโบราณ ป้องกันความเสียหายจากไฟและลาวา 100% พร้อมวิ่งไวขึ้น 15%',
-    costCinderShards: 10,
-    materials: { magma_wyrm_scale: 1, ruby_gem: 2 },
+    costCinderShards: 18,
+    materials: { magma_wyrm_scale: 2, ruby_gem: 5 },
     resultItem: 'ring_of_fire_walker',
     resultCount: 1,
     type: 'accessory'
   },
   forge_enchant_weapon: {
     id: 'forge_enchant_weapon',
-    name: 'สลักรูนเถ้าภูเขาไฟเสริมอาวุธ (+30 DMG, +15% Crit)',
-    desc: 'อาบพลังเถ้าภูเขาไฟให้อาวุธที่สวมใส่ เพิ่มพลังโจมตี +30 และโอกาสคริติคอล +15%',
-    costCinderShards: 12,
-    materials: { gold_ore: 3 },
+    name: 'สลักรูนเถ้าภูเขาไฟเสริมอาวุธ (+12 DMG, +5% Crit)',
+    desc: 'อาบพลังเถ้าภูเขาไฟให้อาวุธที่สวมใส่ เพิ่มพลังโจมตี +12 และโอกาสคริติคอล +5% (สะสมสูงสุด 3 ระดับ)',
+    costCinderShards: 18,
+    materials: { gold_ore: 5, ruby_gem: 2 },
     type: 'enchant'
   },
   forge_cinder_to_doubloons: {
     id: 'forge_cinder_to_doubloons',
-    name: 'หลอมเศษเถ้าเป็นเหรียญทองโจรสลัด (5 เหรียญ)',
-    desc: 'นำเศษผลึกเพลิง 5 ชิ้น หลอมประทับตราเป็นเหรียญทองโจรสลัดโบราณ 5 เหรียญ',
-    costCinderShards: 5,
+    name: 'หลอมเศษเถ้าเป็นเหรียญทองโจรสลัด (3 เหรียญ)',
+    desc: 'นำเศษผลึกเพลิง 8 ชิ้น หลอมประทับตราเป็นเหรียญทองโจรสลัดโบราณ 3 เหรียญ',
+    costCinderShards: 8,
     resultItem: 'pirate_doubloon',
-    resultCount: 5,
+    resultCount: 3,
     type: 'currency'
   }
 };
@@ -1412,177 +1412,177 @@ export const FORGE_RECIPES: Record<string, ForgeRecipe> = {
   iron_sword: {
     id: 'iron_sword',
     name: 'ดาบเหล็กกล้านักผจญภัย',
-    desc: 'ดาบเหล็กฟันระยะประชิด พลังโจมตี 32',
-    cost: 150,
-    materials: { iron_ore: 2, wolf_fang: 1 }
+    desc: 'ดาบเหล็กฟันระยะประชิด พลังโจมตี 28',
+    cost: 350,
+    materials: { iron_ore: 5, wolf_fang: 3 }
   },
   rifle: {
     id: 'rifle',
     name: 'ปืนล่าสัตว์โบราณ',
-    desc: 'ปืนไรเฟิลยิงระยะไกล พลังโจมตี 52',
-    cost: 350,
-    materials: { iron_ore: 4, cursed_wood: 2 }
+    desc: 'ปืนไรเฟิลยิงระยะไกล พลังโจมตี 42',
+    cost: 850,
+    materials: { iron_ore: 10, cursed_wood: 5 }
   },
   antidote_serum: {
     id: 'antidote_serum',
     name: 'เซรุ่มต้านสปอร์พิษ (Antidote Serum)',
     desc: 'ฟื้นฟู HP +80 และพลังงาน +50 ช่วยชำระล้างพิษสปอร์',
-    cost: 50,
-    materials: { blight_spore: 2, starflower_herb: 1 }
+    cost: 80,
+    materials: { blight_spore: 3, starflower_herb: 2 }
   },
   excalibur_sword: {
     id: 'excalibur_sword',
     name: 'ดาบศักดิ์สิทธิ์เอ็กซ์คาลิเบอร์',
-    desc: 'ดาบศักดิ์สิทธิ์ ฟันคลื่นแสงทะลวงศัตรู พลังโจมตี 52',
-    cost: 350,
-    materials: { demon_heart: 1, ruby_gem: 2, mana_gem: 2 }
+    desc: 'ดาบศักดิ์สิทธิ์ ฟันคลื่นแสงทะลวงศัตรู พลังโจมตี 38',
+    cost: 1200,
+    materials: { demon_heart: 2, ruby_gem: 5, mana_gem: 5 }
   },
   dragon_rifle: {
     id: 'dragon_rifle',
     name: 'ปืนมังกรเพลิง (Dragonfire Cannon)',
-    desc: 'ปืนมังกรยิงระเบิดเพลิง พลังโจมตี 62',
-    cost: 450,
-    materials: { demon_heart: 1, cursed_wood: 3, ruby_gem: 2 }
+    desc: 'ปืนมังกรยิงระเบิดเพลิง พลังโจมตี 48',
+    cost: 1400,
+    materials: { demon_heart: 2, cursed_wood: 6, ruby_gem: 5 }
   },
   volcano_sword: {
     id: 'volcano_sword',
     name: 'ดาบเพลิงลาวาภูเขาไฟ (Volcano Magma Blade)',
-    desc: 'ดาบเพลิงหลอมจากแก่นภูเขาไฟ ฟันคลื่นเพลิงลาวา พลังโจมตี 68',
-    cost: 550,
-    materials: { cinder_shard: 5, dragon_tooth: 1, ruby_gem: 2 }
+    desc: 'ดาบเพลิงหลอมจากแก่นภูเขาไฟ ฟันคลื่นเพลิงลาวา พลังโจมตี 48',
+    cost: 1800,
+    materials: { cinder_shard: 10, dragon_tooth: 2, ruby_gem: 5 }
   },
   luminarch_crystal_blade: {
     id: 'luminarch_crystal_blade',
     name: 'ดาบเลเซอร์ผลึกปริซึมลูมินาร์ค (Prismatic Laser Blade)',
-    desc: 'สุดยอดดาบคริสตัลโบราณ ปลดปล่อยเลเซอร์ปริซึมทะลวง พลังโจมตี 60',
-    cost: 550,
-    materials: { luminarch_crystal_heart: 1, diamond_crystal: 2, gold_ore: 4 }
+    desc: 'สุดยอดดาบคริสตัลโบราณ ปลดปล่อยเลเซอร์ปริซึมทะลวง พลังโจมตี 44',
+    cost: 1800,
+    materials: { luminarch_crystal_heart: 2, diamond_crystal: 5, gold_ore: 8 }
   },
   hydra_venom_bow: {
     id: 'hydra_venom_bow',
     name: 'คันธนูสามศรพิษพญาไฮดรา (Hydra Venom Bow)',
-    desc: 'คันธนูบึงพิษ แผลงศรกรดพิษกระจาย 3 ดอกพร้อมกัน พลังโจมตี 24x3',
-    cost: 600,
-    materials: { hydra_venom_gland: 1, hydra_scale: 4, swamp_herb: 3 }
+    desc: 'คันธนูบึงพิษ แผลงศรกรดพิษกระจาย 3 ดอกพร้อมกัน พลังโจมตี 18x3',
+    cost: 2000,
+    materials: { hydra_venom_gland: 2, hydra_scale: 8, swamp_herb: 6 }
   },
   volcano_magma_axe: {
     id: 'volcano_magma_axe',
     name: 'ขวานเพลิงโลกันตร์ลาวาอิกนิสทรอน (Molten Magma Axe)',
-    desc: 'ขวานหินลาวาคู่ ปลดปล่อยระเบิดเพลิงล้างผลาญ พลังโจมตี 82',
-    cost: 750,
-    materials: { magma_dragon_horn: 1, flame_heart: 2, ruby_gem: 4 }
+    desc: 'ขวานหินลาวาคู่ ปลดปล่อยระเบิดเพลิงล้างผลาญ พลังโจมตี 56',
+    cost: 2500,
+    materials: { magma_dragon_horn: 2, flame_heart: 5, ruby_gem: 6 }
   },
   glacial_titan_hammer: {
     id: 'glacial_titan_hammer',
     name: 'ค้อนเหมันต์ไททันน้ำแข็งฟรอสต์แฟงก์ (Glacial Titan Hammer)',
-    desc: 'ค้อนน้ำแข็งพันปี ทุบคลื่นหอกน้ำแข็งแช่แข็ง พลังโจมตี 88',
-    cost: 800,
-    materials: { glacial_titan_core: 1, frost_crystal: 4, diamond_crystal: 2 }
+    desc: 'ค้อนน้ำแข็งพันปี ทุบคลื่นหอกน้ำแข็งแช่แข็ง พลังโจมตี 62',
+    cost: 2800,
+    materials: { glacial_titan_core: 2, frost_crystal: 8, diamond_crystal: 5 }
   },
   malakor_soul_scythe: {
     id: 'malakor_soul_scythe',
     name: 'เคียวมรณะสูบวิญญาณลอร์ดมาลาคอร์ (Malakor Soul Scythe)',
-    desc: 'เคียวแห่งความตาย ปล่อยคลื่นกะโหลกมืด และดูดเลือด 8% คืนแก่ผู้ใช้ พลังโจมตี 92',
-    cost: 1000,
-    materials: { death_lord_soul: 1, cursed_relic: 3, crown_of_despair: 1 }
+    desc: 'เคียวแห่งความตาย ปล่อยคลื่นกะโหลกมืด และดูดเลือด 8% คืนแก่ผู้ใช้ พลังโจมตี 64',
+    cost: 3500,
+    materials: { death_lord_soul: 2, cursed_relic: 6, crown_of_despair: 2 }
   },
   sylvan_bow: {
     id: 'sylvan_bow',
     name: 'คันธนูใบไม้พฤกษาพันปี (Ancient Sylvan Bow)',
-    desc: 'คันธนูแห่งเทพพฤกษา แผลงศรใบไม้คมกริบ 4 ดอกรูปพัด ทะลวงศัตรู พลังโจมตี 28x4',
-    cost: 1150,
-    materials: { ancient_tree_heart: 1, cursed_wood: 4, star_fruit: 3 }
+    desc: 'คันธนูแห่งเทพพฤกษา แผลงศรใบไม้คมกริบ 4 ดอกรูปพัด ทะลวงศัตรู พลังโจมตี 19x4',
+    cost: 4000,
+    materials: { ancient_tree_heart: 2, cursed_wood: 8, star_fruit: 6 }
   },
   tempest_blade: {
     id: 'tempest_blade',
     name: 'ดาบอัสนีบาตคลื่นสายฟ้า (Tempest Lightning Blade)',
-    desc: 'สุดยอดดาบสายฟ้าแห่งจ้าวพายุ ปล่อยลำแสงสายฟ้าผ่าทะลุทะลวง พลังโจมตี 105',
-    cost: 1400,
-    materials: { storm_core: 1, thunder_crystal: 5, gold_ore: 5 }
+    desc: 'สุดยอดดาบสายฟ้าแห่งจ้าวพายุ ปล่อยลำแสงสายฟ้าผ่าทะลุทะลวง พลังโจมตี 72',
+    cost: 4800,
+    materials: { storm_core: 2, thunder_crystal: 10, gold_ore: 10 }
   },
   kathuros_spore_armor: {
     id: 'kathuros_spore_armor',
     name: 'เกราะสปอร์ราชันคาธูรอส (Spore Mail)',
     desc: '[ชุดเกราะบอส] พลังป้องกัน +50% เมื่อโดนโจมตีจะระเบิดหนามสปอร์สวนกลับศัตรู 45 ดาเมจ',
-    cost: 800,
-    materials: { demon_heart: 1, iron_ore: 5, ruby_gem: 2 }
+    cost: 2000,
+    materials: { demon_heart: 2, iron_ore: 10, ruby_gem: 4 }
   },
   ignistron_flame_shield: {
     id: 'ignistron_flame_shield',
     name: 'โล่อัคคีพิโรธอิกนิสทรอน (Magma Shield)',
     desc: '[โล่บอส] เมื่อทำการ Perfect Parry สำเร็จ จะระเบิดคลื่นเพลิงลาวาพุ่งเผาศัตรู 110 ดาเมจ',
-    cost: 950,
-    materials: { magma_dragon_horn: 1, flame_heart: 2, iron_ore: 6 }
+    cost: 2400,
+    materials: { magma_dragon_horn: 2, flame_heart: 4, iron_ore: 12 }
   },
   frostfang_frozen_plate: {
     id: 'frostfang_frozen_plate',
     name: 'เกราะเกล็ดหิมะฟรอสต์แฟงก์ (Glacial Plate)',
     desc: '[ชุดเกราะบอส] การยกโล่บล็อกลดความเสียหาย 80% (จากปกติ 65%) และสะท้อนไอเย็นแช่แข็งศัตรู',
-    cost: 950,
-    materials: { glacial_titan_core: 1, frost_crystal: 4, diamond_crystal: 2 }
+    cost: 2500,
+    materials: { glacial_titan_core: 2, frost_crystal: 8, diamond_crystal: 4 }
   },
   astreon_storm_greaves: {
     id: 'astreon_storm_greaves',
     name: 'เกราะขาอัสนีบาตออสทริออน (Storm Greaves)',
     desc: '[อุปกรณ์บอส] ความเร็วเคลื่อนที่ +30% และเมื่อกลิ้งหลบ Dash จะฟาดสายฟ้าผ่าใส่ศัตรู 60 ดาเมจ',
-    cost: 850,
-    materials: { storm_core: 1, thunder_crystal: 4, gold_ore: 5 }
+    cost: 2800,
+    materials: { storm_core: 2, thunder_crystal: 8, gold_ore: 10 }
   },
   malakor_void_cloak: {
     id: 'malakor_void_cloak',
     name: 'ผ้าคลุมมฤตยูลอร์ดมาลาคอร์ (Void Shroud)',
     desc: '[ชุดเกราะบอส] ขยายหน้าต่าง Perfect Parry เพิ่ม +80ms และดูดเลือด 6% จากความเสียหายที่ทำได้',
-    cost: 1200,
-    materials: { death_lord_soul: 1, cursed_relic: 3, crown_of_despair: 1 }
+    cost: 3500,
+    materials: { death_lord_soul: 2, cursed_relic: 6, crown_of_despair: 2 }
   },
   hydrakis_venom_pendant: {
     id: 'hydrakis_venom_pendant',
     name: 'จี้เขี้ยวพิษพญาไฮดรา (Venom Amulet)',
     desc: '[อุปกรณ์บอส] ป้องกันความเสียหายจากพิษและบึงมลทิน 100% พร้อมเคลือบพิษให้การโจมตี',
-    cost: 750,
-    materials: { hydra_venom_gland: 1, hydra_scale: 4, swamp_herb: 4 }
+    cost: 2200,
+    materials: { hydra_venom_gland: 2, hydra_scale: 8, swamp_herb: 8 }
   },
   health_potion: {
     id: 'health_potion',
     name: 'ยาฟื้นพลังชีวิตชั้นเลิศ',
     desc: 'ฟื้นฟู HP +60 และพลังงาน +30',
-    cost: 40,
-    materials: { starflower_herb: 2 }
+    cost: 75,
+    materials: { starflower_herb: 3 }
   },
   ring_glow: {
     id: 'ring_glow',
     name: 'แหวนเรืองแสงสุริยัน (Sun Glow Ring)',
     desc: 'ส่องรัศมีแสงสว่างรอบตัวในถ้ำมืดและสุสานใต้ดิน (+80 รัศมีแสง)',
-    cost: 300,
-    materials: { gold_ore: 3, ruby_gem: 1 }
+    cost: 800,
+    materials: { gold_ore: 6, ruby_gem: 2 }
   },
   ring_magnet: {
     id: 'ring_magnet',
     name: 'แหวนแม่เหล็กดูดทรัพย์ (Magneto Ring)',
     desc: 'ดูดไอเทมที่ตกบนพื้นเข้าหาตัวจากระยะไกลขึ้น 3 เท่า!',
-    cost: 350,
-    materials: { iron_ore: 4, crystal_core: 2 }
+    cost: 900,
+    materials: { iron_ore: 8, crystal_core: 5 }
   },
   ring_warrior: {
     id: 'ring_warrior',
     name: 'แหวนนักรบผู้กล้า (Warrior Bravery Ring)',
-    desc: 'เพิ่มโอกาสติดคริติคอล +18% และความแรงคริติคอล 2.2 เท่า',
-    cost: 500,
-    materials: { iron_ore: 5, ruby_gem: 2, wolf_fang: 2 }
+    desc: 'เพิ่มโอกาสติดคริติคอล +18% และเพิ่มตัวคูณคริติคอล +0.25x',
+    cost: 1400,
+    materials: { iron_ore: 10, ruby_gem: 4, wolf_fang: 5 }
   },
   ring_vampiric: {
     id: 'ring_vampiric',
     name: 'แหวนแวมไพร์สูบโลหิต (Vampiric Leech Ring)',
     desc: 'ดูดเลือด 4% จากความเสียหายที่ทำได้ คืนเป็นพลังชีวิต',
-    cost: 650,
-    materials: { cursed_wood: 3, bat_wing: 4, blight_spore: 2 }
+    cost: 1600,
+    materials: { cursed_wood: 8, bat_wing: 10, blight_spore: 6 }
   },
   ring_lucky: {
     id: 'ring_lucky',
     name: 'แหวนนำโชคจอมพราน (Fortune Hunter Ring)',
     desc: 'มอนสเตอร์ดรอปทองเพิ่มขึ้น +35% และเพิ่มโอกาสได้ไอเทมหายาก',
-    cost: 550,
-    materials: { gold_ore: 4, diamond_crystal: 1 }
+    cost: 1500,
+    materials: { gold_ore: 8, diamond_crystal: 3 }
   },
 
   // สลักรูนเวทมนตร์ (Elemental Runes)
@@ -1590,29 +1590,29 @@ export const FORGE_RECIPES: Record<string, ForgeRecipe> = {
     id: 'rune_fire',
     name: 'รูนอัคคีพิโรธ (Fire Rune)',
     desc: 'สลักรูนเพลิงลงอาวุธ โจมตีติดสถานะเผาไหม้ (Burn DoT 3 ครั้ง)',
-    cost: 300,
-    materials: { ruby_gem: 2, cinder_shard: 2 }
+    cost: 900,
+    materials: { ruby_gem: 4, cinder_shard: 6 }
   },
   rune_frost: {
     id: 'rune_frost',
     name: 'รูนเหมันต์นิรันดร์ (Frost Rune)',
     desc: 'สลักรูนน้ำแข็งลงอาวุธ แช่แข็งสโลว์ความเร็วศัตรูลง 50%',
-    cost: 300,
-    materials: { frost_crystal: 2, diamond_crystal: 1 }
+    cost: 900,
+    materials: { frost_crystal: 5, diamond_crystal: 2 }
   },
   rune_lightning: {
     id: 'rune_lightning',
     name: 'รูนอัสนีบาต (Lightning Rune)',
     desc: 'สลักรูนสายฟ้าลงอาวุธ สร้างประกายสายฟ้าชิ่งศัตรูรอบข้าง',
-    cost: 300,
-    materials: { mana_gem: 2, gold_ore: 3 }
+    cost: 900,
+    materials: { mana_gem: 5, gold_ore: 6 }
   },
   rune_vampiric: {
     id: 'rune_vampiric',
     name: 'รูนกลืนวิญญาณ (Vampiric Rune)',
     desc: 'สลักรูนสูบวิญญาณลงอาวุธ ฟื้นฟู HP คืน 8% ของความเสียหาย',
-    cost: 400,
-    materials: { demon_heart: 1, wolf_fang: 3 }
+    cost: 1200,
+    materials: { demon_heart: 2, wolf_fang: 6 }
   }
 };
 
@@ -2217,15 +2217,15 @@ export const PIRATE_SHOP_ITEMS: Record<string, PirateShopItem> = {
   cutlass_saber: {
     id: 'cutlass_saber',
     name: 'ดาบโจรสลัดคัตลาสอาถรรพ์ (Corsair Cutlass)',
-    priceDoubloons: 20,
+    priceDoubloons: 40,
     type: 'weapon',
     itemType: 'weapon',
-    desc: 'ดาบโค้งเหล็กกล้าแห่งแคริบเบียน ฟันคลื่นจันทร์เสี้ยววารี พลังโจมตี 100 ติดคริติคอล 35%!'
+    desc: 'ดาบโค้งเหล็กกล้าแห่งแคริบเบียน ฟันคลื่นจันทร์เสี้ยววารี พลังโจมตี 62 ติดคริติคอล +20%!'
   },
   pirate_tricorn_hat: {
     id: 'pirate_tricorn_hat',
     name: 'หมวกกัปตันโจรสลัดสามมุม (Captain Tricorn)',
-    priceDoubloons: 12,
+    priceDoubloons: 25,
     type: 'hat',
     itemType: 'armor',
     desc: 'หมวกโจรสลัดขนนกสีแดง สวมใส่เพิ่มโอกาสหลบหลีก +20% และเดินไวขึ้น +25%'
@@ -2233,7 +2233,7 @@ export const PIRATE_SHOP_ITEMS: Record<string, PirateShopItem> = {
   island_warp_totem: {
     id: 'island_warp_totem',
     name: 'เสาวาร์ปเกาะเขตร้อน x3 (Island Warp Totem)',
-    priceDoubloons: 4,
+    priceDoubloons: 6,
     type: 'consumable',
     itemType: 'material',
     desc: 'เสาอาถรรพ์ ใช้เทเลพอร์ตข้ามมิติมายังเกาะเขตร้อนได้ทันทีจากทุกที่'
@@ -2241,7 +2241,7 @@ export const PIRATE_SHOP_ITEMS: Record<string, PirateShopItem> = {
   golden_melon_seed: {
     id: 'golden_melon_seed',
     name: 'เมล็ดเมลอนทองคำเกาะโจรสลัด x5',
-    priceDoubloons: 3,
+    priceDoubloons: 6,
     type: 'seed',
     itemType: 'seed',
     desc: 'เมล็ดพืชหายาก ปลูกบนเกาะโต 5 วัน ได้ผลเมลอนทองคำขายได้ราคา 420 G!'
@@ -2249,7 +2249,7 @@ export const PIRATE_SHOP_ITEMS: Record<string, PirateShopItem> = {
   starfruit_seed: {
     id: 'starfruit_seed',
     name: 'เมล็ดผลไม้ดวงดาวแคริบเบียน x5',
-    priceDoubloons: 5,
+    priceDoubloons: 10,
     type: 'seed',
     itemType: 'seed',
     desc: 'เมล็ดผลไม้รูปดาวเรืองแสง ปลูกบนเกาะโต 6 วัน ขายได้ราคาสูง 550 G!'
@@ -2257,7 +2257,7 @@ export const PIRATE_SHOP_ITEMS: Record<string, PirateShopItem> = {
   skeleton_key: {
     id: 'skeleton_key',
     name: 'กุญแจโครงกระดูกโจรสลัด (Skeleton Key)',
-    priceDoubloons: 2,
+    priceDoubloons: 4,
     type: 'key',
     itemType: 'material',
     desc: 'กุญแจกระดูกอาถรรพ์ ใช้ไขเปิดหีบสมบัติโจรสลัดโบราณบนซากเรืออับปาง'
