@@ -5106,26 +5106,29 @@ body {
    ======================================================== */
 
 .boss-health-bar-container {
-    background: rgba(15, 23, 42, 0.92) !important;
-    border: 2px solid #b45309 !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8), inset 0 0 15px rgba(180, 83, 9, 0.25) !important;
-    border-radius: 6px !important;
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(9, 12, 24, 0.98)) !important;
+    border: 2px solid #d97706 !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.85), 0 0 20px rgba(217, 119, 6, 0.35), inset 0 0 18px rgba(245, 158, 11, 0.2) !important;
+    border-radius: 8px !important;
+    backdrop-filter: blur(6px);
 }
 
 .boss-title {
     font-family: 'Georgia', 'Cinzel', serif !important;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.09em;
     font-weight: 700 !important;
     color: #fef08a !important;
-    text-shadow: 0 0 8px rgba(245, 158, 11, 0.6) !important;
+    text-shadow: 0 0 12px rgba(251, 191, 36, 0.75), 0 2px 4px rgba(0, 0, 0, 0.9) !important;
 }
 
 .boss-hp-track {
     position: relative;
-    background: #1e1b18 !important;
-    border: 1px solid #78350f !important;
-    height: 14px !important;
+    background: linear-gradient(180deg, #090707, #1c1412) !important;
+    border: 1px solid #92400e !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.85);
+    height: 15px !important;
     overflow: hidden;
+    border-radius: 3px;
 }
 
 .boss-hp-drain {
@@ -5133,7 +5136,7 @@ body {
     top: 0;
     left: 0;
     height: 100%;
-    background: #f59e0b;
+    background: linear-gradient(90deg, #f59e0b, #fde047);
     transition: width 0.65s cubic-bezier(0.25, 1, 0.5, 1);
     z-index: 1;
 }
@@ -5143,8 +5146,8 @@ body {
     top: 0;
     left: 0;
     height: 100%;
-    background: linear-gradient(180deg, #ef4444, #991b1b) !important;
-    box-shadow: 0 0 10px rgba(239, 68, 68, 0.7);
+    background: linear-gradient(180deg, #fb7185 0%, #ef4444 45%, #991b1b 100%) !important;
+    box-shadow: 0 0 14px rgba(239, 68, 68, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.35);
     transition: width 0.12s ease-out;
     z-index: 2;
 }

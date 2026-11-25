@@ -186,6 +186,7 @@ export const Game: any = {
     activeCraftingTab: 'all' as 'all' | 'carpentry' | 'food',
     activeDialogue: null,
     meleeSlashAnim: null,
+    screenFlash: null as { color: string; alpha: number; timer: number; maxTimer: number } | null,
 
     // Time & Calendar & Weather
     time: {
@@ -2547,6 +2548,10 @@ Game.triggerScreenShake = function(intensity = 5, duration = 140) {
 
 Game.triggerHitstop = function(ms = 45) {
     this.hitstopTimer = Math.min(80, Math.max(this.hitstopTimer || 0, ms));
+};
+
+Game.triggerScreenFlash = function(color = '#ffffff', alpha = 0.22, duration = 180) {
+    this.screenFlash = { color, alpha, timer: duration, maxTimer: duration };
 };
 
 
@@ -8547,11 +8552,34 @@ Game.sellItem = function(index) {
 Game.drawContactShadow = function(worldX, worldY, radiusX, radiusY, alpha = 0.28) {
     const sx = Math.round(worldX - this.camera.x);
     const sy = Math.round(worldY - this.camera.y);
-    if (sx + radiusX < -20 || sx - radiusX > this.width + 20 || sy + radiusY < -20 || sy - radiusY > this.height + 20) return;
+    if (sx + radiusX * 1.6 < -20 || sx - radiusX * 1.6 > this.width + 20 || sy + radiusY * 1.6 < -20 || sy - radiusY * 1.6 > this.height + 20) return;
 
-    this.ctx.fillStyle = `rgba(15, 23, 42, ${alpha})`;
+    const outdoor = ['farm', 'village', 'forest', 'island', 'ancient_canopy', 'swamp', 'tempest_plateau'].includes(this.currentScene);
+    let dx = 0;
+    let dy = 1.5;
+    let stretchX = 1.0;
+    let sunShadowAlpha = alpha;
+    if (outdoor && this.time) {
+        const h = (this.time.hour || 12) + (this.time.minute || 0) / 60;
+        if (h >= 6 && h <= 19) {
+            const t = (h - 12.5) / 6.5;
+            dx = t * Math.min(14, radiusX * 0.42);
+            dy = 1.5 + Math.abs(t) * 2.2;
+            stretchX = 1.08 + Math.abs(t) * 0.26;
+            sunShadowAlpha = alpha * (1.0 - Math.abs(t) * 0.15);
+        } else {
+            sunShadowAlpha = alpha * 0.7;
+        }
+    }
+
+    this.ctx.fillStyle = `rgba(8, 12, 26, ${(sunShadowAlpha * 0.42).toFixed(3)})`;
     this.ctx.beginPath();
-    this.ctx.ellipse(sx, sy, radiusX, radiusY, 0, 0, Math.PI * 2);
+    this.ctx.ellipse(sx + dx, sy + dy, radiusX * 1.32 * stretchX, radiusY * 1.24, 0, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    this.ctx.fillStyle = `rgba(4, 7, 18, ${(sunShadowAlpha * 0.92).toFixed(3)})`;
+    this.ctx.beginPath();
+    this.ctx.ellipse(sx + dx * 0.35, sy, radiusX * 0.88, radiusY * 0.82, 0, 0, Math.PI * 2);
     this.ctx.fill();
 };
 
@@ -8560,8 +8588,10 @@ Game.render = function() {
     this.ctx.fillStyle = '#1c1917';
     this.ctx.fillRect(0, 0, this.width, this.height);
 
-    // Dynamic Renderables for 2.5D Depth & Y-Sorting
+    // Dynamic Renderables for 2.5D Depth & Y-Sorting + Dynamic Light Emitters
     const renderables = [];
+    const frameLights: Array<{ x: number; y: number; r: number; c: string; i: number }> = [];
+    const nowMs = performance.now();
 
     // 1. Draw Map Tiles (Ground Pass)
     const startCol = Math.max(0, Math.floor(this.camera.x / this.tileSize));
@@ -8579,7 +8609,14 @@ Game.render = function() {
             if (tile.type === 'path') this.ctx.drawImage(SPRITES.path, screenX, screenY);
             else if (tile.type === 'stone_path') this.ctx.drawImage(SPRITES.stonePath || SPRITES.path, screenX, screenY);
             else if (tile.type === 'wood_path') this.ctx.drawImage(SPRITES.woodPath || SPRITES.path, screenX, screenY);
-            else if (tile.type === 'water') this.ctx.drawImage(SPRITES.water, screenX, screenY);
+            else if (tile.type === 'water') {
+                this.ctx.drawImage(SPRITES.water, screenX, screenY);
+                const wWave = Math.sin(nowMs * 0.0028 + x * 0.9 + y * 0.6);
+                if (wWave > 0.15) {
+                    this.ctx.fillStyle = `rgba(186, 230, 253, ${(wWave * 0.24).toFixed(3)})`;
+                    this.ctx.fillRect(screenX + 5 + Math.round(wWave * 5), screenY + 9 + ((x + y) % 3) * 6, 11, 2);
+                }
+            }
             else if (tile.type === 'soil' || tile.tilled) {
                 this.ctx.drawImage(tile.watered ? SPRITES.soilWet : SPRITES.soilDry, screenX, screenY);
             } else if (tile.type === 'fence' || tile.type === 'wood_fence') {
@@ -8602,6 +8639,7 @@ Game.render = function() {
                 });
             } else if (tile.type === 'farm_lantern') {
                 this.ctx.drawImage(this.currentScene === 'forest' ? SPRITES.darkGrass : this.currentScene === 'house' ? SPRITES.floorWood : SPRITES.grass, screenX, screenY);
+                frameLights.push({ x: x * 32 + 16, y: y * 32 + 14, r: 120 + Math.sin(nowMs / 130 + x) * 4, c: '251, 191, 36', i: 1.15 });
                 renderables.push({
                     depthY: y * this.tileSize + 28,
                     render: () => {
@@ -8611,6 +8649,7 @@ Game.render = function() {
                 });
             } else if (tile.type === 'spire_portal') {
                 this.ctx.drawImage(SPRITES.darkStone || SPRITES.path, screenX, screenY);
+                frameLights.push({ x: x * 32 + 16, y: y * 32 + 16, r: 110 + Math.sin(nowMs / 200) * 8, c: '56, 189, 248', i: 1.05 });
                 renderables.push({
                     depthY: y * this.tileSize + 30,
                     render: () => {
@@ -8620,6 +8659,7 @@ Game.render = function() {
                 });
             } else if (tile.type === 'shrine_altar') {
                 this.ctx.drawImage(SPRITES.runeTile || SPRITES.darkStone, screenX, screenY);
+                frameLights.push({ x: x * 32 + 16, y: y * 32 + 10, r: 115 + Math.sin(nowMs / 220) * 6, c: '253, 224, 71', i: 1.1 });
                 renderables.push({
                     depthY: y * this.tileSize + 30,
                     render: () => {
@@ -8648,6 +8688,7 @@ Game.render = function() {
             else if (tile.type === 'bridge') this.ctx.drawImage(SPRITES.bridge, screenX, screenY);
             else if (tile.type === 'rubyNode') {
                 this.ctx.drawImage(SPRITES.darkGrass, screenX, screenY);
+                frameLights.push({ x: x * 32 + 16, y: y * 32 + 16, r: 62, c: '244, 63, 94', i: 0.72 });
                 renderables.push({
                     depthY: y * this.tileSize + 28,
                     render: () => {
@@ -8666,6 +8707,7 @@ Game.render = function() {
                 });
             } else if (tile.type === 'campfire') {
                 this.ctx.drawImage(SPRITES.path, screenX, screenY);
+                frameLights.push({ x: x * 32 + 16, y: y * 32 + 14, r: 120 + Math.sin(nowMs / 105 + x) * 9, c: '249, 115, 22', i: 1.25 });
                 renderables.push({
                     depthY: y * this.tileSize + 28,
                     render: () => {
@@ -8696,6 +8738,7 @@ Game.render = function() {
                 });
             } else if (tile.type === 'streetLamp') {
                 this.ctx.drawImage(SPRITES.path, screenX, screenY);
+                frameLights.push({ x: x * 32 + 16, y: y * 32 + 4, r: 118 + Math.sin(nowMs / 160 + x) * 3, c: '253, 224, 71', i: 1.1 });
                 renderables.push({
                     depthY: y * this.tileSize + 30,
                     render: () => {
@@ -8941,6 +8984,7 @@ Game.render = function() {
             } else if (tile.type === 'volcanoForge') {
                 this.ctx.fillStyle = '#1c1917';
                 this.ctx.fillRect(screenX, screenY, this.tileSize, this.tileSize);
+                frameLights.push({ x: x * 32 + 16, y: y * 32 + 12, r: 150 + Math.sin(nowMs / 100) * 10, c: '249, 115, 22', i: 1.35 });
                 renderables.push({
                     depthY: y * this.tileSize + 32,
                     render: () => {
@@ -8962,6 +9006,7 @@ Game.render = function() {
             } else if (tile.type === 'cinderShardNode') {
                 this.ctx.fillStyle = '#1c1917';
                 this.ctx.fillRect(screenX, screenY, this.tileSize, this.tileSize);
+                frameLights.push({ x: x * 32 + 16, y: y * 32 + 16, r: 74, c: '234, 88, 12', i: 0.9 });
                 renderables.push({
                     depthY: y * this.tileSize + 24,
                     render: () => {
@@ -8970,12 +9015,14 @@ Game.render = function() {
                     }
                 });
             } else if (tile.type === 'volcanoSpring') {
-                this.ctx.fillStyle = '#38bdf8';
+                this.ctx.fillStyle = '#0ea5e9';
                 this.ctx.fillRect(screenX, screenY, this.tileSize, this.tileSize);
-                this.ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-                this.ctx.fillRect(screenX + 4, screenY + 4, 8, 6);
-                this.ctx.fillStyle = '#0284c7';
+                const sWave = (Math.sin(nowMs * 0.004 + x + y) + 1) * 0.5;
+                this.ctx.fillStyle = `rgba(186, 230, 253, ${(0.25 + sWave * 0.35).toFixed(2)})`;
+                this.ctx.fillRect(screenX + 4 + sWave * 4, screenY + 6, 12, 5);
+                this.ctx.strokeStyle = '#38bdf8';
                 this.ctx.strokeRect(screenX, screenY, this.tileSize, this.tileSize);
+                frameLights.push({ x: x * 32 + 16, y: y * 32 + 16, r: 88, c: '56, 189, 248', i: 0.95 });
             } else if (tile.type === 'volcanoStairsDown') {
                 this.ctx.fillStyle = '#1c1917';
                 this.ctx.fillRect(screenX, screenY, this.tileSize, this.tileSize);
@@ -9485,12 +9532,13 @@ Game.render = function() {
     this.drawActiveSkillVisuals(this.ctx);
     this.drawBloodstain();
 
-    // 7. Dynamic Weather & Lighting
+    // 7. Dynamic Weather, Atmospheric Lighting & Volumetric Effects
     if (this.currentScene !== 'house' && this.currentScene !== 'shop') {
         if (this.time.weather !== 'sun' && !['cave', 'cave_depths', 'volcano', 'crypt', 'spire'].includes(this.currentScene)) this.drawWeatherEffects();
-        this.drawDayNightLighting();
+        this.drawDayNightLighting(frameLights);
         if (this.currentScene === 'farm' && this.waveAlertTimer > 0) this.drawWaveAlertBanner();
     }
+    this.drawAtmosphericPostFX();
 
     // 8. Particles & Ambient Game Feel Effects
     this.drawParticles();
@@ -10353,11 +10401,8 @@ Game.drawPlayer = function() {
             if (sprite) this.ctx.drawImage(sprite, px, py - 6);
         }
     } else {
-        // Soft Grounding Contact Shadow
-        this.ctx.fillStyle = 'rgba(15, 23, 42, 0.3)';
-        this.ctx.beginPath();
-        this.ctx.ellipse(px + 12, py + 30, 9, 4.5, 0, 0, Math.PI * 2);
-        this.ctx.fill();
+        // Directional Grounding Contact Shadow
+        this.drawContactShadow(this.player.x + 12, this.player.y + 30, 10, 4.5, 0.34);
 
         const dirFrames = SPRITES.player ? (SPRITES.player[this.player.direction] || SPRITES.player.down) : null;
         if (dirFrames) {
@@ -10571,140 +10616,299 @@ Game.drawRain = function() {
 };
 
 
-Game.drawDayNightLighting = function() {
-    const hour = this.time.hour;
-    let alpha = 0;
-    let color = '0, 0, 0';
+Game.drawDayNightLighting = function(frameLights: Array<{ x: number; y: number; r: number; c: string; i: number }> = []) {
+    const hour = this.time.hour + (this.time.minute || 0) / 60;
+    const now = performance.now();
+    const scene = this.currentScene;
 
-    if (this.currentScene === 'cave') {
-        alpha = 0.82;
-        color = '6, 10, 22';
-    } else if (hour >= 6 && hour < 9) {
-        alpha = 0.12 * (9 - hour) / 3;
-        color = '251, 191, 36';
-    } else if (hour >= 17 && hour < 20) {
-        alpha = 0.28 * (hour - 16) / 4;
+    // 1. Biome-aware Atmospheric Color Grading
+    let alpha = 0;
+    let color = '8, 12, 26';
+
+    if (scene === 'cave' || scene === 'cave_depths') {
+        alpha = scene === 'cave_depths' ? 0.72 : 0.80;
+        color = '6, 10, 26';
+    } else if (scene === 'crypt') {
+        alpha = 0.58;
+        color = '16, 8, 34';
+    } else if (scene === 'volcano' || scene === 'island_volcano') {
+        alpha = 0.30 + Math.sin(now / 650) * 0.05;
+        color = '45, 10, 6';
+    } else if (scene === 'swamp') {
+        alpha = 0.34;
+        color = '8, 34, 24';
+    } else if (scene === 'frost_peak') {
+        alpha = 0.22;
+        color = '12, 42, 74';
+    } else if (scene === 'spire' || scene === 'tempest_plateau') {
+        alpha = 0.30;
+        color = '14, 22, 52';
+    } else if (scene === 'ancient_canopy') {
+        alpha = 0.16;
+        color = '6, 40, 22';
+    } else if (hour >= 5.5 && hour < 8.5) {
+        const t = Math.sin(((hour - 5.5) / 3) * Math.PI);
+        alpha = 0.16 * t;
+        color = '251, 146, 60';
+    } else if (hour >= 16.5 && hour < 19.5) {
+        const t = (hour - 16.5) / 3;
+        alpha = 0.32 * t;
         color = '234, 88, 12';
-    } else if (hour >= 20 || hour < 6) {
-        alpha = 0.60;
-        color = '10, 15, 28'; // Rich midnight atmosphere
+    } else if (hour >= 19.5 || hour < 5.5) {
+        alpha = 0.56;
+        color = '8, 13, 30';
     }
 
     if (alpha > 0) {
-        this.ctx.fillStyle = `rgba(${color}, ${alpha})`;
+        this.ctx.fillStyle = `rgba(${color}, ${alpha.toFixed(3)})`;
         this.ctx.fillRect(0, 0, this.width, this.height);
+    }
 
-        // Cozy Stardew Valley ambient lighting (torch, campfire, windows & player lantern)
-        if (alpha > 0.18) {
-            this.ctx.save();
-            this.ctx.globalCompositeOperation = 'lighter';
+    // 2. Volumetric Diagonal Sunbeams (God Rays) in outdoor sunlit biomes
+    const sunlitExterior = ['farm', 'village', 'forest', 'island', 'ancient_canopy'].includes(scene);
+    if (sunlitExterior && this.time.weather === 'sun' && hour >= 6.5 && hour <= 18) {
+        this.ctx.save();
+        this.ctx.globalCompositeOperation = 'lighter';
+        const rayAlpha = scene === 'ancient_canopy' ? 0.075 : (hour >= 16 ? 0.065 : 0.045);
+        const rayColor = hour >= 16 ? '253, 186, 116' : (scene === 'ancient_canopy' ? '167, 243, 208' : '254, 249, 195');
+        for (let r = 0; r < 3; r++) {
+            const sway = Math.sin(now * 0.0005 + r * 2.1) * 35;
+            const rx = (this.width * (0.18 + r * 0.34)) + sway;
+            const grad = this.ctx.createLinearGradient(rx - 80, 0, rx + 140, this.height);
+            grad.addColorStop(0, `rgba(${rayColor}, ${rayAlpha})`);
+            grad.addColorStop(0.65, `rgba(${rayColor}, ${(rayAlpha * 0.35).toFixed(4)})`);
+            grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            this.ctx.fillStyle = grad;
+            this.ctx.beginPath();
+            this.ctx.moveTo(rx - 65, 0);
+            this.ctx.lineTo(rx + 25, 0);
+            this.ctx.lineTo(rx + 210, this.height);
+            this.ctx.lineTo(rx + 60, this.height);
+            this.ctx.closePath();
+            this.ctx.fill();
+        }
+        this.ctx.restore();
+    }
 
-            const drawLight = (worldX, worldY, innerRadius, outerRadius, intensity = 1.0) => {
-                const lx = Math.round(worldX - this.camera.x);
-                const ly = Math.round(worldY - this.camera.y);
-                if (lx < -120 || lx > this.width + 120 || ly < -120 || ly > this.height + 120) return;
+    // 3. Dynamic Additive Real-Time Lighting Layer (Lanterns, Biomes, Projectiles, Skills & Bosses)
+    const isDarkEnv = alpha >= 0.16;
+    const hasCombatLights = (this.projectiles && this.projectiles.length > 0) ||
+                            (this.activeSkillVisuals && this.activeSkillVisuals.length > 0) ||
+                            (this.boss && this.boss.alive) ||
+                            frameLights.length > 0;
 
-                const grad = this.ctx.createRadialGradient(lx, ly, innerRadius, lx, ly, outerRadius);
-                grad.addColorStop(0, `rgba(254, 240, 138, ${0.35 * intensity})`);
-                grad.addColorStop(0.4, `rgba(251, 191, 36, ${0.16 * intensity})`);
-                grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    if (isDarkEnv || hasCombatLights) {
+        this.ctx.save();
+        this.ctx.globalCompositeOperation = 'lighter';
 
-                this.ctx.fillStyle = grad;
-                this.ctx.beginPath();
-                this.ctx.arc(lx, ly, outerRadius, 0, Math.PI * 2);
-                this.ctx.fill();
-            };
+        const drawLight = (worldX: number, worldY: number, innerRadius: number, outerRadius: number, intensity = 1.0, rgb = '253, 224, 71') => {
+            const lx = Math.round(worldX - this.camera.x);
+            const ly = Math.round(worldY - this.camera.y);
+            if (lx < -outerRadius || lx > this.width + outerRadius || ly < -outerRadius || ly > this.height + outerRadius) return;
 
+            const grad = this.ctx.createRadialGradient(lx, ly, innerRadius, lx, ly, outerRadius);
+            grad.addColorStop(0, `rgba(${rgb}, ${Math.min(0.85, 0.38 * intensity).toFixed(3)})`);
+            grad.addColorStop(0.45, `rgba(${rgb}, ${Math.min(0.6, 0.16 * intensity).toFixed(3)})`);
+            grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
-            // 1. Player Lantern (Enhanced by Sun Glow Ring)
-            const hasGlow = (typeof this.hasRing === 'function' && this.hasRing('ring_glow'));
-            const lanternRadius = hasGlow ? 165 : 85;
-            const lanternIntensity = hasGlow ? 1.4 : 1.0;
-            drawLight(this.player.x + 12, this.player.y + 16, 12, lanternRadius, lanternIntensity);
+            this.ctx.fillStyle = grad;
+            this.ctx.beginPath();
+            this.ctx.arc(lx, ly, outerRadius, 0, Math.PI * 2);
+            this.ctx.fill();
+        };
 
-            // 2. Scene Specific Glows
-            if (this.currentScene === 'farm') {
-                // House Porch & Windows
-                drawLight(4 * this.tileSize + 48, 2 * this.tileSize + 54, 16, 95, 0.9);
-                // Shop Windows
-                drawLight(27 * this.tileSize + 48, 16 * this.tileSize + 54, 16, 95, 0.9);
-                // Mill Lantern
-                drawLight(18 * this.tileSize + 32, 16 * this.tileSize + 50, 10, 70, 0.75);
-            } else if (this.currentScene === 'forest') {
-                // Campfire (warm flickering hearth)
-                const flicker = Math.sin(performance.now() / 110) * 8;
-                drawLight(25 * 32 + 16, 30 * 32 + 14, 14, 110 + flicker, 1.3);
-            } else if (this.currentScene === 'cave') {
-                // Crystal pillars glow with cyan/violet luminescence
+        // Player Lantern
+        const hasGlow = (typeof this.hasRing === 'function' && this.hasRing('ring_glow'));
+        if (isDarkEnv || hasGlow) {
+            const lanternRadius = hasGlow ? 180 : 100;
+            const lanternIntensity = (isDarkEnv ? 1.15 : 0.45) * (hasGlow ? 1.35 : 1.0);
+            drawLight(this.player.x + 12, this.player.y + 16, 10, lanternRadius, lanternIntensity, '253, 224, 71');
+        }
+
+        // Visible tile lights
+        for (let i = 0; i < frameLights.length; i++) {
+            const fl = frameLights[i];
+            const mult = isDarkEnv ? fl.i : fl.i * 0.48;
+            drawLight(fl.x, fl.y, 6, fl.r, mult, fl.c);
+        }
+
+        // Scene Window & Hearth Lights at Night/Evening
+        if (isDarkEnv) {
+            if (scene === 'farm') {
+                drawLight(4 * 32 + 48, 2 * 32 + 54, 14, 105, 1.05, '251, 191, 36');
+                drawLight(27 * 32 + 48, 16 * 32 + 54, 14, 105, 1.05, '251, 191, 36');
+                drawLight(18 * 32 + 32, 16 * 32 + 50, 10, 78, 0.85, '251, 191, 36');
+            } else if (scene === 'village') {
+                drawLight(8 * 32 + 48, 6 * 32 + 58, 14, 105, 0.95, '251, 191, 36');
+                drawLight(46 * 32 + 48, 6 * 32 + 58, 14, 105, 0.95, '167, 243, 208');
+                drawLight(8 * 32 + 48, 25 * 32 + 58, 16, 120, 1.15, '249, 115, 22');
+                drawLight(46 * 32 + 48, 25 * 32 + 58, 16, 115, 1.1, '251, 191, 36');
+            } else if (scene === 'forest') {
+                const flicker = Math.sin(now / 110) * 8;
+                drawLight(25 * 32 + 16, 30 * 32 + 14, 14, 120 + flicker, 1.35, '249, 115, 22');
+            } else if (scene === 'cave' || scene === 'cave_depths') {
                 const crystalGlowPositions = [
                     { x: 18 * 32 + 16, y: 28 * 32 + 16, c: '56, 189, 248' },
                     { x: 24 * 32 + 16, y: 28 * 32 + 16, c: '168, 85, 247' },
                     { x: 10 * 32 + 16, y: 14 * 32 + 16, c: '56, 189, 248' },
                     { x: 33 * 32 + 16, y: 14 * 32 + 16, c: '168, 85, 247' },
-                    { x: 21 * 32 + 16, y: 8 * 32 + 16,  c: '234, 179, 8' },
+                    { x: 21 * 32 + 16, y: 8 * 32 + 16,  c: '250, 204, 21' },
                     { x: 37 * 32 + 16, y: 25 * 32 + 16, c: '56, 189, 248' },
                     { x: 8 * 32 + 16,  y: 25 * 32 + 16, c: '168, 85, 247' }
                 ];
-                crystalGlowPositions.forEach(p => {
-                    const lx = Math.round(p.x - this.camera.x);
-                    const ly = Math.round(p.y - this.camera.y);
-                    if (lx < -120 || lx > this.width + 120 || ly < -120 || ly > this.height + 120) return;
-                    const cgrad = this.ctx.createRadialGradient(lx, ly, 10, lx, ly, 95);
-                    cgrad.addColorStop(0, `rgba(${p.c}, 0.55)`);
-                    cgrad.addColorStop(0.5, `rgba(${p.c}, 0.22)`);
-                    cgrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-                    this.ctx.fillStyle = cgrad;
-                    this.ctx.beginPath();
-                    this.ctx.arc(lx, ly, 95, 0, Math.PI * 2);
-                    this.ctx.fill();
-                });
+                crystalGlowPositions.forEach(p => drawLight(p.x, p.y, 10, 110, 1.25, p.c));
             }
-
-            // 3. Placed Farm Lanterns Glow
-            if (this.placedLanterns && this.placedLanterns.length > 0) {
-                this.placedLanterns.forEach((l: any) => {
-                    if (l.scene === this.currentScene) {
-                        const flicker = Math.sin((performance.now() + (l.x + l.y) * 100) / 120) * 4;
-                        drawLight(l.x * this.tileSize + 16, l.y * this.tileSize + 16, 12, 105 + flicker, 1.2);
-                    }
-                });
-            }
-
-            this.ctx.restore();
         }
+
+        // Placed Farm Lanterns Glow
+        if (this.placedLanterns && this.placedLanterns.length > 0) {
+            this.placedLanterns.forEach((l: any) => {
+                if (l.scene === scene) {
+                    const flicker = Math.sin((now + (l.x + l.y) * 100) / 120) * 4;
+                    drawLight(l.x * this.tileSize + 16, l.y * this.tileSize + 16, 10, 115 + flicker, 1.25, '251, 191, 36');
+                }
+            });
+        }
+
+        // Real-Time Projectile Blooms
+        if (this.projectiles && this.projectiles.length > 0 && this.isCombatScene()) {
+            const projColors: Record<string, string> = {
+                holy_beam: '253, 224, 71',
+                dragon_fire: '249, 115, 22',
+                lightning_beam: '56, 189, 248',
+                crystal_shard: '232, 121, 249',
+                shadow_skull: '168, 85, 247',
+                ice_shard: '103, 232, 249',
+                poison_glob: '74, 222, 128',
+                petal_blade: '134, 239, 172',
+                meteor_blight: '239, 68, 68',
+                homing_spore: '192, 132, 252'
+            };
+            const maxProjGlow = Math.min(this.projectiles.length, 24);
+            for (let i = 0; i < maxProjGlow; i++) {
+                const p = this.projectiles[i];
+                const col = projColors[p.type];
+                if (col) drawLight(p.x, p.y, 4, p.type === 'meteor_blight' ? 54 : 38, 0.9, col);
+            }
+        }
+
+        // Real-Time Boss Ground Glow
+        if (this.boss && this.boss.alive) {
+            const bossRgb: Record<string, string> = {
+                boss_luminarch: '56, 189, 248',
+                boss_hydrakis: '34, 197, 94',
+                boss_ignistron: '249, 115, 22',
+                boss_frostfang: '103, 232, 249',
+                boss_malakor: '168, 85, 247',
+                boss_sylvanus: '74, 222, 128',
+                boss_astreon: '250, 204, 21',
+                boss_karzarak: '239, 68, 68'
+            };
+            const bCol = bossRgb[this.boss.id] || '225, 29, 72';
+            const bPulse = 1 + Math.sin(now / 180) * 0.12;
+            drawLight(this.boss.x + 32, this.boss.y + 36, 14, Math.round(92 * bPulse), this.boss.phase === 3 ? 1.35 : 0.95, bCol);
+        }
+
+        this.ctx.restore();
+    }
+};
+
+Game.drawAtmosphericPostFX = function() {
+    const now = performance.now();
+
+    // 1. Subtle Cinematic Edge Vignette + Low-HP Adrenaline Crimson Pulse
+    const hpRatio = this.player && this.player.maxHp ? Math.max(0, this.player.hp / this.player.maxHp) : 1;
+    const isLowHp = hpRatio < 0.30 && !this.player?.isDead;
+    const pulse = isLowHp ? (Math.sin(now / 140) + 1) * 0.5 : 0;
+    const outerRadius = Math.hypot(this.width, this.height) * 0.62;
+    const innerRadius = Math.min(this.width, this.height) * 0.34;
+    const vig = this.ctx.createRadialGradient(this.width * 0.5, this.height * 0.5, innerRadius, this.width * 0.5, this.height * 0.5, outerRadius);
+    vig.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    if (isLowHp) {
+        vig.addColorStop(0.75, `rgba(127, 29, 29, ${(0.08 + pulse * 0.12).toFixed(3)})`);
+        vig.addColorStop(1, `rgba(153, 27, 27, ${(0.28 + pulse * 0.22).toFixed(3)})`);
+    } else {
+        const edgeAlpha = ['cave', 'cave_depths', 'crypt', 'volcano', 'island_volcano'].includes(this.currentScene) ? 0.36 : 0.20;
+        vig.addColorStop(0.78, 'rgba(4, 7, 18, 0.04)');
+        vig.addColorStop(1, `rgba(4, 7, 18, ${edgeAlpha})`);
+    }
+    this.ctx.fillStyle = vig;
+    this.ctx.fillRect(0, 0, this.width, this.height);
+
+    // 2. Impact / Ultimate / Parry Screen Flash
+    if (this.screenFlash && this.screenFlash.timer > 0) {
+        const ratio = Math.max(0, this.screenFlash.timer / (this.screenFlash.maxTimer || 180));
+        this.ctx.save();
+        this.ctx.globalAlpha = this.screenFlash.alpha * ratio;
+        this.ctx.fillStyle = this.screenFlash.color;
+        this.ctx.fillRect(0, 0, this.width, this.height);
+        this.ctx.restore();
     }
 };
 
 
 Game.spawnParticles = function(x, y, color, count = 8) {
-    if (this.particles.length > 150) {
-        this.particles.splice(0, count);
+    if (this.particles.length > 260) {
+        this.particles.splice(0, Math.min(this.particles.length - 200, count));
     }
     for (let i = 0; i < count; i++) {
+        const ang = Math.random() * Math.PI * 2;
+        const spd = 1.2 + Math.random() * 3.6;
         this.particles.push({
             x: x, y: y,
-            vx: (Math.random() - 0.5) * 3,
-            vy: (Math.random() - 1.5) * 2.5,
+            vx: Math.cos(ang) * spd,
+            vy: Math.sin(ang) * spd - 0.85,
             color: color,
             life: 1.0,
-            size: Math.random() * 3 + 2
+            decay: 0.03 + Math.random() * 0.025,
+            size: Math.random() * 3.2 + 2.0,
+            glow: true
         });
     }
 };
 
 
 Game.drawParticles = function() {
+    if (!this.particles || this.particles.length === 0) return;
+    this.ctx.save();
+    this.ctx.globalCompositeOperation = 'lighter';
     for (let i = this.particles.length - 1; i >= 0; i--) {
         const p = this.particles[i];
         p.x += p.vx;
         p.y += p.vy;
-        p.life -= 0.04;
+        p.vx *= 0.94;
+        p.vy = p.vy * 0.94 + 0.03;
+        p.life -= (p.decay || 0.038);
         if (p.life <= 0) { this.particles.splice(i, 1); continue; }
-        const sx = Math.round(p.x - this.camera.x);
-        const sy = Math.round(p.y - this.camera.y);
+
+        const sx = p.x - this.camera.x;
+        const sy = p.y - this.camera.y;
+        if (sx < -24 || sx > this.width + 24 || sy < -24 || sy > this.height + 24) continue;
+
+        const r = Math.max(0.8, p.size * (0.45 + p.life * 0.65));
+
+        this.ctx.globalAlpha = Math.max(0, p.life * 0.34);
         this.ctx.fillStyle = p.color;
-        this.ctx.fillRect(sx, sy, p.size, p.size);
+        this.ctx.beginPath();
+        this.ctx.arc(sx, sy, r * 2.1, 0, Math.PI * 2);
+        this.ctx.fill();
+
+        this.ctx.globalAlpha = Math.max(0, p.life * 0.92);
+        this.ctx.strokeStyle = p.color;
+        this.ctx.lineWidth = r;
+        this.ctx.lineCap = 'round';
+        this.ctx.beginPath();
+        this.ctx.moveTo(sx, sy);
+        this.ctx.lineTo(sx - p.vx * 2.4, sy - p.vy * 2.4);
+        this.ctx.stroke();
+
+        this.ctx.globalAlpha = Math.max(0, p.life * 0.85);
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.beginPath();
+        this.ctx.arc(sx, sy, Math.max(0.7, r * 0.42), 0, Math.PI * 2);
+        this.ctx.fill();
     }
+    this.ctx.restore();
 };
 
 
@@ -10723,20 +10927,35 @@ Game.addFloatingText = function(text, worldX, worldY, color = '#ffffff') {
 
 
 Game.drawFloatingTexts = function() {
-    this.ctx.font = 'bold 13px "Prompt", sans-serif';
+    if (!this.floatingTexts || this.floatingTexts.length === 0) return;
+    this.ctx.save();
     for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
         const t = this.floatingTexts[i];
         t.y += t.vy;
-        t.life -= 0.02;
+        t.vy *= 0.97;
+        t.life -= 0.018;
         if (t.life <= 0) { this.floatingTexts.splice(i, 1); continue; }
+
         const sx = Math.round(t.x - this.camera.x);
         const sy = Math.round(t.y - this.camera.y);
+        const isBig = typeof t.text === 'string' && (t.text.includes('CRIT') || t.text.includes('FINISHER') || t.text.includes('อัลติเมท'));
+        const age = 1 - t.life;
+        const popScale = age < 0.14 ? (1.35 - (age / 0.14) * 0.35) : 1.0;
 
-        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        this.ctx.fillText(t.text, sx + 1, sy + 1);
+        this.ctx.save();
+        this.ctx.globalAlpha = Math.min(1, t.life * 1.45);
+        this.ctx.translate(sx, sy);
+        if (popScale !== 1.0) this.ctx.scale(popScale, popScale);
+        this.ctx.font = isBig ? 'bold 15px "Prompt", sans-serif' : 'bold 13px "Prompt", sans-serif';
+        this.ctx.lineJoin = 'round';
+        this.ctx.lineWidth = isBig ? 3.5 : 3;
+        this.ctx.strokeStyle = 'rgba(6, 10, 20, 0.9)';
+        this.ctx.strokeText(t.text, 0, 0);
         this.ctx.fillStyle = t.color;
-        this.ctx.fillText(t.text, sx, sy);
+        this.ctx.fillText(t.text, 0, 0);
+        this.ctx.restore();
     }
+    this.ctx.restore();
 };
 
 
@@ -13059,9 +13278,10 @@ Game.playerMeleeAttack = function(targetWorldX, targetWorldY, weapon) {
         y: originY,
         angle: angle,
         dir: this.player.direction,
+        weaponId: weapon.id,
         isHoly: (weapon.id === 'excalibur_sword' || weapon.id === 'luminarch_crystal_blade'),
-        timer: combo === 3 ? 210 : 160,
-        maxTimer: combo === 3 ? 210 : 160,
+        timer: combo === 3 ? 230 : 175,
+        maxTimer: combo === 3 ? 230 : 175,
         comboStep: combo
     };
 
@@ -13295,7 +13515,12 @@ Game.playerMeleeAttack = function(targetWorldX, targetWorldY, weapon) {
                     this.addFloatingText('★ พิษไฮดรา!', this.boss.x + 16, this.boss.y - 18, '#4ade80');
                 }
 
-                this.spawnParticles(originX + Math.cos(angle) * 35, originY + Math.sin(angle) * 35, isCrit ? '#facc15' : '#f59e0b', 14);
+                this.spawnParticles(originX + Math.cos(angle) * 35, originY + Math.sin(angle) * 35, isCrit ? '#facc15' : '#f59e0b', isCrit ? 20 : 14);
+                if (isCrit) {
+                    this.activeSkillVisuals = this.activeSkillVisuals || [];
+                    this.activeSkillVisuals.push({ type: 'crit_flare', x: this.boss.x + 32, y: this.boss.y + 32, radius: 42, angle: angle, timer: 240, maxTimer: 240 });
+                    if (combo === 3) this.triggerScreenFlash('#fde047', 0.14, 120);
+                }
                 this.addFloatingText((isCrit ? ' CRIT -' : ' -') + actualDmg, this.boss.x + 20, this.boss.y - 10, isCrit ? '#fde047' : '#ef4444');
                 if (this.boss.hp <= 0) {
                     this.defeatBoss();
@@ -14444,9 +14669,61 @@ Game.drawHiredHunters = function() {
 
 
 Game.drawProjectiles = function() {
+    if (!this.projectiles || this.projectiles.length === 0) return;
+
+    const projGlowMap: Record<string, { c: string; r: number; tail: number }> = {
+        holy_beam: { c: '#fde047', r: 18, tail: 26 },
+        dragon_fire: { c: '#f97316', r: 20, tail: 24 },
+        lightning_beam: { c: '#38bdf8', r: 18, tail: 30 },
+        crystal_shard: { c: '#e879f9', r: 15, tail: 22 },
+        shadow_skull: { c: '#a855f7', r: 17, tail: 22 },
+        ice_shard: { c: '#67e8f9', r: 15, tail: 20 },
+        poison_glob: { c: '#4ade80', r: 14, tail: 18 },
+        petal_blade: { c: '#86efac', r: 14, tail: 18 },
+        meteor_blight: { c: '#ef4444', r: 24, tail: 28 },
+        homing_spore: { c: '#c084fc', r: 14, tail: 16 },
+        rifle: { c: '#fbbf24', r: 10, tail: 16 }
+    };
+
     this.projectiles.forEach(p => {
         const sx = Math.round(p.x - this.camera.x);
         const sy = Math.round(p.y - this.camera.y);
+        if (sx < -40 || sx > this.width + 40 || sy < -40 || sy > this.height + 40) return;
+
+        const g = projGlowMap[p.type];
+        if (g) {
+            this.ctx.save();
+            this.ctx.globalCompositeOperation = 'lighter';
+            const spd = Math.hypot(p.vx || 0, p.vy || 0) || 1;
+            const nx = (p.vx || 0) / spd;
+            const ny = (p.vy || 0) / spd;
+            const tx = sx - nx * g.tail;
+            const ty = sy - ny * g.tail;
+            const tGrad = this.ctx.createLinearGradient(sx, sy, tx, ty);
+            tGrad.addColorStop(0, g.c);
+            tGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            this.ctx.globalAlpha = 0.65;
+            this.ctx.strokeStyle = tGrad;
+            this.ctx.lineWidth = g.r * 0.48;
+            this.ctx.lineCap = 'round';
+            this.ctx.beginPath();
+            this.ctx.moveTo(sx, sy);
+            this.ctx.lineTo(tx, ty);
+            this.ctx.stroke();
+
+            this.ctx.globalAlpha = 0.28;
+            this.ctx.fillStyle = g.c;
+            this.ctx.beginPath();
+            this.ctx.arc(sx, sy, g.r, 0, Math.PI * 2);
+            this.ctx.fill();
+
+            this.ctx.globalAlpha = 0.45;
+            this.ctx.fillStyle = '#ffffff';
+            this.ctx.beginPath();
+            this.ctx.arc(sx, sy, g.r * 0.42, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.restore();
+        }
 
         const spr = SPRITES.projectiles[p.type] || SPRITES.projectiles.stone;
         const halfSize = (p.type === 'meteor_blight') ? 12 : 8;
@@ -14986,6 +15263,7 @@ Game.damagePlayer = function(amount, source = null) {
     SoundEngine.hit();
     this.triggerScreenShake(5.5, 180);
     this.triggerHitstop(60);
+    this.triggerScreenFlash('#dc2626', 0.24, 210);
     this.spawnParticles(this.player.x + 12, this.player.y + 14, '#ef4444', 14);
     this.addFloatingText('★ -' + amount + ' HP' + (this.player.buffs?.defense ? ' (เกราะลดดาเมจ)' : ''), this.player.x, this.player.y - 20, '#ef4444');
     this.updateHpHUD();
@@ -15373,21 +15651,32 @@ Game.drawBossTelegraphs = function() {
                 warnColor = '#c084fc';
             }
 
+            this.ctx.globalCompositeOperation = 'lighter';
             this.ctx.strokeStyle = strokeStyle;
-            this.ctx.lineWidth = 2;
+            this.ctx.lineWidth = 4;
             this.ctx.beginPath();
             this.ctx.arc(sx, sy, t.radius, 0, Math.PI * 2);
             this.ctx.stroke();
 
-            // Inner shrinking/filling charge
+            const spin = performance.now() * 0.0025;
+            this.ctx.setLineDash([6, 5]);
+            this.ctx.lineWidth = 1.8;
+            this.ctx.beginPath();
+            this.ctx.arc(sx, sy, t.radius * 0.78, spin, spin + Math.PI * 2);
+            this.ctx.stroke();
+            this.ctx.setLineDash([]);
+
             this.ctx.fillStyle = fillStyle;
             this.ctx.beginPath();
             this.ctx.arc(sx, sy, t.radius * progress, 0, Math.PI * 2);
             this.ctx.fill();
 
-            // Warning icon
-            this.ctx.font = 'bold 11px sans-serif';
+            this.ctx.globalCompositeOperation = 'source-over';
+            this.ctx.font = 'bold 13px sans-serif';
             this.ctx.textAlign = 'center';
+            this.ctx.lineWidth = 3;
+            this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.85)';
+            this.ctx.strokeText('!', sx, sy + 4);
             this.ctx.fillStyle = warnColor;
             this.ctx.fillText('!', sx, sy + 4);
             this.ctx.restore();
@@ -15452,53 +15741,65 @@ Game.updateBossGroundHazards = function(dt) {
 Game.drawBossGroundHazards = function() {
     if (!this.bossGroundHazards || this.bossGroundHazards.length === 0) return;
 
+    const now = performance.now();
     this.bossGroundHazards.forEach(h => {
         const sx = Math.round(h.x - this.camera.x);
         const sy = Math.round(h.y - this.camera.y);
-        const flicker = Math.sin((performance.now() + h.x) / 100) * 2;
+        const flicker = Math.sin((now + h.x) / 100) * 2.5;
+        const rx = h.radius + flicker;
 
         this.ctx.save();
+        this.ctx.globalCompositeOperation = 'lighter';
         if (h.type === 'fire_patch') {
-            this.ctx.fillStyle = 'rgba(234, 88, 12, 0.4)';
+            const grad = this.ctx.createRadialGradient(sx, sy, 2, sx, sy, rx);
+            grad.addColorStop(0, 'rgba(254, 240, 138, 0.65)');
+            grad.addColorStop(0.5, 'rgba(249, 115, 22, 0.45)');
+            grad.addColorStop(1, 'rgba(220, 38, 38, 0)');
+            this.ctx.fillStyle = grad;
             this.ctx.beginPath();
-            this.ctx.ellipse(sx, sy, h.radius + flicker, h.radius * 0.6 + flicker * 0.5, 0, 0, Math.PI * 2);
+            this.ctx.ellipse(sx, sy, rx, rx * 0.62, 0, 0, Math.PI * 2);
             this.ctx.fill();
 
             this.ctx.fillStyle = '#fde047';
-            this.ctx.fillRect(sx - 4 + flicker, sy - 4, 3, 5);
-            this.ctx.fillRect(sx + 3 - flicker, sy - 6, 2, 6);
-            this.ctx.fillStyle = '#ea580c';
-            this.ctx.fillRect(sx - 2, sy - 8, 4, 4);
+            this.ctx.fillRect(sx - 4 + flicker, sy - 5, 3, 6);
+            this.ctx.fillRect(sx + 3 - flicker, sy - 7, 2, 7);
         } else if (h.type === 'electric_patch') {
-            this.ctx.fillStyle = 'rgba(56, 189, 248, 0.35)';
+            const grad = this.ctx.createRadialGradient(sx, sy, 2, sx, sy, rx);
+            grad.addColorStop(0, 'rgba(224, 242, 254, 0.6)');
+            grad.addColorStop(0.55, 'rgba(56, 189, 248, 0.38)');
+            grad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+            this.ctx.fillStyle = grad;
             this.ctx.beginPath();
-            this.ctx.ellipse(sx, sy, h.radius + flicker * 0.8, h.radius * 0.6 + flicker * 0.4, 0, 0, Math.PI * 2);
+            this.ctx.ellipse(sx, sy, rx, rx * 0.62, 0, 0, Math.PI * 2);
             this.ctx.fill();
 
-            this.ctx.strokeStyle = '#facc15';
-            this.ctx.lineWidth = 1.5;
+            this.ctx.strokeStyle = '#fde047';
+            this.ctx.lineWidth = 2;
             this.ctx.beginPath();
-            this.ctx.moveTo(sx - 5 + flicker, sy - 4);
+            this.ctx.moveTo(sx - 6 + flicker, sy - 4);
             this.ctx.lineTo(sx - 1, sy);
-            this.ctx.lineTo(sx - 4, sy + 3);
+            this.ctx.lineTo(sx - 4, sy + 4);
             this.ctx.stroke();
 
-            this.ctx.strokeStyle = '#38bdf8';
+            this.ctx.strokeStyle = '#7dd3fc';
             this.ctx.beginPath();
             this.ctx.moveTo(sx + 2, sy - 5);
             this.ctx.lineTo(sx + 6 + flicker, sy);
             this.ctx.lineTo(sx + 3, sy + 4);
             this.ctx.stroke();
         } else {
-            this.ctx.fillStyle = 'rgba(147, 51, 234, 0.35)';
+            const grad = this.ctx.createRadialGradient(sx, sy, 2, sx, sy, rx);
+            grad.addColorStop(0, 'rgba(216, 180, 254, 0.6)');
+            grad.addColorStop(0.55, 'rgba(147, 51, 234, 0.4)');
+            grad.addColorStop(1, 'rgba(88, 28, 135, 0)');
+            this.ctx.fillStyle = grad;
             this.ctx.beginPath();
-            this.ctx.ellipse(sx, sy, h.radius, h.radius * 0.6, 0, 0, Math.PI * 2);
+            this.ctx.ellipse(sx, sy, rx, rx * 0.62, 0, 0, Math.PI * 2);
             this.ctx.fill();
 
-            this.ctx.fillStyle = '#a855f7';
+            this.ctx.fillStyle = '#e9d5ff';
             this.ctx.fillRect(sx - 5, sy - 7, 2, 7);
             this.ctx.fillRect(sx + 4, sy - 8, 3, 8);
-            this.ctx.fillRect(sx, sy - 5, 2, 5);
         }
         this.ctx.restore();
     });
@@ -15557,16 +15858,24 @@ Game.drawBossShockwaves = function() {
         const alpha = Math.max(0, 1 - (sw.radius / sw.maxRadius));
 
         this.ctx.save();
-        this.ctx.strokeStyle = `rgba(239, 68, 68, ${alpha * 0.85})`;
+        this.ctx.globalCompositeOperation = 'lighter';
+
+        this.ctx.strokeStyle = `rgba(249, 115, 22, ${(alpha * 0.45).toFixed(3)})`;
+        this.ctx.lineWidth = 10;
+        this.ctx.beginPath();
+        this.ctx.arc(sx, sy, sw.radius, 0, Math.PI * 2);
+        this.ctx.stroke();
+
+        this.ctx.strokeStyle = `rgba(239, 68, 68, ${(alpha * 0.92).toFixed(3)})`;
         this.ctx.lineWidth = 4;
         this.ctx.beginPath();
         this.ctx.arc(sx, sy, sw.radius, 0, Math.PI * 2);
         this.ctx.stroke();
 
-        this.ctx.strokeStyle = `rgba(168, 85, 247, ${alpha * 0.6})`;
-        this.ctx.lineWidth = 2;
+        this.ctx.strokeStyle = `rgba(254, 240, 138, ${(alpha * 0.85).toFixed(3)})`;
+        this.ctx.lineWidth = 1.8;
         this.ctx.beginPath();
-        this.ctx.arc(sx, sy, Math.max(0, sw.radius - 8), 0, Math.PI * 2);
+        this.ctx.arc(sx, sy, Math.max(0, sw.radius - 5), 0, Math.PI * 2);
         this.ctx.stroke();
         this.ctx.restore();
     });
@@ -17973,11 +18282,8 @@ Game.drawSingleWorldMonster = function(m) {
     const mx = Math.round(m.x - this.camera.x);
     const my = Math.round(m.y - this.camera.y);
 
-    // Grounding Contact Shadow
-    this.ctx.fillStyle = 'rgba(15, 23, 42, 0.3)';
-    this.ctx.beginPath();
-    this.ctx.ellipse(mx + 16, my + 28, 11, 4.5, 0, 0, Math.PI * 2);
-    this.ctx.fill();
+    // Directional Grounding Contact Shadow
+    this.drawContactShadow(m.x + 16, m.y + 28, 11, 4.5, 0.34);
 
     const frames = SPRITES.worldMonsters[m.type];
     if (frames) {
@@ -18091,7 +18397,43 @@ Game.drawBoss = function() {
     this.ctx.fill();
 
     // Grounding Contact Shadow
-    this.drawContactShadow(this.boss.x + 32, this.boss.y + 60, 28, 10, 0.4);
+    this.drawContactShadow(this.boss.x + 32, this.boss.y + 60, 30, 11, 0.45);
+
+    // Phase 2 & 3 Rotating Arcane Ground Seal
+    if (this.boss.phase >= 2) {
+        const sealColors: Record<string, string> = {
+            boss_luminarch: '56, 189, 248',
+            boss_hydrakis: '34, 197, 94',
+            boss_ignistron: '249, 115, 22',
+            boss_frostfang: '103, 232, 249',
+            boss_malakor: '168, 85, 247',
+            boss_sylvanus: '74, 222, 128',
+            boss_astreon: '250, 204, 21',
+            boss_karzarak: '239, 68, 68'
+        };
+        const sc = sealColors[this.boss.id] || '225, 29, 72';
+        const rot = performance.now() * (this.boss.phase === 3 ? 0.0028 : 0.0014);
+        const cx = bx + 32;
+        const cy = by + 56;
+        const r = this.boss.phase === 3 ? 42 : 35;
+
+        this.ctx.save();
+        this.ctx.globalCompositeOperation = 'lighter';
+        this.ctx.strokeStyle = `rgba(${sc}, ${this.boss.phase === 3 ? 0.72 : 0.45})`;
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        this.ctx.ellipse(cx, cy, r, r * 0.42, 0, 0, Math.PI * 2);
+        this.ctx.stroke();
+
+        for (let k = 0; k < 6; k++) {
+            const ang = rot + (k / 6) * Math.PI * 2;
+            const px = cx + Math.cos(ang) * r;
+            const py = cy + Math.sin(ang) * r * 0.42;
+            this.ctx.fillStyle = `rgba(255, 255, 255, ${this.boss.phase === 3 ? 0.85 : 0.55})`;
+            this.ctx.fillRect(px - 1.5, py - 1.5, 3, 3);
+        }
+        this.ctx.restore();
+    }
 
     // Electric / Energy sparks for Phase 2 & 3
     if (this.boss.phase >= 2 && Math.random() < 0.45) {
@@ -19405,64 +19747,79 @@ Game.drawMeleeSlash = function() {
     const slash = this.meleeSlashAnim;
     const sx = Math.round(slash.x - this.camera.x);
     const sy = Math.round(slash.y - this.camera.y);
-    const progress = Math.max(0, Math.min(1, slash.timer / (slash.maxTimer || 180)));
+    const lifeRatio = Math.max(0, Math.min(1, slash.timer / (slash.maxTimer || 180)));
+    const sweep = 1 - lifeRatio;
     const combo = slash.comboStep || 1;
+    const wid = slash.weaponId || '';
+
+    let outerCol = combo === 3 ? '#f59e0b' : (combo === 2 ? '#0284c7' : '#94a3b8');
+    let midCol = combo === 3 ? '#fde047' : (combo === 2 ? '#38bdf8' : '#e2e8f0');
+    if (wid === 'volcano_sword' || wid === 'volcano_magma_axe' || wid === 'volcano_flame_sword') {
+        outerCol = '#dc2626'; midCol = '#fb923c';
+    } else if (wid === 'malakor_soul_scythe') {
+        outerCol = '#7e22ce'; midCol = '#e879f9';
+    } else if (wid === 'glacial_titan_hammer') {
+        outerCol = '#0284c7'; midCol = '#bae6fd';
+    } else if (wid === 'tempest_blade' || wid === 'cutlass_saber') {
+        outerCol = '#2563eb'; midCol = '#38bdf8';
+    } else if (wid === 'luminarch_crystal_blade') {
+        outerCol = '#a855f7'; midCol = '#22d3ee';
+    } else if (slash.isHoly || wid === 'spire_blade') {
+        outerCol = '#d97706'; midCol = '#fde047';
+    }
+
+    const rOuter = combo === 3 ? 44 : (combo === 2 ? 34 : 29);
+    const halfSpan = combo === 3 ? Math.PI * 0.64 : (combo === 2 ? Math.PI * 0.48 : Math.PI * 0.36);
+    const startAng = -halfSpan;
+    const endAng = halfSpan;
 
     this.ctx.save();
     this.ctx.translate(sx, sy);
     this.ctx.rotate(slash.angle);
+    if (combo === 2) this.ctx.scale(1, -1);
+    this.ctx.globalCompositeOperation = 'lighter';
+
+    this.ctx.globalAlpha = lifeRatio * 0.42;
+    this.ctx.strokeStyle = outerCol;
+    this.ctx.lineWidth = combo === 3 ? 16 : 11;
+    this.ctx.lineCap = 'round';
+    this.ctx.beginPath();
+    this.ctx.arc(8, 0, rOuter, startAng, endAng);
+    this.ctx.stroke();
+
+    const thickness = (combo === 3 ? 15 : 10) * (0.4 + lifeRatio * 0.6);
+    this.ctx.globalAlpha = lifeRatio * 0.92;
+    this.ctx.fillStyle = midCol;
+    this.ctx.beginPath();
+    this.ctx.arc(10, 0, rOuter + 2, startAng, endAng);
+    this.ctx.arc(10 - thickness, 0, rOuter - thickness * 0.25, endAng, startAng, true);
+    this.ctx.closePath();
+    this.ctx.fill();
+
+    this.ctx.globalAlpha = Math.min(1, lifeRatio * 1.15);
+    this.ctx.strokeStyle = '#ffffff';
+    this.ctx.lineWidth = combo === 3 ? 3.2 : 2.2;
+    this.ctx.beginPath();
+    this.ctx.arc(11, 0, rOuter + 1, startAng * 0.85, endAng * 0.85);
+    this.ctx.stroke();
 
     if (combo === 3) {
-        // Step 3 Finisher: Giant Golden Explosive Solar Arc (180 degrees)
-        this.ctx.shadowColor = '#facc15';
-        this.ctx.shadowBlur = 16;
-
-        this.ctx.strokeStyle = `rgba(250, 204, 21, ${0.95 * progress})`;
-        this.ctx.lineWidth = 6;
-        this.ctx.beginPath();
-        this.ctx.arc(14, 0, 36, -Math.PI / 1.8, Math.PI / 1.8);
-        this.ctx.stroke();
-
-        this.ctx.strokeStyle = `rgba(255, 255, 255, ${1.0 * progress})`;
-        this.ctx.lineWidth = 3;
-        this.ctx.beginPath();
-        this.ctx.arc(16, 0, 32, -Math.PI / 2.2, Math.PI / 2.2);
-        this.ctx.stroke();
-    } else if (combo === 2) {
-        // Step 2: Wide Azure Cleave (125 degrees)
-        this.ctx.shadowColor = '#38bdf8';
-        this.ctx.shadowBlur = 12;
-
-        this.ctx.strokeStyle = `rgba(56, 189, 248, ${0.88 * progress})`;
-        this.ctx.lineWidth = 4.5;
-        this.ctx.beginPath();
-        this.ctx.arc(16, 0, 28, -Math.PI / 2.6, Math.PI / 2.6);
-        this.ctx.stroke();
-
-        this.ctx.strokeStyle = `rgba(255, 255, 255, ${0.95 * progress})`;
-        this.ctx.lineWidth = 2.2;
-        this.ctx.beginPath();
-        this.ctx.arc(18, 0, 25, -Math.PI / 3, Math.PI / 3);
-        this.ctx.stroke();
-    } else {
-        // Step 1: Swift Silver Slash (75 degrees)
-        this.ctx.shadowColor = '#cbd5e1';
-        this.ctx.shadowBlur = 8;
-
-        this.ctx.strokeStyle = `rgba(248, 250, 252, ${0.88 * progress})`;
-        this.ctx.lineWidth = 3.5;
-        this.ctx.beginPath();
-        this.ctx.arc(18, 0, 24, -Math.PI / 3.4, Math.PI / 3.4);
-        this.ctx.stroke();
-    }
-
-    if (slash.isHoly) {
-        this.ctx.strokeStyle = `rgba(253, 224, 71, ${0.9 * progress})`;
+        const ringR = (rOuter + 14) * (0.5 + sweep * 0.65);
+        this.ctx.globalAlpha = lifeRatio * 0.7;
+        this.ctx.strokeStyle = midCol;
         this.ctx.lineWidth = 2.5;
         this.ctx.beginPath();
-        this.ctx.arc(22, 0, 38, -Math.PI / 3, Math.PI / 3);
+        this.ctx.arc(12, 0, ringR, -halfSpan * 0.9, halfSpan * 0.9);
         this.ctx.stroke();
     }
+
+    const tipX = 11 + Math.cos(endAng * (0.5 + sweep * 0.4)) * rOuter;
+    const tipY = Math.sin(endAng * (0.5 + sweep * 0.4)) * rOuter;
+    this.ctx.globalAlpha = lifeRatio * 0.95;
+    this.ctx.fillStyle = '#ffffff';
+    this.ctx.beginPath();
+    this.ctx.arc(tipX, tipY, combo === 3 ? 4.5 : 3, 0, Math.PI * 2);
+    this.ctx.fill();
 
     this.ctx.restore();
 };
@@ -19514,6 +19871,12 @@ Game.gameLoop = function(timestamp) {
             this.meleeSlashAnim.timer -= dt;
             if (this.meleeSlashAnim.timer <= 0) {
                 this.meleeSlashAnim = null;
+            }
+        }
+        if (this.screenFlash) {
+            this.screenFlash.timer -= dt;
+            if (this.screenFlash.timer <= 0) {
+                this.screenFlash = null;
             }
         }
 
@@ -21621,12 +21984,52 @@ Game.buySpireItem = function(itemId: string, cost: number) {
 
 Game.updateAmbientEffects = function(dt: number) {
     if (!this.ambientParticles) {
-        this.ambientParticles = { fireflies: [], leaves: [], footprints: [], smoke: [] };
+        this.ambientParticles = { fireflies: [], leaves: [], footprints: [], smoke: [], motes: [] };
     }
+    if (!this.ambientParticles.motes) this.ambientParticles.motes = [];
 
     const hour = this.time.hour;
     const season = this.time.seasonIndex;
     const isExterior = ['farm', 'village', 'forest', 'island'].includes(this.currentScene);
+
+    // Biome Atmospheric Motes
+    const moteThemes: Record<string, { col: string; vy: number; vx: number; max: number }> = {
+        volcano: { col: '#fb923c', vy: -0.95, vx: 0.25, max: 24 },
+        island_volcano: { col: '#f97316', vy: -0.95, vx: 0.25, max: 24 },
+        frost_peak: { col: '#bae6fd', vy: 0.45, vx: -0.55, max: 22 },
+        swamp: { col: '#4ade80', vy: -0.25, vx: 0.15, max: 18 },
+        ancient_canopy: { col: '#86efac', vy: -0.22, vx: 0.2, max: 18 },
+        forest: { col: '#a3e635', vy: -0.18, vx: 0.15, max: 14 },
+        crypt: { col: '#c084fc', vy: -0.35, vx: 0.08, max: 18 },
+        cave_depths: { col: '#38bdf8', vy: -0.28, vx: 0.12, max: 18 },
+        spire: { col: '#e879f9', vy: -0.45, vx: 0.18, max: 22 },
+        tempest_plateau: { col: '#7dd3fc', vy: -0.4, vx: 0.85, max: 22 }
+    };
+    const mTheme = moteThemes[this.currentScene];
+    if (mTheme) {
+        if (this.ambientParticles.motes.length < mTheme.max) {
+            this.ambientParticles.motes.push({
+                x: Math.random() * this.width,
+                y: mTheme.vy < 0 ? this.height + 8 : -8,
+                vx: mTheme.vx + (Math.random() - 0.5) * 0.45,
+                vy: mTheme.vy * (0.65 + Math.random() * 0.65),
+                phase: Math.random() * Math.PI * 2,
+                size: 1.5 + Math.random() * 2.2,
+                color: mTheme.col
+            });
+        }
+        for (let i = this.ambientParticles.motes.length - 1; i >= 0; i--) {
+            const mt = this.ambientParticles.motes[i];
+            mt.phase += 0.06;
+            mt.x += mt.vx + Math.sin(mt.phase) * 0.25;
+            mt.y += mt.vy;
+            if (mt.y < -20 || mt.y > this.height + 20 || mt.x < -20 || mt.x > this.width + 20) {
+                this.ambientParticles.motes.splice(i, 1);
+            }
+        }
+    } else if (this.ambientParticles.motes.length > 0) {
+        this.ambientParticles.motes = [];
+    }
 
     // 1. Night Fireflies (18:00 - 05:00)
     if (isExterior && (hour >= 18 || hour < 5)) {
@@ -21760,18 +22163,43 @@ Game.drawAmbientEffects = function() {
         });
     }
 
-    // 4. Draw Night Fireflies (screen coords)
+    // 4. Draw Biome Glowing Motes & Night Fireflies (additive bloom)
+    if (this.ambientParticles.motes && this.ambientParticles.motes.length > 0) {
+        this.ctx.save();
+        this.ctx.globalCompositeOperation = 'lighter';
+        this.ambientParticles.motes.forEach((mt: any) => {
+            const tw = (Math.sin(mt.phase) + 1) * 0.5;
+            this.ctx.globalAlpha = 0.22 + tw * 0.45;
+            this.ctx.fillStyle = mt.color;
+            this.ctx.beginPath();
+            this.ctx.arc(mt.x, mt.y, mt.size * 2.2, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.globalAlpha = 0.75 + tw * 0.25;
+            this.ctx.fillStyle = '#ffffff';
+            this.ctx.beginPath();
+            this.ctx.arc(mt.x, mt.y, mt.size * 0.6, 0, Math.PI * 2);
+            this.ctx.fill();
+        });
+        this.ctx.restore();
+    }
+
     if (this.ambientParticles.fireflies && this.ambientParticles.fireflies.length > 0) {
+        this.ctx.save();
+        this.ctx.globalCompositeOperation = 'lighter';
         this.ambientParticles.fireflies.forEach((f: any) => {
             const glow = (Math.sin(f.pulse) + 1) * 0.5;
-            this.ctx.save();
-            this.ctx.globalCompositeOperation = 'lighter';
-            this.ctx.fillStyle = `rgba(254, 240, 138, ${0.25 + glow * 0.65})`;
+            this.ctx.globalAlpha = 0.2 + glow * 0.35;
+            this.ctx.fillStyle = '#fde047';
             this.ctx.beginPath();
-            this.ctx.arc(f.x, f.y, f.size + glow * 2, 0, Math.PI * 2);
+            this.ctx.arc(f.x, f.y, (f.size + glow * 2) * 2.2, 0, Math.PI * 2);
             this.ctx.fill();
-            this.ctx.restore();
+            this.ctx.globalAlpha = 0.55 + glow * 0.45;
+            this.ctx.fillStyle = '#fef9c3';
+            this.ctx.beginPath();
+            this.ctx.arc(f.x, f.y, f.size * 0.85, 0, Math.PI * 2);
+            this.ctx.fill();
         });
+        this.ctx.restore();
     }
 };
 
@@ -22010,6 +22438,7 @@ Game.castWarriorSkill = function(skill, lv) {
         this.triggerHitstop(160);
         this.spawnParticles(px, py, '#fde047', 35);
         this.spawnParticles(px, py, '#f59e0b', 30);
+        this.triggerScreenFlash('#fde047', 0.22, 220);
         this.activeSkillVisuals.push({ type: 'judgement_sword', x: px, y: py, radius: 220, timer: 900, maxTimer: 900 });
         this.damageEnemiesInRadius(px, py, 220, dmg, '★ สุริยันพิฆาต! -' + dmg, '#fde047');
         this.addFloatingText('★ [อัลติเมท] สุริยันพิฆาตสะบั้นหล้า! -' + dmg + ' HP', px - 55, py - 35, '#fde047');
@@ -22057,6 +22486,7 @@ Game.castMageSkill = function(skill, lv) {
         this.addFloatingText('★ [เวท 3] ม่านพายุปริซึม! (เลเซอร์ออโต้ ' + orbDmg + ' DMG)', px - 30, py - 25, '#c084fc');
     } else if (skill.id === 'meteor_cataclysm') {
         this.triggerScreenShake(13.0, 600);
+        this.triggerScreenFlash('#ea580c', 0.20, 240);
         this.spawnParticles(px, py, '#ea580c', 35);
         this.addFloatingText('★ [อัลติเมท] ฝนดาวตกกลืนนภา! มหาอุกกาบาตล้างบาง!', px - 50, py - 35, '#ea580c');
         const nearestEnemy = this.findNearestCombatTarget(520);
@@ -22116,6 +22546,7 @@ Game.castRangerSkill = function(skill, lv) {
         this.addFloatingText('★ [พราน 3] ก้าวเงาล่องหน! (อมตะ 1.2s & วิ่งไว +60%)', px - 40, py - 25, '#94a3b8');
     } else if (skill.id === 'dragonpiercer') {
         this.triggerScreenShake(11.0, 450);
+        this.triggerScreenFlash('#38bdf8', 0.22, 200);
         this.spawnParticles(px, py, '#38bdf8', 30);
         this.spawnParticles(px, py, '#fde047', 20);
         this.activeSkillVisuals.push({ type: 'lightning_beam_line', x: px, y: py, angle: baseAng, length: 800, timer: 650, maxTimer: 650 });
@@ -22167,6 +22598,7 @@ Game.castPaladinSkill = function(skill, lv) {
     } else if (skill.id === 'wrath_heavens') {
         this.triggerScreenShake(13.0, 600);
         this.triggerHitstop(140);
+        this.triggerScreenFlash('#fef08a', 0.26, 250);
         this.spawnParticles(px, py, '#fde047', 40);
         this.spawnParticles(px, py, '#ffffff', 30);
         this.activeSkillVisuals.push({ type: 'heaven_pillar', x: px, y: py, radius: 220, timer: 950, maxTimer: 950 });
@@ -23153,8 +23585,33 @@ Game.drawActiveSkillVisuals = function(ctx) {
         const alpha = Math.max(0, 1 - progress);
 
         ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
 
-        if (v.type === 'cyclone') {
+        if (v.type === 'crit_flare') {
+            const curR = (v.radius || 38) * (0.45 + progress * 0.75);
+            ctx.globalAlpha = alpha;
+            const g = ctx.createRadialGradient(sx, sy, 1, sx, sy, curR);
+            g.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+            g.addColorStop(0.3, 'rgba(253, 224, 71, 0.75)');
+            g.addColorStop(1, 'rgba(249, 115, 22, 0)');
+            ctx.fillStyle = g;
+            ctx.beginPath();
+            ctx.arc(sx, sy, curR, 0, Math.PI * 2);
+            ctx.fill();
+
+            const rot = v.angle || 0;
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2.5 * alpha;
+            for (let k = 0; k < 2; k++) {
+                const a = rot + k * (Math.PI / 2);
+                const rLen = curR * 1.25;
+                ctx.beginPath();
+                ctx.moveTo(sx - Math.cos(a) * rLen, sy - Math.sin(a) * rLen);
+                ctx.lineTo(sx + Math.cos(a) * rLen, sy + Math.sin(a) * rLen);
+                ctx.stroke();
+            }
+
+        } else if (v.type === 'cyclone') {
             // Cyclone Slash - Multi-layer golden & electric vortex
             const curR = v.radius * (0.35 + progress * 0.65);
             const rot = progress * Math.PI * 6;
@@ -23763,12 +24220,15 @@ Game.drawActiveSkillVisuals = function(ctx) {
 
         } else if (v.type === 'guard_break') {
             // Guard Break Shatter Shockwave
-            ctx.shadowColor = '#ef4444';
-            ctx.shadowBlur = 18;
             ctx.strokeStyle = `rgba(239, 68, 68, ${alpha * 0.9})`;
-            ctx.lineWidth = 4;
+            ctx.lineWidth = 6;
             ctx.beginPath();
-            ctx.arc(sx, sy, 32 * (0.3 + progress * 0.7), 0, Math.PI * 2);
+            ctx.arc(sx, sy, 36 * (0.3 + progress * 0.7), 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.8})`;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(sx, sy, 26 * (0.3 + progress * 0.7), 0, Math.PI * 2);
             ctx.stroke();
         }
 
