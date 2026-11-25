@@ -481,6 +481,7 @@
                             </div>
                         </div>
                         <p id="detailItemDesc" class="item-detail-desc">รายละเอียดไอเทม</p>
+                        <div id="detailItemSource" class="item-detail-source" style="display: none;"></div>
                         <div id="detailItemActionContainer" style="display: none; margin-top: 10px; display: flex; justify-content: flex-end; gap: 8px;">
                             <button id="detailItemConsumeBtn" class="btn-eat-detail" onclick="Game.consumeItemFromInventoryCard()">รับประทาน / ดื่ม</button>
                             <button id="detailItemDropBtn" class="btn-drop-detail" onclick="Game.dropItemFromInventoryCard()" style="background: #991b1b; color: white; border: 2px solid #7f1d1d; border-radius: 4px; padding: 4px 12px; font-size: 11px; font-weight: bold; cursor: pointer;">ทิ้งลงพื้น (Drop)</button>
@@ -1072,6 +1073,7 @@
                         <button class="compendium-tab-btn" data-tab="minerals" onclick="Game.setCompendiumTab('minerals')">แร่ธาตุ</button>
                         <button class="compendium-tab-btn" data-tab="artisan" onclick="Game.setCompendiumTab('artisan')">สินค้าแปรรูป</button>
                         <button class="compendium-tab-btn" data-tab="achievements" onclick="Game.setCompendiumTab('achievements')">ตราความสำเร็จ</button>
+                        <button class="compendium-tab-btn" data-tab="sources" onclick="Game.setCompendiumTab('sources')">🔍 แหล่งหาของ</button>
                     </div>
                     <div id="compendiumContent" class="compendium-content-area"></div>
                 </div>
@@ -1365,14 +1367,17 @@
                         <div class="repair-req-card">
                             <span class="repair-item-name">ไม้ (Wood)</span>
                             <span id="repairReqWood" class="repair-item-status">0 / 20</span>
+                            <span class="repair-item-source">ตัดต้นไม้ด้วยขวานในฟาร์ม/ป่า หรือซื้อร้านตีเหล็ก</span>
                         </div>
                         <div class="repair-req-card">
                             <span class="repair-item-name">แร่เหล็ก (Iron Ore)</span>
                             <span id="repairReqIron" class="repair-item-status">0 / 5</span>
+                            <span class="repair-item-source">ก็อบลินในป่า / เหมืองชั้น 10+ / ซื้อช่างตีเหล็กคาเอล (60G)</span>
                         </div>
                         <div class="repair-req-card">
                             <span class="repair-item-name">เหรียญทอง (Gold)</span>
                             <span id="repairReqGold" class="repair-item-status">0 / 500 G</span>
+                            <span class="repair-item-source">ขายพืชผล/ปลา/แร่ที่กล่องรับซื้อหน้าบ้าน หรือทำเควส</span>
                         </div>
                     </div>
                     <div class="repair-modal-actions" style="margin-top: 18px; display: flex; justify-content: flex-end; align-items: center; gap: 10px; flex-wrap: wrap;">

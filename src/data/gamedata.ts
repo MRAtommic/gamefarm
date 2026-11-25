@@ -27,6 +27,7 @@ import {
 export const CROPS: Record<string, CropData> = {
   wheat: { id: 'wheat', name: 'ข้าวสาลี', seedName: 'เมล็ดข้าวสาลี', buyPrice: 10, sellPrice: 20, growDays: 2, xp: 4, levelReq: 1, category: 'grain' },
   carrot: { id: 'carrot', name: 'แครอท', seedName: 'เมล็ดแครอท', buyPrice: 15, sellPrice: 32, growDays: 2, xp: 6, levelReq: 1, category: 'vegetable' },
+  potato: { id: 'potato', name: 'มันฝรั่ง', seedName: 'เมล็ดมันฝรั่ง', buyPrice: 18, sellPrice: 40, growDays: 2, xp: 7, levelReq: 1, category: 'vegetable' },
   corn: { id: 'corn', name: 'ข้าวโพด', seedName: 'เมล็ดข้าวโพด', buyPrice: 20, sellPrice: 45, growDays: 3, xp: 8, levelReq: 2, category: 'grain' },
   tomato: { id: 'tomato', name: 'มะเขือเทศ', seedName: 'เมล็ดมะเขือเทศ', buyPrice: 25, sellPrice: 55, growDays: 3, xp: 10, levelReq: 2, category: 'vegetable' },
   strawberry: { id: 'strawberry', name: 'สตรอเบอร์รี่', seedName: 'เมล็ดสตรอเบอร์รี่', buyPrice: 35, sellPrice: 80, growDays: 4, xp: 14, levelReq: 3, category: 'fruit' },
@@ -2521,3 +2522,262 @@ export const PIRATE_SHOP_ITEMS: Record<string, PirateShopItem> = {
     desc: 'เครื่องดื่มผลไม้เขตร้อนเย็นฉ่ำ ดื่มเพื่อวิ่งเร็วขึ้น +60% นาน 5 นาที!'
   }
 };
+
+// ========================================================
+// CENTRALIZED ITEM SOURCE DIRECTORY (แหล่งที่มาของไอเทมทั้งหมด)
+// ========================================================
+export type ItemFinderCategory =
+  | 'mineral'
+  | 'monster'
+  | 'boss'
+  | 'forage'
+  | 'crop'
+  | 'fish'
+  | 'artisan'
+  | 'shop';
+
+export interface ItemSourceMeta {
+  name?: string;
+  category: ItemFinderCategory;
+  source: string;
+}
+
+export const ITEM_SOURCES: Record<string, ItemSourceMeta> = {
+  // --- แร่ธาตุ & อัญมณี (Mining & Caves) ---
+  wood: { name: 'ท่อนไม้', category: 'forage', source: 'ใช้ขวานตัดต้นไม้ในฟาร์ม/ป่า หรือต้นปาล์มบนเกาะสมบัติ (ซื้อร้านช่างตีเหล็กคาเอล 5 ท่อน 75G ได้)' },
+  stone: { name: 'ก้อนหินเนื้อแน่น', category: 'mineral', source: 'ใช้จอบอีเต๋อขุดก้อนหินในเหมืองป่าลึก (มีโอกาสได้ x2 35%) หรือกะเทาะหินปริศนา' },
+  coal: { name: 'ถ่านหิน (Coal)', category: 'mineral', source: 'สุ่มดรอป 16% เมื่อขุดก้อนหินในเหมือง หรือดรอป 45% จากภูตลูกไฟลาวาในถ้ำภูเขาไฟเกาะสมบัติ' },
+  copper_ore: { name: 'แร่ทองแดงบริสุทธิ์', category: 'mineral', source: 'สุ่มดรอป 25% จากการขุดหินในเหมืองชั้น 1+ หรือซื้อจากช่างตีเหล็กคาเอล (2 ก้อน 70G)' },
+  iron_ore: { name: 'แร่เหล็กดิบ', category: 'mineral', source: 'ขุดแร่ทับทิมในเหมืองชั้น 10+ (65%), ดรอปจากก็อบลินในป่า (100%), นักรบโครงกระดูกในสุสาน (75%), หนอนลาวา (45%) หรือซื้อร้านตีเหล็กคาเอล (60G)' },
+  gold_ore: { name: 'แร่ทองคำดิบ', category: 'mineral', source: 'ขุดสายแร่ทองในเหมืองชั้น 5+ และก้นบึ้งถ้ำ (Cave Depths), ดันเจี้ยนภูเขาไฟ (25%), โจรสลัดโครงกระดูก (30%) หรือหีบสมบัติ' },
+  mana_gem: { name: 'ผลึกมานาสีคราม', category: 'mineral', source: 'ขุดสายแร่มานาสีฟ้าในเหมืองป่าลึก, ดรอปจากต้นไม้ปีศาจในป่า (30%) / สไลม์คริสตัล (25%) หรือหีบสมบัติถ้ำ' },
+  ruby_gem: { name: 'อัญมณีทับทิมเวทมนตร์', category: 'mineral', source: 'ขุดแร่ทับทิมในป่าเงามืด / เหมืองชั้น 10+ / วิหารไฟลาวา, ดรอปจากค้างคาว (14%) / อสูรไฟ (25%) หรือกะเทาะหินปริศนา' },
+  diamond_crystal: { name: 'เพชรคริสตัลโบราณ', category: 'mineral', source: 'ขุดสายแร่เพชรในเหมืองชั้น 15+ และ Cave Depths, ดรอปจากสไลม์/แมงมุมผลึก (8-12%), ร้าน Void Shop ซุล (750G) หรือร้านหอคอย (8 ผลึก)' },
+  thunder_crystal: { name: 'ผลึกสายฟ้าอัสนีบาต', category: 'mineral', source: 'ขุดผลึกสายฟ้าบนที่ราบสูงแห่งพายุ (Tempest Plateau ทางเหนือของยอดเขาหิมะ) หรือดรอปจากบอสออสทริออน (x3)' },
+  cinder_shard: { name: 'เศษผลึกเพลิง (Cinder Shard)', category: 'mineral', source: 'ขุดแร่ผลึกเพลิงในดันเจี้ยนภูเขาไฟเกาะสมบัติ, ดรอปจากมอนสเตอร์ภูเขาไฟ (30-50%) หรือบอสคาร์ซาร็อค (x8)' },
+  star_core: { name: 'แก่นผลึกดวงดาว', category: 'mineral', source: 'ขุดอุกกาบาตดวงดาว หรือเปิดหีบสมบัติหลักในเหมืองชั้น 5, 10, 15, 20 (หีบชั้นละ 1 ชิ้น)' },
+  star_shard: { name: 'เศษอุกกาบาตดวงดาว (Star Shard)', category: 'mineral', source: 'ขุดก้อนอุกกาบาตดวงดาว หรือสุ่ม 6% จากการกะเทาะหินผลึกปิดผนึกปริศนา (Mystery Geode)' },
+  mystery_geode: { name: 'หินผลึกปิดผนึกปริศนา (Mystery Geode)', category: 'mineral', source: 'ขุดอุกกาบาต หรือซื้อจากร้านค้าลึกลับ Void Shop ของซุล (350 G) -> กดคลิกใช้ในกระเป๋าเพื่อสุ่มแร่หายาก' },
+  ancient_relic: { name: 'โบราณวัตถุแห่งอารยธรรมสาบสูญ', category: 'mineral', source: 'สุ่มแจ็กพอต (2%) จากการกะเทาะหินผลึกปิดผนึกปริศนา (Mystery Geode) ในกระเป๋า' },
+  spire_shard: { name: 'ผลึกหอคอยมิติ (Spire Shard)', category: 'boss', source: 'ดรอป 85-100% จากศัตรูและบอสในหอคอยมิติไร้จุดสิ้นสุด (Infinite Spire)' },
+
+  // --- ของป่า & เกาะมหาสมบัติ (Foraging & Exploration) ---
+  wild_berries: { name: 'เบอร์รี่ป่า (Wild Berries)', category: 'forage', source: 'เก็บจากพุ่มไม้เบอร์รี่สีชมพูในฟาร์ม หมู่บ้าน และป่าเงามืด (เกิดใหม่ทุกเช้าวันใหม่)' },
+  starflower_herb: { name: 'สมุนไพรดวงดาว', category: 'forage', source: 'เก็บดอกไม้เรืองแสงในป่าเงามืด หนองน้ำมรณะ หรือยอดเขาหิมะ (เกิดใหม่ทุกวัน) หรือดรอปจากก็อบลินในป่า (60%)' },
+  swamp_herb: { name: 'บัวสมุนไพรหนองน้ำ', category: 'forage', source: 'ดรอป 80% จากจระเข้หนองน้ำพิษ (Swamp Croc) ในหนองน้ำมรณะฝั่งตะวันตกของหมู่บ้าน และบอสพญาไฮดรา (x3)' },
+  frost_berry: { name: 'เบอร์รี่หิมะเยือกแข็ง', category: 'forage', source: 'ดรอป 60% จากหมาป่าหิมะเยือกแข็ง (Frost Wolf) บนยอดเขาหิมะ Frost Peak (ทางเหนือของป่าเงามืด)' },
+  star_fruit: { name: 'ผลไม้ดวงดาราพฤกษา', category: 'forage', source: 'เก็บจากพุ่มไม้ดาวเรืองแสงในป่าพฤกษาบรรพกาล (Ancient Canopy ทางตะวันออกของป่าเงามืด) หรือบอสซิลวาเนีย (x2)' },
+  mushroom_purple: { name: 'เห็ดม่วงเรืองแสง', category: 'forage', source: 'เก็บจากกล่องเพาะเห็ดในถ้ำฟาร์ม (Farm Cave - เลือกอัปเกรดเป็นห้องเพาะเห็ดวิจัย)' },
+  mushroom_red: { name: 'เห็ดแดงจุดขาว', category: 'forage', source: 'เก็บจากกล่องเพาะเห็ดในถ้ำฟาร์ม (Farm Cave - เลือกอัปเกรดเป็นห้องเพาะเห็ดวิจัย)' },
+  mushroom_chanterelle: { name: 'เห็ดแชนเทอเรลล์สีทอง', category: 'forage', source: 'เก็บจากกล่องเพาะเห็ดในถ้ำฟาร์ม (Farm Cave - เลือกอัปเกรดเป็นห้องเพาะเห็ดวิจัย)' },
+  apple: { name: 'แอปเปิ้ลป่าสด', category: 'forage', source: 'เก็บบนพื้นในถ้ำฟาร์ม (Farm Cave - เลือกอัปเกรดเป็นถ้ำค้างคาวผลไม้)' },
+  orange: { name: 'ส้มสดหวานฉ่ำ', category: 'forage', source: 'เก็บบนพื้นในถ้ำฟาร์ม (Farm Cave - เลือกอัปเกรดเป็นถ้ำค้างคาวผลไม้)' },
+  plum: { name: 'ลูกพลัมป่า', category: 'forage', source: 'เก็บบนพื้นในถ้ำฟาร์ม (Farm Cave - เลือกอัปเกรดเป็นถ้ำค้างคาวผลไม้)' },
+  seashell: { name: 'เปลือกหอยมุกสีรุ้ง', category: 'forage', source: 'เก็บบนชายหาดของเกาะมหาสมบัติเขตร้อน (เกิดใหม่ทุกวัน) หรือดรอป 75% จากปูยักษ์เกราะหิน' },
+  message_bottle: { name: 'ขวดแก้วลายแทงสมบัติ', category: 'forage', source: 'เก็บขวดแก้วที่เกยตื้นบนชายหาดเกาะมหาสมบัติเขตร้อน' },
+  pineapple: { name: 'สับปะรดทองคำ', category: 'forage', source: 'เก็บฟรีบนเกาะมหาสมบัติเขตร้อน (เกิดใหม่ทุกวัน) หรือซื้อหน่อสับปะรด (50G) ที่ร้านค้าหมู่บ้านมาปลูก' },
+  coconut: { name: 'มะพร้าวน้ำหอม', category: 'forage', source: 'เก็บฟรีและตัดจากต้นปาล์มบนเกาะมหาสมบัติเขตร้อน หรือซื้อลูกมะพร้าว (60G) ที่ร้านค้าหมู่บ้านมาปลูก' },
+  banana: { name: 'กล้วยหอมทอง (Golden Banana)', category: 'forage', source: 'เก็บฟรีบนเกาะมหาสมบัติเขตร้อน หรือซื้อหน่อกล้วยทอง (55G) ที่ร้านค้าหมู่บ้านมาปลูก' },
+  golden_melon: { name: 'เมลอนทองคำเกาะโจรสลัด', category: 'crop', source: 'แลกเมล็ดด้วย 6 เหรียญโจรสลัดที่ร้านกัปตันบาร์นาบี้ (หรือเปิดหีบโจรสลัด) แล้วปลูกในเกาะสมบัติ/เรือนกระจก (5 วัน)' },
+  starfruit: { name: 'ผลไม้ดวงดาวแคริบเบียน', category: 'crop', source: 'แลกเมล็ดด้วย 10 เหรียญโจรสลัดที่ร้านกัปตันบาร์นาบี้บนเกาะสมบัติ แล้วปลูกในเกาะสมบัติ/เรือนกระจก (6 วัน)' },
+  cosmic_fruit: { name: 'ผลไม้ดวงดาวจักรวาล (Cosmic Star Fruit)', category: 'crop', source: 'ซื้อเมล็ดพันธุ์ดาราจักร (650 G) ที่ร้าน Void Shop ของซุล แล้วปลูกในฟาร์มหรือเรือนกระจก (5 วัน)' },
+  sapling: { name: 'ต้นกล้าไม้โอ๊ค', category: 'forage', source: 'ดรอปเมื่อตัดต้นไม้ใหญ่ในฟาร์มหรือป่าเงามืดด้วยขวาน' },
+
+  // --- ดรอปจากมอนสเตอร์ & แมลงปีศาจ (Monster Drops) ---
+  blight_spore: { name: 'สปอร์กลายพันธุ์ (Blight Spore)', category: 'monster', source: 'ดรอปจากแมลงปีศาจที่บุกฟาร์มยามค่ำคืนทุกตัว (ด้วงทมิฬ / ต่อปีศาจ / หนอนพิษ)' },
+  beetle_shell: { name: 'กระดองด้วงปีศาจ', category: 'monster', source: 'กำจัด "ด้วงปีศาจทมิฬ" ที่บุกแปลงผักในฟาร์มช่วงกลางคืน' },
+  demon_wing: { name: 'ปีกต่อปีศาจ', category: 'monster', source: 'กำจัด "ต่อปีศาจเหล็กในพิษ" ที่บุกคอกสัตว์ในฟาร์มช่วงกลางคืน' },
+  monster_essence: { name: 'น้ำมันปีศาจ', category: 'monster', source: 'กำจัด "หนอนพิษดูดกลืนพืช" ที่บุกแปลงผักในฟาร์มช่วงกลางคืน' },
+  shadow_pelt: { name: 'หนังหมาป่าเงา', category: 'monster', source: 'ดรอป 100% จากหมาป่าเงา (Shadow Wolf) ในป่าเงามืด (Shadow Woods) และสุสานโบราณ' },
+  wolf_fang: { name: 'เขี้ยวหมาป่าอาถรรพ์', category: 'monster', source: 'ดรอป 100% จากหมาป่าเงา (ป่าเงามืด / สุสาน) และหมาป่าหิมะ (ยอดเขา Frost Peak)' },
+  cursed_wood: { name: 'ไม้โบราณต้องสาป', category: 'monster', source: 'ดรอป 85% จากต้นไม้ปีศาจ (Demon Treant) ในป่าเงามืด / ป่าบรรพกาล หรือซื้อที่ร้านตีเหล็กคาเอล (85 G)' },
+  bat_wing: { name: 'ปีกค้างคาวถ้ำ', category: 'monster', source: 'ดรอป 75% จากค้างคาวถ้ำ (Cave Bat) ในเหมืองแร่ ยอดเขาหิมะ และที่ราบสูงพายุ หรือทุบไหในดันเจี้ยน' },
+  crystal_core: { name: 'แก่นคริสตัลสไลม์', category: 'monster', source: 'ดรอป 70-75% จากสไลม์ผลึกและแมงมุมคริสตัลในเหมือง/ก้นบึ้งถ้ำ หรืออสูรหอคอยมิติ (40%)' },
+  hydra_scale: { name: 'เกล็ดมังกรบึงพิษ', category: 'monster', source: 'ดรอป 100% จากจระเข้หนองน้ำพิษ (Swamp Croc) ในหนองน้ำมรณะ และบอสพญาไฮดราคิส (x3)' },
+  flame_heart: { name: 'แก่นเพลิงลาวาเดือด', category: 'monster', source: 'ดรอป 35% จากอสูรธาตุเพลิงลาวาในวิหารไฟ (Volcano) และบอสอิกนิสทรอน (x2)' },
+  frost_crystal: { name: 'ผลึกน้ำแข็งบริสุทธิ์', category: 'monster', source: 'ดรอป 100% จากหมาป่าหิมะ (Frost Wolf) บนยอดเขาหิมะ Frost Peak และบอสฟรอสต์แฟงก์ (x3)' },
+  cursed_relic: { name: 'โบราณวัตถุต้องสาป', category: 'monster', source: 'ดรอป 35% จากนักรบโครงกระดูกในสุสานโบราณ (Crypt ฝั่งตะวันออกหมู่บ้าน) และบอสมาลาคอร์ (x2)' },
+  crab_meat: { name: 'เนื้อปูยักษ์สด', category: 'monster', source: 'ดรอป 100% จากปูยักษ์เกราะหิน (Stoneback Crab) บนชายหาดเกาะมหาสมบัติเขตร้อน' },
+  pirate_doubloon: { name: 'เหรียญทองโบราณโจรสลัด', category: 'monster', source: 'ดรอปจากโจรสลัดโครงกระดูก (55%) / ปูยักษ์ (30%) บนเกาะสมบัติ, เก็บขวดลายแทง, บอสคาร์ซาร็อค (x6) หรือหลอมจาก Cinder Shard 8 ชิ้น' },
+  skeleton_key: { name: 'กุญแจโครงกระดูกโจรสลัด', category: 'monster', source: 'ดรอป 20% จากโจรสลัดโครงกระดูกบนเกาะมหาสมบัติ หรือแลกจากกัปตันบาร์นาบี้ (4 เหรียญโจรสลัด)' },
+  dragon_tooth: { name: 'เขี้ยวมังกรโบราณ (Dragon Tooth)', category: 'fish', source: 'ตกปลาขณะมีสกิล Mastery "นักล่าสมบัติ (Treasure Hunter)" (โอกาส 40% ได้รับจากหีบสมบัติใต้สมุทร)' },
+
+  // --- ของดรอปจากมหาบอส (Boss Drops & Sacred Shards) ---
+  demon_heart: { name: 'หัวใจจอมอสูรคาธูรอส', category: 'boss', source: 'ปราบมหาบอส "คาธูรอส" (Boss Kathuros) ทางเหนือสุดของป่าเงามืด (Shadow Woods)' },
+  crown_of_despair: { name: 'มงกุฎแห่งความสิ้นหวัง', category: 'boss', source: 'ปราบมหาบอส "คาธูรอส" (ป่าเงามืด) หรือมหาบอส "ลอร์ดมาลาคอร์" (สุสาน Crypt)' },
+  luminarch_crystal_heart: { name: 'หัวใจผลึกปริซึมลูมินาร์ค', category: 'boss', source: 'ปราบมหาบอส "ลูมินาร์ค" (Luminarch) ในก้นบึ้งถ้ำผลึก (Cave Depths เข้าทางรอยแยกมุมซ้ายบนในเหมือง)' },
+  hydra_venom_gland: { name: 'ต่อมพิษพญาไฮดราโบราณ', category: 'boss', source: 'ปราบมหาบอส "พญาไฮดราคิส" (Hydrakis) ในหนองน้ำมรณะ (ทางตะวันตกของหมู่บ้าน)' },
+  magma_dragon_horn: { name: 'เขามังกรอัคนีเพลิงอิกนิสทรอน', category: 'boss', source: 'ปราบมหาบอส "อิกนิสทรอน" (Ignistron) ในปล่องภูเขาไฟวิหารมังกร (เข้าต่อจากก้นบึ้งถ้ำ Cave Depths)' },
+  glacial_titan_core: { name: 'แก่นเหมันต์ไททันน้ำแข็ง', category: 'boss', source: 'ปราบมหาบอส "ฟรอสต์แฟงก์" (Frostfang) บนยอดเขาหิมะเยือกแข็ง (ทางเหนือของป่าเงามืด)' },
+  death_lord_soul: { name: 'ดวงวิญญาณมรณะลอร์ดมาลาคอร์', category: 'boss', source: 'ปราบมหาบอส "ลอร์ดมาลาคอร์" (Lord Malakor) ในสุสานโบราณ Crypt (ทางตะวันออกของหมู่บ้าน)' },
+  ancient_tree_heart: { name: 'หัวใจพฤกษาบรรพกาล', category: 'boss', source: 'ปราบมหาบอส "เทพพฤกษาซิลวาเนีย" (Sylvanus) ในป่าพฤกษาบรรพกาล (Ancient Canopy ทางตะวันออกของป่าเงามืด)' },
+  storm_core: { name: 'แก่นอัสนีบาตคำราม', category: 'boss', source: 'ปราบมหาบอส "ออสทริออน" (Astreon) บนที่ราบสูงแห่งพายุ (Tempest Plateau ทางเหนือของยอดเขาหิมะ)' },
+  magma_wyrm_scale: { name: 'เกล็ดมังกรลาวายักษ์ (Magma Scale)', category: 'boss', source: 'ปราบมังกรลาวา "คาร์ซาร็อค" (Karzarak) ชั้น 10 ดันเจี้ยนภูเขาไฟเกาะสมบัติ (x2) หรือดรอป 8% จาก Lava Lurker ในถ้ำภูเขาไฟ' },
+  sacred_shard_earth: { name: 'แก่นศิลาปฐพีศักดิ์สิทธิ์', category: 'boss', source: 'ดรอปการันตีเมื่อปราบมหาบอส "คาธูรอส" ในป่าเงามืด' },
+  sacred_shard_sun: { name: 'แก่นศิลาสุริยันศักดิ์สิทธิ์', category: 'boss', source: 'ดรอปการันตีเมื่อปราบมหาบอส "ลูมินาร์ค" ในก้นบึ้งถ้ำผลึก (Cave Depths)' },
+  sacred_shard_water: { name: 'แก่นศิลาวารีศักดิ์สิทธิ์', category: 'boss', source: 'ดรอปการันตีเมื่อปราบมหาบอส "ไฮดราคิส" ในหนองน้ำมรณะ (Swamp)' },
+  sacred_shard_fire: { name: 'แก่นศิลาเพลิงศักดิ์สิทธิ์', category: 'boss', source: 'ดรอปการันตีเมื่อปราบมหาบอส "อิกนิสทรอน" ในปล่องภูเขาไฟลาวา (Volcano)' },
+  sacred_shard_frost: { name: 'แก่นศิลาเหมันต์ศักดิ์สิทธิ์', category: 'boss', source: 'ดรอปการันตีเมื่อปราบมหาบอส "ฟรอสต์แฟงก์" บนยอดเขาหิมะ (Frost Peak)' },
+  sacred_shard_shadow: { name: 'แก่นศิลาทมิฬศักดิ์สิทธิ์', category: 'boss', source: 'ดรอปการันตีเมื่อปราบมหาบอส "ลอร์ดมาลาคอร์" ในสุสานโบราณ (Crypt)' },
+  sacred_shard_nature: { name: 'แก่นศิลาพฤกษาศักดิ์สิทธิ์', category: 'boss', source: 'ดรอปการันตีเมื่อปราบมหาบอส "ซิลวาเนีย" ในป่าพฤกษาบรรพกาล (Ancient Canopy)' },
+  sacred_shard_thunder: { name: 'แก่นศิลาอัสนีศักดิ์สิทธิ์', category: 'boss', source: 'ดรอปการันตีเมื่อปราบมหาบอส "ออสทริออน" บนที่ราบสูงแห่งพายุ (Tempest Plateau)' },
+
+  // --- ผลผลิตสัตว์เลี้ยง & แปรรูป ---
+  egg: { name: 'ไข่ไก่สด', category: 'crop', source: 'เลี้ยง "ไก่" ในคอกสัตว์ (ให้อาหารด้วยข้าวโพดทุกเช้า แล้วเดินไปเก็บ)' },
+  milk: { name: 'นมวัวสด', category: 'crop', source: 'เลี้ยง "วัวนม" ในคอกสัตว์ (ให้อาหารด้วยข้าวสาลีทุกเช้า แล้วเดินไปรีดนม)' },
+  wool: { name: 'ขนแกะนุ่มฟู', category: 'crop', source: 'เลี้ยง "แกะ" ในคอกสัตว์ (ให้อาหารด้วยข้าวสาลีทุกเช้า แล้วเดินไปตัดขน)' },
+  truffle: { name: 'เห็ดทรัฟเฟิลดำ', category: 'crop', source: 'เลี้ยง "หมู" ในคอกสัตว์ (ให้อาหารด้วยแครอททุกเช้า หมูจะขุดพบให้เก็บในคอก)' },
+  wheat_flour: { name: 'แป้งสาลีเนื้อละเอียด', category: 'artisan', source: 'โม่ข้าวสาลีที่กังหันลม (Windmill) หรือคราฟต์ในหมวดโรงสี [C]' },
+  sugar: { name: 'น้ำตาลทรายบริสุทธิ์', category: 'artisan', source: 'นำ "อ้อย" 1 ชิ้นไปบดที่กังหันลม (Windmill Kit) ในฟาร์ม (ได้น้ำตาล x2)' },
+  mayonnaise: { name: 'มายองเนสเข้มข้น', category: 'artisan', source: 'นำ "ไข่ไก่" ใส่ในเครื่องทำมายองเนส (Mayonnaise Machine)' },
+  aged_cheese: { name: 'เชดดาร์ชีสบ่มพิเศษ', category: 'artisan', source: 'นำ "นมวัวสด" ใส่ในเครื่องอัดชีสแท้ (Cheese Press)' },
+  strawberry_jam: { name: 'แยมสตรอเบอร์รี่หวานฉ่ำ', category: 'artisan', source: 'นำ "สตรอเบอร์รี่" หรือ "มะพร้าว" ใส่ในถังหมักแยม (Preserves Jar)' },
+  pickled_carrot: { name: 'ผักดองแครอทกรอบ', category: 'artisan', source: 'นำ "แครอท" ใส่ในถังหมักแยม & ผักดอง (Preserves Jar)' },
+  fine_wine: { name: 'ไวน์ผลไม้ชั้นเลิศ', category: 'artisan', source: 'นำ "สตรอเบอร์รี่" หรือ "สับปะรด" ใส่ในถังบ่มไวน์ (Wine & Ale Keg)' },
+  craft_ale: { name: 'เบียร์สดข้าวสาลีคราฟต์', category: 'artisan', source: 'นำ "ข้าวสาลี" ใส่ในถังบ่มไวน์และเอล (Wine & Ale Keg)' },
+
+  // --- อาวุธ/อุปกรณ์จากร้านค้าพิเศษ ---
+  slingshot: { name: 'หนังสติ๊กล่าสัตว์', category: 'shop', source: 'อุปกรณ์เริ่มต้นในกระเป๋าตั้งแต่เริ่มเกม' },
+  phoenix_feather: { name: 'ขนนกฟีนิกซ์ศักดิ์สิทธิ์', category: 'shop', source: 'ซื้อที่ร้านค้าลึกลับ Void Shop ของซุล (2,800 G) ใช้ชุบชีวิตอัตโนมัติ 100% เมื่อ HP หมด' },
+  void_elixir: { name: 'โอสถแห่งความว่างเปล่า', category: 'shop', source: 'ซื้อที่ร้านค้าลึกลับ Void Shop ของซุล (550 G)' },
+  spire_blade: { name: 'ดาบสุริยันผลึกหอคอย', category: 'shop', source: 'แลกด้วย 35 Spire Shard ที่ร้านค้าผลึกหอคอยมิติ (หอคอย Infinite Spire)' },
+  spire_bow: { name: 'ธนูประกายดาราผลึก', category: 'shop', source: 'แลกด้วย 35 Spire Shard ที่ร้านค้าผลึกหอคอยมิติ (Infinite Spire)' },
+  spire_staff: { name: 'คทาแก่นหอคอยมิติ', category: 'shop', source: 'แลกด้วย 45 Spire Shard ที่ร้านค้าผลึกหอคอยมิติ (Infinite Spire)' },
+  parrot_egg: { name: 'ไข่นกแก้วมาคอว์โจรสลัด', category: 'shop', source: 'รางวัล/สมบัติพิเศษเกาะโจรสลัด หรือร้านค้าสำรวจเกาะมหาสมบัติ' }
+};
+
+export function getItemDisplayName(itemId: string): string {
+  if (!itemId) return '';
+  if (CROPS[itemId]?.name) return CROPS[itemId].name;
+  if (itemId.endsWith('_seed')) {
+    const crop = CROPS[itemId.slice(0, -5)];
+    if (crop?.seedName) return crop.seedName;
+  }
+  if (WORLD_ITEMS[itemId]?.name) return WORLD_ITEMS[itemId].name;
+  if (MONSTER_DROPS[itemId]?.name) return MONSTER_DROPS[itemId].name;
+  if (FISH[itemId]?.name) return FISH[itemId].name;
+  if (RECIPES[itemId]?.name) return RECIPES[itemId].name;
+  if (FORGE_RECIPES[itemId]?.name) return FORGE_RECIPES[itemId].name;
+  if (PIRATE_SHOP_ITEMS[itemId]?.name) return PIRATE_SHOP_ITEMS[itemId].name;
+  if (WEAPONS[itemId]?.name) return WEAPONS[itemId].name;
+  const tool = TOOLS.find(t => t.id === itemId);
+  if (tool) return tool.name;
+  if (ITEM_SOURCES[itemId]?.name) return ITEM_SOURCES[itemId].name!;
+  return itemId;
+}
+
+export function getItemSourceText(itemId: string): string {
+  if (!itemId) return '';
+  if (ITEM_SOURCES[itemId]) return ITEM_SOURCES[itemId].source;
+
+  if (itemId.endsWith('_seed')) {
+    const base = itemId.slice(0, -5);
+    if (base === 'cosmic_fruit') {
+      return 'ซื้อที่ร้านค้าลึกลับ (Void Shop) ของซุล ราคา 650 G';
+    }
+    if (base === 'golden_melon' || base === 'starfruit') {
+      const pItem = PIRATE_SHOP_ITEMS[itemId];
+      return `แลกที่ร้านกัปตันบาร์นาบี้บนเกาะมหาสมบัติ (${pItem ? pItem.priceDoubloons : 8} เหรียญโจรสลัด)`;
+    }
+    if (CROPS[base]) {
+      return `ซื้อเมล็ดพันธุ์ที่ร้านค้าหมู่บ้าน (คลิกป้ายร้านในหมู่บ้าน) ราคา ${CROPS[base].buyPrice} G`;
+    }
+  }
+
+  if (CROPS[itemId]) {
+    const c = CROPS[itemId];
+    return `ปลูกจาก "${c.seedName}" (ซื้อที่ร้านค้าหมู่บ้าน ${c.buyPrice} G, โต ${c.growDays} วัน)`;
+  }
+
+  if (FISH[itemId]) {
+    const f = FISH[itemId];
+    const habitatMap: Record<string, string> = {
+      pond: 'ตกปลาที่บ่อน้ำในฟาร์ม (ด้วยคันเบ็ด)',
+      river: 'ตกปลาที่ลำธารในป่าเงามืด (ด้วยคันเบ็ด)',
+      ocean: 'ตกปลาที่ทะเลรอบเกาะมหาสมบัติเขตร้อน (ด้วยคันเบ็ด)',
+      any: 'ตกปลาได้ทุกแหล่งน้ำ (บ่อฟาร์ม, ลำธารป่า และทะเลเกาะ)'
+    };
+    return habitatMap[f.habitat] || 'ตกปลาด้วยคันเบ็ดริมแหล่งน้ำ';
+  }
+
+  const artisanConv = Object.values(ARTISAN_CONVERSIONS).find(c => c.outputItem === itemId);
+  if (artisanConv) {
+    const machineNames: Record<string, string> = {
+      mayo_machine: 'เครื่องทำมายองเนส',
+      cheese_press: 'เครื่องอัดชีสแท้',
+      preserves_jar: 'ถังหมักแยม & ผักดอง',
+      wine_keg: 'ถังบ่มไวน์และเอลโบราณ'
+    };
+    return `นำ "${getItemDisplayName(artisanConv.inputItem)}" แปรรูปใน${machineNames[artisanConv.machineType] || 'เครื่องแปรรูป'}`;
+  }
+
+  const volcanoRec = Object.values(VOLCANO_FORGE_RECIPES).find(v => v.resultItem === itemId);
+  if (volcanoRec) {
+    return `หลอมที่แท่นหลอมภูเขาไฟโบราณ (ชั้น 10 ดันเจี้ยนภูเขาไฟ หลังปราบคาร์ซาร็อค) ใช้ ${volcanoRec.costCinderShards} Cinder Shards`;
+  }
+
+  if (PIRATE_SHOP_ITEMS[itemId]) {
+    const p = PIRATE_SHOP_ITEMS[itemId];
+    return `แลกที่ร้านกัปตันบาร์นาบี้ บนเกาะมหาสมบัติ (${p.priceDoubloons} เหรียญโจรสลัด)`;
+  }
+
+  if (FORGE_RECIPES[itemId]) {
+    const f = FORGE_RECIPES[itemId];
+    return `หลอมสร้างที่เตาตีเหล็กคาเอล (หมู่บ้าน / ค่ายป่าเงามืด) ใช้ ${f.cost} G + วัตถุดิบ`;
+  }
+
+  if (RECIPES[itemId]) {
+    const r = RECIPES[itemId];
+    const ingStr = Object.entries(r.ingredients)
+      .map(([k, v]) => `${getItemDisplayName(k)} x${v}`)
+      .join(' + ');
+    return `สร้างจากเมนูคราฟต์ [C] (ใช้วัตถุดิบ: ${ingStr})`;
+  }
+
+  if (itemId === 'rifle') {
+    return 'ซื้อที่ร้านค้าหมู่บ้าน (500 G) หรือหลอมสร้างที่เตาตีเหล็กคาเอล';
+  }
+
+  const tool = TOOLS.find(t => t.id === itemId);
+  if (tool) {
+    return 'เครื่องมือพื้นฐานของนักฟาร์ม (ติดตัวในกระเป๋าหรือสร้างในเมนูคราฟต์)';
+  }
+
+  return 'สำรวจฟาร์ม ดันเจี้ยน แหล่งขุดแร่ หรือร้านค้าภายในหมู่บ้าน';
+}
+
+export interface ItemFinderEntry {
+  id: string;
+  name: string;
+  category: ItemFinderCategory;
+  source: string;
+}
+
+export function getAllItemFinderEntries(): ItemFinderEntry[] {
+  const map = new Map<string, ItemFinderEntry>();
+
+  const put = (id: string, category: ItemFinderCategory) => {
+    if (!id || map.has(id)) return;
+    map.set(id, {
+      id,
+      name: getItemDisplayName(id),
+      category,
+      source: getItemSourceText(id)
+    });
+  };
+
+  Object.entries(ITEM_SOURCES).forEach(([id, meta]) => {
+    put(id, meta.category);
+  });
+  Object.keys(CROPS).forEach(id => put(id, 'crop'));
+  Object.keys(FISH).forEach(id => put(id, 'fish'));
+  Object.keys(ARTISAN_CONVERSIONS).forEach(k => put(ARTISAN_CONVERSIONS[k].outputItem, 'artisan'));
+  Object.keys(RECIPES).forEach(id => put(id, 'artisan'));
+  Object.keys(FORGE_RECIPES).forEach(id => put(id, 'shop'));
+  Object.values(VOLCANO_FORGE_RECIPES).forEach(v => {
+    if (v.resultItem) put(v.resultItem, 'boss');
+  });
+  Object.keys(PIRATE_SHOP_ITEMS).forEach(id => put(id, 'shop'));
+
+  return Array.from(map.values());
+}

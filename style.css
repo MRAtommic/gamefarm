@@ -6835,3 +6835,199 @@ body {
     .story-cutscene-title { font-size: 18px; }
     .story-cutscene-body { font-size: 13px; padding: 12px; }
 }
+
+/* ========================================================
+   38. ITEM SOURCE HINTS & ITEM FINDER DIRECTORY
+   ======================================================== */
+.item-detail-source {
+    margin-top: 8px;
+    padding: 7px 10px;
+    background: #fef3c7;
+    border: 1.5px solid #d97706;
+    border-radius: 6px;
+    font-size: 11px;
+    line-height: 1.45;
+    color: #78350f;
+}
+
+.item-detail-source strong {
+    color: #92400e;
+}
+
+.ing-source-guide {
+    margin-top: 6px;
+    padding: 6px 8px;
+    background: #fffbeb;
+    border-left: 3px solid #d97706;
+    border-radius: 4px;
+    font-size: 10.5px;
+    line-height: 1.45;
+    color: #78350f;
+}
+
+.ing-source-guide-title {
+    font-weight: 700;
+    color: #b45309;
+    margin-bottom: 2px;
+}
+
+.ing-source-guide-row {
+    margin-top: 2px;
+}
+
+.ing-source-guide.dark-surface {
+    background: rgba(15, 23, 42, 0.72);
+    border-left-color: #f97316;
+    color: #fed7aa;
+}
+
+.ing-source-guide.dark-surface .ing-source-guide-title {
+    color: #fdba74;
+}
+
+.volcano-forge-card .ing-ok {
+    color: #4ade80;
+}
+
+.volcano-forge-card .ing-missing {
+    color: #fca5a5;
+}
+
+.repair-item-source {
+    display: block;
+    margin-top: 4px;
+    font-size: 10px;
+    color: #94a3b8;
+    line-height: 1.35;
+}
+
+.compendium-card-source {
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px dashed #e2e8f0;
+    font-size: 9.5px;
+    line-height: 1.3;
+    color: #b45309;
+    text-align: left;
+    width: 100%;
+}
+
+.compendium-card.locked .compendium-card-source {
+    color: #475569;
+    border-top-color: #cbd5e1;
+}
+
+.compendium-finder-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.compendium-search-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    border: 2px solid #b08968;
+    border-radius: 8px;
+    background: #fff8ee;
+    color: #451a03;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    outline: none;
+}
+
+.compendium-search-input:focus {
+    border-color: #d97706;
+    background: #ffffff;
+}
+
+.compendium-filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.finder-filter-chip {
+    background: #e2d4c0;
+    color: #5c3d1e;
+    border: 1.5px solid #b08968;
+    border-radius: 999px;
+    padding: 3px 9px;
+    font-size: 10.5px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.finder-filter-chip.active {
+    background: #d97706;
+    color: #ffffff;
+    border-color: #92400e;
+}
+
+.item-finder-list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.item-finder-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: #ffffff;
+    border: 1.5px solid #d4a373;
+    border-radius: 8px;
+    padding: 8px 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.item-finder-icon {
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    image-rendering: pixelated;
+    margin-top: 2px;
+}
+
+.item-finder-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.item-finder-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.item-finder-name {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #3e2723;
+}
+
+.item-finder-owned {
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.item-finder-owned.has-item {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.item-finder-source {
+    margin-top: 3px;
+    font-size: 11px;
+    line-height: 1.4;
+    color: #78350f;
+}

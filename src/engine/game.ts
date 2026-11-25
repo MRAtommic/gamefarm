@@ -13,7 +13,8 @@ import {
     NPC_GIFTS, COMPENDIUM_CATEGORIES, ACHIEVEMENTS_DATA, ARTISAN_CONVERSIONS,
     SKILL_MASTERIES, FESTIVALS, BOUNTY_BOARD, NPC_HEART_EVENTS,
     PIRATE_SHOP_ITEMS, BOSS_KARZARAK, VOLCANO_FORGE_RECIPES,
-    STORY_CUTSCENES, STORY_LORE_ENTRIES
+    STORY_CUTSCENES, STORY_LORE_ENTRIES,
+    getItemSourceText, getItemDisplayName, getAllItemFinderEntries, ItemFinderCategory
 } from '../data/gamedata';
 import { SPRITES } from '../sprites/sprites';
 import { SoundEngine } from '../audio/soundEngine';
@@ -7606,10 +7607,10 @@ Game.handleTileInteract = function(type, tx, ty) {
         const sugarCaneCount = this.countItemInInventory('sugarcane');
         if (wheatCount >= 1) {
             this.removeItemFromInventory('wheat', 1);
-            this.addItemToInventory('wheat_flour', 2, 'แป้งสาลีเนื้อละเอียด');
+            this.addItemToInventory('flour', 2, 'แป้งทำขนม');
             SoundEngine.craft();
             this.spawnParticles(this.player.x + 10, this.player.y + 10, '#fef08a', 14);
-            this.addFloatingText('กังหันลมโม่ข้าวสาลี! ได้รับ แป้งสาลี x2', this.player.x - 20, this.player.y - 18, '#fde047');
+            this.addFloatingText('กังหันลมโม่ข้าวสาลี! ได้รับ แป้งทำขนม x2', this.player.x - 20, this.player.y - 18, '#fde047');
             this.updateHUD();
         } else if (sugarCaneCount >= 1) {
             this.removeItemFromInventory('sugarcane', 1);
@@ -12578,6 +12579,38 @@ Game.renderSellModal = function() {
 };
 
 
+Game.escapeHtmlAttr = function(text: string) {
+    return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+};
+
+/** Builds a compact Thai guide box explaining where to obtain missing (or requested) materials. */
+Game.buildIngredientSourcesHtml = function(
+    reqMap: Record<string, number>,
+    opts: { dark?: boolean; showAll?: boolean } = {}
+) {
+    if (!reqMap) return '';
+    const rows: string[] = [];
+    const seen = new Set<string>();
+
+    for (const [ingId, reqCount] of Object.entries(reqMap)) {
+        if (!ingId || seen.has(ingId) || (reqCount as number) <= 0) continue;
+        seen.add(ingId);
+        const has = this.countItemInInventory(ingId);
+        if (!opts.showAll && has >= (reqCount as number)) continue;
+        const name = this.escapeHtmlAttr(getItemDisplayName(ingId));
+        const src = this.escapeHtmlAttr(getItemSourceText(ingId));
+        rows.push(`<div class="ing-source-guide-row">• <strong>${name}:</strong> ${src}</div>`);
+    }
+
+    if (rows.length === 0) return '';
+    const darkCls = opts.dark ? ' dark-surface' : '';
+    return `<div class="ing-source-guide${darkCls}"><div class="ing-source-guide-title">📍 แหล่งหาวัตถุดิบ:</div>${rows.join('')}</div>`;
+};
+
 Game.setCraftingTab = function(tab: 'all' | 'carpentry' | 'food') {
     this.activeCraftingTab = tab;
     document.querySelectorAll('.craft-tab-btn').forEach(btn => {
@@ -12621,8 +12654,9 @@ Game.renderCraftingModal = function() {
         let canCraft = !alreadyUpgraded;
         for (let [ingId, reqCount] of Object.entries(recipe.ingredients)) {
             const has = this.countItemInInventory(ingId);
-            const ingName = CROPS[ingId]?.name || RECIPES[ingId]?.name || WORLD_ITEMS[ingId]?.name || (ingId === 'wood' ? 'ท่อนไม้' : ingId === 'iron_ore' ? 'แร่เหล็กดิบ' : ingId === 'milk' ? 'นมวัว' : ingId === 'egg' ? 'ไข่ไก่' : ingId === 'wool' ? 'ขนแกะ' : ingId);
-            ingredText += `<span class="${has >= reqCount ? 'ing-ok' : 'ing-missing'}">${ingName}: ${has}/${reqCount}</span> `;
+            const ingName = getItemDisplayName(ingId);
+            const srcHint = this.escapeHtmlAttr(getItemSourceText(ingId));
+            ingredText += `<span class="${has >= reqCount ? 'ing-ok' : 'ing-missing'}" title="แหล่งที่มา: ${srcHint}">${ingName}: ${has}/${reqCount}</span> `;
             if (has < reqCount) canCraft = false;
         }
 
@@ -12638,11 +12672,13 @@ Game.renderCraftingModal = function() {
         } else if (recipe.id === 'chest') {
             priceDesc = `นำไปวางบนพื้นดินเพื่อเก็บของได้ 16 ช่อง`;
         }
+        const missingSourcesHtml = alreadyUpgraded ? '' : this.buildIngredientSourcesHtml(recipe.ingredients);
 
         info.innerHTML = `
             <h4>${recipe.name}</h4>
             <p>วัตถุดิบ: ${ingredText}</p>
             <span class="price-tag">${priceDesc}</span>
+            ${missingSourcesHtml}
         `;
 
         const craftBtn = document.createElement('button');
@@ -13163,6 +13199,8 @@ Game.getItemTooltipText = function(item) {
     if (data.thirstRestore > 0) lines.push(`ฟื้นฟูน้ำดื่ม: +${data.thirstRestore}`);
     if (data.attackDmg > 0) lines.push(`พลังโจมตี: ${data.attackDmg} dmg (ระยะ: ${data.range}px)`);
     if (data.desc) lines.push(data.desc);
+    const sourceText = getItemSourceText(data.id);
+    if (sourceText) lines.push(`📍 แหล่งที่มา: ${sourceText}`);
     if (item.type !== 'tool' && !WEAPONS[data.id]) lines.push(`ราคาขาย: ${data.sellPrice} G / ชิ้น`);
     if (data.count !== undefined && data.count > 1) lines.push(`มีอยู่ในกระเป๋า: ${data.count} ชิ้น`);
 
@@ -13225,6 +13263,17 @@ Game.showItemDetailCard = function(item) {
 
     const descEl = document.getElementById('detailItemDesc');
     if (descEl) descEl.textContent = data.desc || 'ไม่มีคำอธิบายเพิ่มเติม';
+
+    const sourceEl = document.getElementById('detailItemSource');
+    if (sourceEl) {
+        const sourceText = getItemSourceText(data.id);
+        if (sourceText) {
+            sourceEl.innerHTML = `<strong>📍 แหล่งที่มา:</strong> ${this.escapeHtmlAttr(sourceText)}`;
+            sourceEl.style.display = 'block';
+        } else {
+            sourceEl.style.display = 'none';
+        }
+    }
 
     const actionCont = document.getElementById('detailItemActionContainer');
     const consumeBtn = document.getElementById('detailItemConsumeBtn');
@@ -18808,10 +18857,11 @@ Game.renderForgeModal = function() {
 
         for (let [matId, reqQty] of Object.entries(recipe.materials)) {
             const hasQty = this.countItemInInventory(matId);
-            const matName = (WORLD_ITEMS && WORLD_ITEMS[matId]?.name) || matId;
+            const matName = getItemDisplayName(matId);
+            const srcHint = this.escapeHtmlAttr(getItemSourceText(matId));
             const ok = hasQty >= reqQty;
             if (!ok) canForge = false;
-            matHtml += `<span class="${ok ? 'ing-ok' : 'ing-missing'}">${matName}: ${hasQty}/${reqQty}</span> `;
+            matHtml += `<span class="${ok ? 'ing-ok' : 'ing-missing'}" title="แหล่งที่มา: ${srcHint}">${matName}: ${hasQty}/${reqQty}</span> `;
         }
 
         const cost = recipe.cost ?? recipe.goldCost ?? 0;
@@ -18822,12 +18872,14 @@ Game.renderForgeModal = function() {
         if (!fitsInBag && canForge) {
             canForge = false;
         }
+        const missingSourcesHtml = this.buildIngredientSourcesHtml(recipe.materials);
 
         info.innerHTML = `
             <h4>${recipe.name}</h4>
             <p>${recipe.desc}</p>
             <div class="forge-mats">${matHtml}</div>
             <div class="price-tag ${goldOk ? 'ing-ok' : 'ing-missing'}">ค่าตีเหล็ก: ${cost} G (มี ${this.player.gold} G)</div>
+            ${missingSourcesHtml}
         `;
 
         const btn = document.createElement('button');
@@ -20756,6 +20808,111 @@ Game.renderCompendium = function() {
         return;
     }
 
+    if (currentTab === 'sources') {
+        if (!this.compendiumFinderCategory) this.compendiumFinderCategory = 'all';
+        if (typeof this.compendiumFinderQuery !== 'string') this.compendiumFinderQuery = '';
+
+        banner.innerHTML = `
+            <div style="font-size:12px; color:#451a03; font-weight:700;">🔍 คู่มือแหล่งหาของทั้งหมด (Item Finder)</div>
+            <div style="font-size:11px; font-weight:700; color:#78350f;">ค้นหาว่าวัตถุดิบ แร่ สมุนไพร ของดรอปบอส และไอเทมแต่ละชิ้นหาจากไหนได้ทันที</div>
+        `;
+        container.appendChild(banner);
+
+        const controls = document.createElement('div');
+        controls.className = 'compendium-finder-controls';
+
+        const searchInput = document.createElement('input');
+        searchInput.type = 'text';
+        searchInput.id = 'compendiumFinderSearch';
+        searchInput.className = 'compendium-search-input';
+        searchInput.placeholder = 'พิมพ์ชื่อไอเทม หรือสถานที่ (เช่น เหล็ก, ทับทิม, บอส, เกาะ, เห็ด, คาร์ซาร็อค)...';
+        searchInput.value = this.compendiumFinderQuery;
+        searchInput.addEventListener('keydown', (e: KeyboardEvent) => {
+            e.stopPropagation();
+            if (e.key === 'Escape') this.closeAllModals();
+        });
+
+        const chipsRow = document.createElement('div');
+        chipsRow.className = 'compendium-filter-chips';
+        const filterCats: { id: 'all' | ItemFinderCategory; label: string }[] = [
+            { id: 'all', label: 'ทั้งหมด' },
+            { id: 'mineral', label: 'แร่ & อัญมณี' },
+            { id: 'monster', label: 'ดรอปมอนสเตอร์' },
+            { id: 'boss', label: 'ของบอส & หอคอย' },
+            { id: 'forage', label: 'ของป่า & เกาะ' },
+            { id: 'crop', label: 'พืชผล & สัตว์เลี้ยง' },
+            { id: 'fish', label: 'ปลา' },
+            { id: 'artisan', label: 'แปรรูป & ครัว' },
+            { id: 'shop', label: 'ร้านค้า & อาวุธ' }
+        ];
+
+        const resultsList = document.createElement('div');
+        resultsList.className = 'item-finder-list';
+        const allEntries = getAllItemFinderEntries();
+
+        const renderFinderRows = () => {
+            const q = (this.compendiumFinderQuery || '').trim().toLowerCase();
+            const cat = this.compendiumFinderCategory || 'all';
+            const filtered = allEntries.filter(entry => {
+                if (cat !== 'all' && entry.category !== cat) return false;
+                if (!q) return true;
+                return (
+                    entry.name.toLowerCase().includes(q) ||
+                    entry.source.toLowerCase().includes(q) ||
+                    entry.id.toLowerCase().includes(q)
+                );
+            });
+
+            resultsList.innerHTML = '';
+            if (filtered.length === 0) {
+                resultsList.innerHTML = '<div class="empty-hint">ไม่พบไอเทมที่ตรงกับคำค้นหา ลองคำอื่นดูนะ!</div>';
+                return;
+            }
+
+            filtered.forEach(entry => {
+                const owned = this.countItemInInventory ? this.countItemInInventory(entry.id) : 0;
+                const row = document.createElement('div');
+                row.className = 'item-finder-row';
+                row.innerHTML = `
+                    <img src="${SPRITES.getItemDataURL(entry.id)}" class="item-finder-icon" alt="${this.escapeHtmlAttr(entry.name)}">
+                    <div class="item-finder-body">
+                        <div class="item-finder-header">
+                            <span class="item-finder-name">${this.escapeHtmlAttr(entry.name)}</span>
+                            <span class="item-finder-owned ${owned > 0 ? 'has-item' : ''}">${owned > 0 ? `มีในกระเป๋า: ${owned}` : 'ยังไม่มีในกระเป๋า'}</span>
+                        </div>
+                        <div class="item-finder-source">📍 ${this.escapeHtmlAttr(entry.source)}</div>
+                    </div>
+                `;
+                resultsList.appendChild(row);
+            });
+        };
+
+        filterCats.forEach(fc => {
+            const btn = document.createElement('button');
+            btn.className = 'finder-filter-chip' + (this.compendiumFinderCategory === fc.id ? ' active' : '');
+            btn.textContent = fc.label;
+            btn.onclick = () => {
+                this.compendiumFinderCategory = fc.id;
+                chipsRow.querySelectorAll('.finder-filter-chip').forEach(el => el.classList.remove('active'));
+                btn.classList.add('active');
+                renderFinderRows();
+            };
+            chipsRow.appendChild(btn);
+        });
+
+        searchInput.addEventListener('input', () => {
+            this.compendiumFinderQuery = searchInput.value;
+            renderFinderRows();
+        });
+
+        controls.appendChild(searchInput);
+        controls.appendChild(chipsRow);
+        container.appendChild(controls);
+        container.appendChild(resultsList);
+        renderFinderRows();
+        return;
+    }
+
     // Normal Item Category
     const allItems = catData ? catData.items : [];
     banner.innerHTML = `
@@ -20769,7 +20926,7 @@ Game.renderCompendium = function() {
 
     allItems.forEach((itemId: string) => {
         const isDiscovered = collectedList.includes(itemId);
-        const itemInfo = WORLD_ITEMS[itemId] || { name: itemId, desc: '' };
+        const itemInfo = WORLD_ITEMS[itemId] || { name: getItemDisplayName(itemId), desc: '' };
 
         const card = document.createElement('div');
         card.className = `compendium-card ${isDiscovered ? 'discovered' : 'locked'}`;
@@ -20787,15 +20944,20 @@ Game.renderCompendium = function() {
 
         const nameEl = document.createElement('div');
         nameEl.className = 'compendium-card-name';
-        nameEl.textContent = isDiscovered ? itemInfo.name : '???';
+        nameEl.textContent = isDiscovered ? (itemInfo.name || getItemDisplayName(itemId)) : '???';
 
         const descEl = document.createElement('div');
         descEl.className = 'compendium-card-desc';
         descEl.textContent = isDiscovered ? (itemInfo.desc || 'ไอเทมที่ค้นพบแล้ว') : 'ยังไม่เคยค้นพบหรือผลิตได้';
 
+        const sourceEl = document.createElement('div');
+        sourceEl.className = 'compendium-card-source';
+        sourceEl.textContent = `${isDiscovered ? '📍 ' : '💡 วิธีค้นหา: '}${getItemSourceText(itemId)}`;
+
         card.appendChild(iconContainer);
         card.appendChild(nameEl);
         card.appendChild(descEl);
+        card.appendChild(sourceEl);
         grid.appendChild(card);
     });
     container.appendChild(grid);
@@ -25537,16 +25699,23 @@ Game.renderVolcanoForgeModal = function() {
     recipeList.forEach((recipe: any) => {
         const isEnchantMaxed = (recipe.type === 'enchant' && enchantLv >= MAX_ENCHANT_LV);
         let canCraft = !isEnchantMaxed && (cinderCount >= recipe.costCinderShards);
-        let matReqStr = `${recipe.costCinderShards} เศษผลึกเพลิง`;
+
+        const allVolcanoMats: Record<string, number> = {
+            cinder_shard: recipe.costCinderShards || 0,
+            ...(recipe.materials || {})
+        };
+        let matReqHtml = `<span class="${cinderCount >= (recipe.costCinderShards || 0) ? 'ing-ok' : 'ing-missing'}" title="แหล่งที่มา: ${this.escapeHtmlAttr(getItemSourceText('cinder_shard'))}">${cinderCount}/${recipe.costCinderShards} เศษผลึกเพลิง</span>`;
 
         if (recipe.materials) {
             for (const [matId, matCount] of Object.entries(recipe.materials)) {
                 const has = typeof this.getItemCount === 'function' ? this.getItemCount(matId) : 0;
-                const matName = (WORLD_ITEMS as any)?.[matId]?.name || (window as any).WORLD_ITEMS?.[matId]?.name || matId;
-                matReqStr += ` + ${has}/${matCount} ${matName}`;
+                const matName = getItemDisplayName(matId);
+                const srcHint = this.escapeHtmlAttr(getItemSourceText(matId));
+                matReqHtml += ` + <span class="${has >= (matCount as number) ? 'ing-ok' : 'ing-missing'}" title="แหล่งที่มา: ${srcHint}">${has}/${matCount} ${matName}</span>`;
                 if (has < (matCount as number)) canCraft = false;
             }
         }
+        const volcanoMissingSourcesHtml = isEnchantMaxed ? '' : this.buildIngredientSourcesHtml(allVolcanoMats, { dark: true });
 
         const titleSuffix = recipe.type === 'enchant' ? ` (ระดับ ${enchantLv}/${MAX_ENCHANT_LV})` : '';
         const btnText = isEnchantMaxed ? 'สลักครบสูงสุดแล้ว (MAX)' : (canCraft ? 'หลอมสร้าง' : 'วัตถุดิบไม่พอ');
@@ -25559,8 +25728,9 @@ Game.renderVolcanoForgeModal = function() {
                 </div>
                 <p class="forge-card-desc">${recipe.desc}</p>
                 <div class="forge-card-reqs" style="color: ${isEnchantMaxed ? '#facc15' : (canCraft ? '#4ade80' : '#ef4444')}; font-size: 12px; margin-bottom: 6px;">
-                    ${isEnchantMaxed ? '★ เสริมพลังรูนภูเขาไฟครบขีดจำกัดสูงสุดแล้ว (+36 DMG, +15% Crit)' : 'ต้องใช้: ' + matReqStr}
+                    ${isEnchantMaxed ? '★ เสริมพลังรูนภูเขาไฟครบขีดจำกัดสูงสุดแล้ว (+36 DMG, +15% Crit)' : 'ต้องใช้: ' + matReqHtml}
                 </div>
+                ${volcanoMissingSourcesHtml}
                 <div class="forge-card-footer">
                     <button class="btn-primary forge-craft-btn" ${canCraft ? '' : 'disabled'} onclick="Game.craftVolcanoForgeRecipe('${recipe.id}')">
                         ${btnText}
