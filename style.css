@@ -6681,3 +6681,157 @@ body {
     opacity: 0.9 !important;
     display: flex !important;
 }
+
+/* ========================================================
+   STORY CUTSCENE OVERLAY & LORE CHRONICLE JOURNAL
+   ======================================================== */
+.story-cutscene-overlay {
+    background: radial-gradient(circle at center, rgba(15, 23, 42, 0.90) 0%, rgba(2, 6, 23, 0.97) 100%) !important;
+    z-index: 12000;
+    padding: 16px;
+}
+
+.story-cutscene-card {
+    max-width: 620px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: linear-gradient(160deg, #1e1b2e 0%, #0f172a 60%, #1c1917 100%);
+    border: 2px solid #f59e0b;
+    border-radius: 14px;
+    padding: 26px 28px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75), 0 0 36px rgba(245, 158, 11, 0.2);
+    color: #f8fafc;
+    text-align: center;
+    animation: cutsceneFadeIn 0.35s ease-out;
+}
+
+@keyframes cutsceneFadeIn {
+    from { opacity: 0; transform: translateY(14px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.story-cutscene-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    background: rgba(245, 158, 11, 0.16);
+    border: 1px solid rgba(250, 204, 21, 0.55);
+    color: #fde047;
+    margin-bottom: 10px;
+}
+
+.story-cutscene-title {
+    margin: 0 0 6px 0;
+    font-size: 22px;
+    line-height: 1.3;
+    color: #fef08a;
+    text-shadow: 0 2px 12px rgba(250, 204, 21, 0.35);
+}
+
+.story-cutscene-subtitle {
+    margin: 0;
+    font-size: 13px;
+    color: #cbd5e1;
+}
+
+.story-cutscene-divider {
+    margin: 14px auto;
+    color: #f59e0b;
+    font-size: 12px;
+    letter-spacing: 8px;
+    opacity: 0.85;
+}
+
+.story-cutscene-body {
+    text-align: left;
+    font-size: 14px;
+    line-height: 1.75;
+    color: #e2e8f0;
+    background: rgba(15, 23, 42, 0.55);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 10px;
+    padding: 16px 18px;
+}
+
+.story-cutscene-body p {
+    margin: 0 0 12px 0;
+}
+
+.story-cutscene-body p:last-child {
+    margin-bottom: 0;
+}
+
+.story-cutscene-quote {
+    margin: 14px 0 0 0;
+    padding: 10px 14px;
+    font-style: italic;
+    font-size: 13px;
+    color: #fde68a;
+    background: rgba(217, 119, 6, 0.1);
+    border-left: 3px solid #f59e0b;
+    border-radius: 6px;
+    text-align: left;
+}
+
+.story-cutscene-footer {
+    margin-top: 18px;
+    display: flex;
+    justify-content: center;
+}
+
+.story-cutscene-btn {
+    padding: 10px 26px !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.35);
+}
+
+.chronicle-card {
+    background: #fffbeb;
+    border: 2px solid #d97706;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    text-align: left;
+}
+
+.chronicle-card.locked {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+    opacity: 0.78;
+}
+
+.chronicle-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.chronicle-cat-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #fef3c7;
+    border: 1px solid #d97706;
+    color: #92400e;
+}
+
+.chronicle-card-text {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.55;
+    color: #451a03;
+}
+
+@media (max-width: 640px) {
+    .story-cutscene-card { padding: 18px 16px; }
+    .story-cutscene-title { font-size: 18px; }
+    .story-cutscene-body { font-size: 13px; padding: 12px; }
+}

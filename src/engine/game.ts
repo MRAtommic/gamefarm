@@ -12,7 +12,8 @@ import {
     QUESTS, NPC_STORY, FORGE_RECIPES, FISH,
     NPC_GIFTS, COMPENDIUM_CATEGORIES, ACHIEVEMENTS_DATA, ARTISAN_CONVERSIONS,
     SKILL_MASTERIES, FESTIVALS, BOUNTY_BOARD, NPC_HEART_EVENTS,
-    PIRATE_SHOP_ITEMS, BOSS_KARZARAK, VOLCANO_FORGE_RECIPES
+    PIRATE_SHOP_ITEMS, BOSS_KARZARAK, VOLCANO_FORGE_RECIPES,
+    STORY_CUTSCENES, STORY_LORE_ENTRIES
 } from '../data/gamedata';
 import { SPRITES } from '../sprites/sprites';
 import { SoundEngine } from '../audio/soundEngine';
@@ -85,7 +86,8 @@ export const Game: any = {
             valeria: 10,
             kael: 10,
             bob: 10,
-            eldrin: 10
+            eldrin: 10,
+            luna: 10
         },
         museumCollections: {
             crops: ['wheat', 'carrot'],
@@ -116,10 +118,12 @@ export const Game: any = {
         waterCanMax: 10,
         selectedSlot: 0,
         inventory: [],
-        quests: { q1: 'active', q2: 'not_started', q3: 'not_started', q4: 'not_started', q5: 'not_started', q6: 'not_started', q7: 'not_started', q8: 'not_started', q9: 'not_started', q10: 'not_started' },
-        questProgress: { bugsDefeated: 0, sporesCollected: 0, wolvesKilled: 0, rubiesMined: 0, manaGemsFound: 0, caveMonstersDefeated: 0, kathurosDefeated: false, bossDefeated: false, cropsHarvested: 0, artisanGoodsProduced: 0, luminarchDefeated: false, hydrakisDefeated: false, ignistronDefeated: false, frostfangDefeated: false, malakorDefeated: false },
+        quests: { q1: 'active', q2: 'not_started', q3: 'not_started', q4: 'not_started', q5: 'not_started', q6: 'not_started', q7: 'not_started', q8: 'not_started', q9: 'not_started', q10: 'not_started', q11: 'not_started', q12: 'not_started', q_shrine: 'not_started' },
+        questProgress: { bugsDefeated: 0, sporesCollected: 0, wolvesKilled: 0, rubiesMined: 0, manaGemsFound: 0, caveMonstersDefeated: 0, kathurosDefeated: false, bossDefeated: false, cropsHarvested: 0, artisanGoodsProduced: 0, luminarchDefeated: false, hydrakisDefeated: false, ignistronDefeated: false, frostfangDefeated: false, malakorDefeated: false, sylvanusDefeated: false, astreonDefeated: false },
         claimedBounties: {},
         defeatedBosses: {},
+        seenStoryCutscenes: {},
+        unlockedLore: {},
         equippedRings: [null, null],
         equippedArmor: null,
         equippedShield: null,
@@ -171,6 +175,11 @@ export const Game: any = {
     bugSpawnTimer: 0,
     waveCounter: 0,
     playerShootCooldown: 0,
+    _lastMineSwingTime: 0,
+    _lastChopTime: 0,
+    _lastGatherTime: 0,
+    _lastToolActionTime: 0,
+    _lastBenchTime: 0,
     waveAlertTimer: 0,
 
     // Open World, Monsters & Mega Boss
@@ -304,6 +313,33 @@ Game.init = function() {
         Auth.init();
     }
 
+    // Migrate old saves: fix shop-bought seeds saved as crop IDs & ensure pickaxe tool is present
+    if (typeof this.normalizeSeedItemsInInventory === 'function') {
+        this.normalizeSeedItemsInInventory();
+    }
+    if (typeof this.ensurePickaxeInInventory === 'function') {
+        this.ensurePickaxeInInventory();
+    }
+    if (this.player?.defeatedBosses && this.player?.questProgress) {
+        const db = this.player.defeatedBosses;
+        const qp = this.player.questProgress;
+        if (db.boss_kathuros) { qp.kathurosDefeated = true; qp.bossDefeated = true; }
+        if (db.boss_luminarch) qp.luminarchDefeated = true;
+        if (db.boss_hydrakis) qp.hydrakisDefeated = true;
+        if (db.boss_ignistron) qp.ignistronDefeated = true;
+        if (db.boss_frostfang) qp.frostfangDefeated = true;
+        if (db.boss_malakor) qp.malakorDefeated = true;
+        if (db.boss_sylvanus) qp.sylvanusDefeated = true;
+        if (db.boss_astreon) qp.astreonDefeated = true;
+    }
+
+    // Play opening Story Letter once on first start (when login modal isn't blocking screen)
+    setTimeout(() => {
+        if (typeof this.maybePlayPrologueCutscene === 'function') {
+            this.maybePlayPrologueCutscene();
+        }
+    }, 650);
+
     // Retroactive recovery: If player defeated wolves or bugs before the drop fix, grant their earned materials!
     if (this.player && this.player.questProgress) {
         if ((this.player.questProgress.wolvesKilled || 0) > 0 && this.countItemInInventory('wolf_fang') === 0) {
@@ -382,6 +418,7 @@ Game.initInventory = function() {
         { id: 'slingshot', type: 'weapon', name: 'หนังสติ๊กล่าสัตว์' },
         { id: 'scythe', type: 'tool', name: 'เคียว' },
         { id: 'axe', type: 'tool', name: 'ขวานตัดไม้' },
+        { id: 'pickaxe', type: 'tool', name: 'อีเต๋อขุดแร่' },
         { id: 'fishing_rod', type: 'tool', name: 'เบ็ดตกปลา' },
         { id: 'wheat_seed', type: 'seed', cropId: 'wheat', name: 'เมล็ดข้าวสาลี', count: 8 },
         { id: 'bread', type: 'food', name: 'ขนมปังอบสด', count: 4, energyRestore: 40 },
@@ -390,6 +427,62 @@ Game.initInventory = function() {
     while (this.player.inventory.length < this.player.maxInventorySlots) {
         this.player.inventory.push(null);
     }
+};
+
+Game.normalizeSeedItemsInInventory = function() {
+    if (!this.player || !Array.isArray(this.player.inventory)) return false;
+    let changed = false;
+    const inv = this.player.inventory;
+
+    for (let i = 0; i < inv.length; i++) {
+        const slot = inv[i];
+        if (!slot || !slot.id) continue;
+        const idStr = String(slot.id);
+
+        if (idStr.endsWith('_seed')) {
+            const cId = slot.cropId || idStr.replace(/_seed$/, '');
+            if (slot.type !== 'seed' || slot.cropId !== cId) {
+                slot.type = 'seed';
+                slot.cropId = cId;
+                changed = true;
+            }
+            continue;
+        }
+
+        // Migrate legacy bug: shop used to add seeds with bare crop.id and crop.seedName
+        const cropMeta = (CROPS as any)[idStr];
+        if (cropMeta && slot.name === cropMeta.seedName) {
+            const fixedId = idStr + '_seed';
+            slot.id = fixedId;
+            slot.type = 'seed';
+            slot.cropId = idStr;
+            changed = true;
+        }
+    }
+
+    if (changed) {
+        // Merge duplicate seed stacks that may have been created before normalization
+        for (let i = 0; i < inv.length; i++) {
+            const a = inv[i];
+            if (!a || a.type !== 'seed') continue;
+            for (let j = i + 1; j < inv.length; j++) {
+                const b = inv[j];
+                if (b && b.id === a.id && (b.quality || 0) === (a.quality || 0)) {
+                    a.count = (a.count || 1) + (b.count || 1);
+                    inv[j] = null;
+                }
+            }
+        }
+    }
+    return changed;
+};
+
+Game.ensurePickaxeInInventory = function() {
+    if (!this.player || !Array.isArray(this.player.inventory)) return false;
+    const hasPick = this.player.inventory.some((it: any) => it && it.id === 'pickaxe');
+    if (hasPick) return false;
+    this.addItemToInventory('pickaxe', 1, 'อีเต๋อขุดแร่');
+    return true;
 };
 
 
@@ -2165,7 +2258,7 @@ Game.generateIslandMap = function() {
         { x: 26, y: 17 }, { x: 27, y: 17 }, { x: 28, y: 17 }, { x: 29, y: 17 }
     ].forEach(p => {
         map[p.y][p.x].type = 'soil';
-        map[p.y][p.x].isTilled = true;
+        map[p.y][p.x].tilled = true;
     });
 
     // Tropical Palm Trees with coconuts
@@ -2831,12 +2924,16 @@ Game.setupInputListeners = function() {
                     this.fishing.isHoldingPull = true;
                     return;
                 } else if (this.fishing.state === 'waiting') {
-                    this.cancelFishing('ยกเลิกการตกปลา');
+                    if (!e.repeat) this.cancelFishing('ยกเลิกการตกปลา');
                     return;
                 }
             }
 
             const selItem = this.player.inventory[this.player.selectedSlot];
+            const isWeapon = (selItem && (selItem.type === 'weapon' || WEAPONS[selItem.id]));
+            // Prevent holding Space from OS auto-repeating farming, eating, interacting, or mining!
+            if (e.repeat && !isWeapon) return;
+
             if (this.isItemEdible(selItem)) {
                 this.consumeItem(selItem, this.player.selectedSlot);
                 return;
@@ -2848,7 +2945,7 @@ Game.setupInputListeners = function() {
                 return;
             }
 
-            // Check if facing an interactive tile (sailboat, door, chest, well) BEFORE weapon attack
+            // Check if facing an interactive tile BEFORE weapon attack (respect mining tool check if node is mineable)
             const target = this.getTargetTile();
             const facingTile = (this.map && this.map[target.y]) ? this.map[target.y][target.x] : null;
             if (facingTile && facingTile.interactable) {
@@ -2856,7 +2953,7 @@ Game.setupInputListeners = function() {
                 return;
             }
 
-            if (selItem && (selItem.type === 'weapon' || WEAPONS[selItem.id])) {
+            if (isWeapon) {
                 const originX = this.player.x + 12;
                 const originY = this.player.y + 14;
                 let tx = originX;
@@ -2883,6 +2980,7 @@ Game.setupInputListeners = function() {
                 this.useCurrentTool();
             }
         } else if (e.code === 'KeyE') {
+            if (e.repeat) return;
             this.interact();
         } else if (e.code === 'KeyQ') {
             this.toggleModal('questModal');
@@ -3050,15 +3148,19 @@ Game.setupInputListeners = function() {
             }
         }
 
-        // 4. Check interactive tile click (sailboat, door, chest, well, bed) BEFORE shooting
-        if (targetTile && targetTile.interactable && distToTile <= 3.8) {
-            this.handleTileInteract(targetTile.interactable, tileX, tileY);
-            return;
+        // 4. Check interactive tile click (sailboat, door, chest, well, bed, mine nodes) BEFORE shooting
+        if (targetTile && targetTile.interactable) {
+            const isMineNode = ['ruby_node', 'gold_node', 'mana_node', 'diamond_node', 'thunder_crystal_node', 'breakable_rock', 'mine_cinder_shard', 'meteorite_rock'].includes(targetTile.interactable);
+            const maxInteractDist = isMineNode ? 2.5 : 3.8;
+            if (distToTile <= maxInteractDist) {
+                this.handleTileInteract(targetTile.interactable, tileX, tileY);
+                return;
+            }
         }
 
         const selItem = this.player.inventory[this.player.selectedSlot];
         const isWeapon = (selItem && (selItem.type === 'weapon' || (typeof WEAPONS !== 'undefined' && WEAPONS[selItem.id])));
-        const isToolOrFarmItem = (selItem && (selItem.type === 'tool' || selItem.type === 'seed' || ['hoe', 'water', 'axe', 'pickaxe', 'scythe', 'sickle', 'fishing_rod'].includes(selItem.id)));
+        const isToolOrFarmItem = (selItem && (selItem.type === 'tool' || selItem.type === 'seed' || (typeof selItem.id === 'string' && selItem.id.endsWith('_seed')) || ['hoe', 'water', 'axe', 'pickaxe', 'scythe', 'sickle', 'fishing_rod'].includes(selItem.id)));
 
         // 3. Check if clicking directly on a hostile enemy
         let targetedEnemy = false;
@@ -3100,8 +3202,8 @@ Game.setupInputListeners = function() {
             return;
         }
 
-        // If holding a tool or seeds, or on the farm/greenhouse, prioritize farming/harvesting!
-        if (isToolOrFarmItem || this.currentScene === 'farm' || this.currentScene === 'greenhouse') {
+        // If holding a tool or seeds, or on the farm/greenhouse/island, prioritize farming/harvesting!
+        if (isToolOrFarmItem || this.currentScene === 'farm' || this.currentScene === 'greenhouse' || this.currentScene === 'island') {
             if (isWeapon) {
                 // If user deliberately selected a weapon, allow shooting
                 this.playerAttackAt(worldX, worldY);
@@ -3798,13 +3900,18 @@ Game.useCurrentTool = function() {
 // ========================================================
 
 Game.isItemEdible = function(item: any) {
-    if (!item) return false;
-    const id = item.id;
+    if (!item || !item.id) return false;
+    const id = String(item.id);
+    // Seeds, saplings, and shop seed packets must NEVER be consumed as food!
+    if (item.type === 'seed' || id.endsWith('_seed') || id === 'sapling') return false;
+    if (CROPS[id] && item.name === CROPS[id].seedName) return false;
+
     if (item.type === 'food' || item.type === 'potion' || item.type === 'crop' || item.type === 'fish') return true;
-    if (['bread', 'cheese', 'cake', 'cookie', 'pizza', 'grilled_fish', 'spicy_fish_soup', 
+    if (['bread', 'cheese', 'cake', 'cookie', 'pizza', 'grilled_fish', 'spicy_fish_soup',
          'milk', 'demon_elixir', 'health_potion', 'antidote_serum', 'bacon',
          'farmer_stew', 'vigor_juice', 'herbal_defense_soup',
          'carrot', 'tomato', 'corn', 'strawberry', 'cabbage', 'pumpkin', 'sugarcane', 'cosmic_fruit', 'void_elixir',
+         'pineapple', 'banana', 'coconut', 'golden_melon', 'starfruit',
          'carp', 'tilapia', 'catfish', 'salmon', 'golden_salmon', 'golden_carp', 'ancient_glowfish'].includes(id)) {
         return true;
     }
@@ -4024,9 +4131,12 @@ Game.actOnTile = function(tx, ty) {
         this.handleTileInteract('exit_island_sailboat', 23, 32);
         return;
     }
-    if (tile && tile.interactable && dist <= 3.8) {
-        this.handleTileInteract(tile.interactable, tx, ty);
-        return;
+    if (tile && tile.interactable) {
+        const isMineNode = ['ruby_node', 'gold_node', 'mana_node', 'diamond_node', 'thunder_crystal_node', 'breakable_rock', 'mine_cinder_shard', 'meteorite_rock'].includes(tile.interactable);
+        if (dist <= (isMineNode ? 2.5 : 3.8)) {
+            this.handleTileInteract(tile.interactable, tx, ty);
+            return;
+        }
     }
 
     // 2. Check ripe crop harvest if within reach (generous 3.8 tiles reach for mobile comfort)
@@ -4057,9 +4167,13 @@ Game.actOnTile = function(tx, ty) {
         return;
     }
 
-    //  1. Tree Chopping with Axe
+    //  1. Tree Chopping with Axe (with swing cooldown)
     if (tile.type === 'tree') {
         if (selectedItem.id === 'axe') {
+            const nowChop = performance.now();
+            if (nowChop - (this._lastChopTime || 0) < 340) return;
+            this._lastChopTime = nowChop;
+
             if (this.player.energy <= 0) {
                 this.addFloatingText('หมดแรงแล้ว! กินอาหารหรือเข้านอน', this.player.x, this.player.y - 10, '#f87171');
                 return;
@@ -4638,12 +4752,12 @@ Game.actOnTile = function(tx, ty) {
     }
 
     // Hoe
-    if (selectedItem.id === 'hoe' && (this.currentScene === 'farm' || this.currentScene === 'greenhouse')) {
+    if (selectedItem.id === 'hoe' && (this.currentScene === 'farm' || this.currentScene === 'greenhouse' || this.currentScene === 'island')) {
         if (this.player.energy <= 0) {
             this.addFloatingText('หมดแรงแล้ว! กินอาหารหรือเข้านอน', this.player.x, this.player.y - 10, '#f87171');
             return;
         }
-        if ((tile.type === 'soil' || tile.type === 'grass') && !tile.tilled && !tile.solid) {
+        if ((tile.type === 'soil' || tile.type === 'grass' || (this.currentScene === 'island' && tile.type === 'sand')) && !tile.tilled && !tile.solid) {
             tile.type = 'soil';
             tile.tilled = true;
             let cost = this.player.houseUpgrades.fireplace ? 1 : 2;
@@ -4655,9 +4769,10 @@ Game.actOnTile = function(tx, ty) {
             this.addFloatingText('-' + cost + ' พลังงาน', tx * 32, ty * 32 - 12, '#93c5fd');
             this.updateHUD();
         }
+        return;
     }
     // Water
-    else if (selectedItem.id === 'water' && (this.currentScene === 'farm' || this.currentScene === 'greenhouse')) {
+    else if (selectedItem.id === 'water' && (this.currentScene === 'farm' || this.currentScene === 'greenhouse' || this.currentScene === 'island')) {
         if (tile.type === 'well' || tile.type === 'water') {
             this.player.waterCan = this.player.waterCanMax;
             const prevT = this.player.thirst !== undefined ? this.player.thirst : 100;
@@ -4688,20 +4803,41 @@ Game.actOnTile = function(tx, ty) {
             this.spawnParticles(tx * 32 + 16, ty * 32 + 16, '#60a5fa', 8);
             this.updateHUD();
         }
+        return;
     }
-    // Seeds
-    else if (selectedItem.type === 'seed' && (this.currentScene === 'farm' || this.currentScene === 'greenhouse')) {
-        if (tile.tilled && !tile.crop) {
-            tile.crop = { cropId: selectedItem.cropId, stage: 0, daysGrown: 0, ready: false };
-
-            selectedItem.count -= 1;
-            if (selectedItem.count <= 0) this.player.inventory[this.player.selectedSlot] = null;
-            SoundEngine.plant();
-            this.spawnParticles(tx * 32 + 16, ty * 32 + 16, '#84cc16', 8);
-            this.spawnParticles(tx * 32 + 16, ty * 32 + 16, '#facc15', 5);
-            this.addFloatingText(' ปลูก ' + selectedItem.name, tx * 32, ty * 32 - 12, '#a3e635');
-            this.updateHUD();
+    // Seeds (also handle legacy bare-ID seeds safely)
+    else if (
+        selectedItem.type === 'seed' ||
+        (typeof selectedItem.id === 'string' && selectedItem.id.endsWith('_seed')) ||
+        (CROPS[selectedItem.id] && selectedItem.name === CROPS[selectedItem.id].seedName)
+    ) {
+        if (this.currentScene !== 'farm' && this.currentScene !== 'greenhouse' && this.currentScene !== 'island') {
+            this.addFloatingText('ปลูกเมล็ดพันธุ์ได้เฉพาะในฟาร์ม โรงเรือน หรือแปลงเกาะเขตร้อนเท่านั้น!', tx * 32 - 30, ty * 32 - 12, '#f87171');
+            return;
         }
+        const resolvedCropId = selectedItem.cropId || String(selectedItem.id).replace(/_seed$/, '');
+        if (!CROPS[resolvedCropId]) {
+            this.addFloatingText('ไม่พบข้อมูลเมล็ดพันธุ์นี้!', tx * 32, ty * 32 - 12, '#f87171');
+            return;
+        }
+        if (!tile.tilled) {
+            this.addFloatingText('ต้องใช้จอบพรวนดินก่อนปลูกเมล็ด!', tx * 32 - 15, ty * 32 - 12, '#fde047');
+            return;
+        }
+        if (tile.crop) {
+            this.addFloatingText('มีพืชปลูกอยู่บนแปลงนี้แล้ว!', tx * 32, ty * 32 - 12, '#f87171');
+            return;
+        }
+        tile.crop = { cropId: resolvedCropId, stage: 0, daysGrown: 0, ready: false };
+
+        selectedItem.count = (selectedItem.count || 1) - 1;
+        if (selectedItem.count <= 0) this.player.inventory[this.player.selectedSlot] = null;
+        SoundEngine.plant();
+        this.spawnParticles(tx * 32 + 16, ty * 32 + 16, '#84cc16', 8);
+        this.spawnParticles(tx * 32 + 16, ty * 32 + 16, '#facc15', 5);
+        this.addFloatingText(' ปลูก ' + selectedItem.name, tx * 32, ty * 32 - 12, '#a3e635');
+        this.updateHUD();
+        return;
     }
     // Food & Consumables
     if (this.isItemEdible(selectedItem)) {
@@ -5255,7 +5391,7 @@ Game.setupTouchControls = function() {
 
         const selItem = this.player.inventory[this.player.selectedSlot];
         const isWeapon = (selItem && (selItem.type === 'weapon' || (typeof WEAPONS !== 'undefined' && WEAPONS[selItem.id])));
-        const isToolOrFarmItem = (selItem && (selItem.type === 'tool' || selItem.type === 'seed' || ['hoe', 'water', 'axe', 'pickaxe', 'scythe', 'sickle', 'fishing_rod'].includes(selItem.id)));
+        const isToolOrFarmItem = (selItem && (selItem.type === 'tool' || selItem.type === 'seed' || (typeof selItem.id === 'string' && selItem.id.endsWith('_seed')) || ['hoe', 'water', 'axe', 'pickaxe', 'scythe', 'sickle', 'fishing_rod'].includes(selItem.id)));
 
         // 1. Check if directly tapping a hostile enemy
         let targetedEnemy: any = null;
@@ -5286,8 +5422,8 @@ Game.setupTouchControls = function() {
             return;
         }
 
-        // 2. If holding a tool or seeds, or on the farm/greenhouse: ALWAYS prioritize farming / harvesting / tile interaction!
-        if (isToolOrFarmItem || this.currentScene === 'farm' || this.currentScene === 'greenhouse') {
+        // 2. If holding a tool or seeds, or on the farm/greenhouse/island: ALWAYS prioritize farming / harvesting / tile interaction!
+        if (isToolOrFarmItem || this.currentScene === 'farm' || this.currentScene === 'greenhouse' || this.currentScene === 'island') {
             if (isWeapon) {
                 // If user deliberately selected a weapon on the farm, let them shoot
                 this.playerAttackAt(wx, wy);
@@ -5420,10 +5556,10 @@ Game.setupTouchControls = function() {
             }
 
             const isWeapon = (selItem && (selItem.type === 'weapon' || (typeof WEAPONS !== 'undefined' && WEAPONS[selItem.id])));
-            const isToolOrFarmItem = (selItem && (selItem.type === 'tool' || selItem.type === 'seed' || ['hoe', 'water', 'axe', 'pickaxe', 'scythe', 'sickle', 'fishing_rod'].includes(selItem.id)));
-            const isFarmScene = (this.currentScene === 'farm' || this.currentScene === 'greenhouse');
+            const isToolOrFarmItem = (selItem && (selItem.type === 'tool' || selItem.type === 'seed' || (typeof selItem.id === 'string' && selItem.id.endsWith('_seed')) || ['hoe', 'water', 'axe', 'pickaxe', 'scythe', 'sickle', 'fishing_rod'].includes(selItem.id)));
+            const isFarmScene = (this.currentScene === 'farm' || this.currentScene === 'greenhouse' || this.currentScene === 'island');
 
-            // If player is holding a tool/seed, or on the farm without an equipped weapon: ALWAYS USE TOOL / HARVEST!
+            // If player is holding a tool/seed, or on the farm/island without an equipped weapon: ALWAYS USE TOOL / HARVEST!
             if (isToolOrFarmItem || (isFarmScene && !isWeapon)) {
                 this.useCurrentTool();
                 return;
@@ -5543,8 +5679,18 @@ Game.setupTouchControls = function() {
                     }
                     return;
                 }
-                this.interact();
-            }, 140);
+                // Hold-E only auto-harvests ripe crops or picks up dropped items; never infinitely hold-mines rocks or chats!
+                const nearbyDropped = this.findNearbyDroppedItem && this.findNearbyDroppedItem(this.player.x + 12, this.player.y + 16, 48);
+                if (nearbyDropped) {
+                    this.pickupDroppedItem(nearbyDropped);
+                    return;
+                }
+                const target = this.getTargetTile();
+                const t = this.map?.[target.y]?.[target.x];
+                if (t && t.crop && t.crop.ready) {
+                    this.harvestCrop(target.x, target.y);
+                }
+            }, 160);
         };
 
         const releaseE = (e: Event) => {
@@ -6749,17 +6895,19 @@ Game.drawAmbientCreatures = function() {
 
 
 Game.drawActiveQuestTracker = function() {
+    const questOrder = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9', 'q10', 'q11', 'q12', 'q_shrine'];
     let activeQ = null;
 
-    for (let qKey of ['q1', 'q2', 'q3', 'q4', 'q5']) {
+    for (let qKey of questOrder) {
         if (this.player.quests && this.player.quests[qKey] === 'active') {
             activeQ = QUESTS[qKey];
             break;
         }
     }
     if (!activeQ) {
-        for (let qKey of ['q1', 'q2', 'q3', 'q4', 'q5']) {
-            if (!this.player.quests || !this.player.quests[qKey] || this.player.quests[qKey] === 'available') {
+        for (let qKey of questOrder) {
+            if (this.player.quests && this.player.quests[qKey] !== 'completed') {
+                if (qKey === 'q_shrine' && this.player.shrineRestored) continue;
                 activeQ = QUESTS[qKey];
                 break;
             }
@@ -6775,7 +6923,7 @@ Game.drawActiveQuestTracker = function() {
     const leftMargin = isMobile ? 220 : 250;
     const rightMargin = isMobile ? 150 : 190;
     const availableW = Math.max(140, this.width - leftMargin - rightMargin);
-    const boxW = Math.min(230, Math.max(150, Math.min(availableW, 230)));
+    const boxW = Math.min(250, Math.max(150, Math.min(availableW, 250)));
     const boxH = 50;
     const boxX = Math.round(leftMargin + Math.max(0, (availableW - boxW) / 2));
     const boxY = isMobile ? 6 : 10;
@@ -6792,41 +6940,143 @@ Game.drawActiveQuestTracker = function() {
 
     this.ctx.font = 'bold 11px "Prompt", sans-serif';
     this.ctx.fillStyle = '#fde047';
-    this.ctx.fillText(activeQ.title.split('(')[0].trim(), boxX + 10, boxY + 18);
+    this.ctx.fillText(activeQ.title.split('(')[0].trim().slice(0, 32), boxX + 10, boxY + 18);
 
     let objectiveText = '';
-    let targetX = 0;
-    let targetY = 0;
+    let targetX = 12 * 32;
+    let targetY = 10 * 32;
     let targetScene = 'village';
 
-    if (activeQ.id === 'q1') {
-        const bugs = this.player.questProgress?.bugsDefeated || 0;
-        const spores = this.player.questProgress?.sporesCollected || 0;
-        if (bugs < 3 || spores < 2) {
-            objectiveText = `กำจัดแมลงในไร่: ${bugs}/3 ตัว (สปอร์: ${spores}/2)`;
-            targetScene = 'farm';
-            targetX = 16 * 32; targetY = 12 * 32;
-        } else {
-            objectiveText = `พบกิลเบิร์ตที่คฤหาสน์หมู่บ้าน (สำเร็จแล้ว!)`;
-            targetScene = 'village';
-            targetX = 12 * 32; targetY = 10 * 32;
+    const qp = this.player.questProgress || {};
+    const trackerTargets: Record<string, () => void> = {
+        q1: () => {
+            const bugs = qp.bugsDefeated || 0;
+            const spores = qp.sporesCollected || 0;
+            if (bugs < 3 || spores < 2) {
+                objectiveText = `แมลงในไร่ ${Math.min(3, bugs)}/3 | สปอร์ ${Math.min(2, spores)}/2`;
+                targetScene = 'farm'; targetX = 16 * 32; targetY = 12 * 32;
+            } else {
+                objectiveText = `ส่งเควสต์: กิลเบิร์ต (คฤหาสน์หมู่บ้าน)`;
+                targetScene = 'village'; targetX = 12 * 32; targetY = 10 * 32;
+            }
+        },
+        q2: () => {
+            const sp = this.countItemInInventory('blight_spore');
+            const hb = this.countItemInInventory('starflower_herb');
+            if (sp < 3 || hb < 2) {
+                objectiveText = `สปอร์ ${Math.min(3, sp)}/3 | สมุนไพร ${Math.min(2, hb)}/2 (ป่า)`;
+                targetScene = 'forest'; targetX = 24 * 32; targetY = 20 * 32;
+            } else {
+                objectiveText = `ส่งเควสต์: หมอยาลิเลียน (คลินิก)`;
+                targetScene = 'village'; targetX = 45 * 32; targetY = 10 * 32;
+            }
+        },
+        q3: () => {
+            const wolves = qp.wolvesKilled || 0;
+            const rubies = this.countItemInInventory('ruby_gem');
+            if (wolves < 3 || rubies < 2) {
+                objectiveText = `หมาป่า ${Math.min(3, wolves)}/3 | ทับทิม ${Math.min(2, rubies)}/2`;
+                targetScene = 'forest'; targetX = 20 * 32; targetY = 20 * 32;
+            } else {
+                objectiveText = `ส่งเควสต์: ผู้กองวาเลเรีย (ปราการเหนือ)`;
+                targetScene = 'village'; targetX = 27 * 32; targetY = 4 * 32;
+            }
+        },
+        q4: () => {
+            const mg = this.countItemInInventory('mana_gem');
+            const ck = qp.caveMonstersDefeated || 0;
+            if (mg < 2 || ck < 3) {
+                objectiveText = `ผลึกมานา ${Math.min(2, mg)}/2 | อสูรถ้ำ ${Math.min(3, ck)}/3`;
+                targetScene = 'cave'; targetX = 21 * 32; targetY = 15 * 32;
+            } else {
+                objectiveText = `ส่งเควสต์: ปราชญ์เอลดริน (หมู่บ้าน)`;
+                targetScene = 'village'; targetX = 23 * 32; targetY = 12 * 32;
+            }
+        },
+        q5: () => {
+            if (qp.kathurosDefeated) {
+                objectiveText = `ส่งเควสต์: กิลเบิร์ต (ปลดล็อกบทต่อไป!)`;
+                targetScene = 'village'; targetX = 12 * 32; targetY = 10 * 32;
+            } else {
+                objectiveText = `สยบราชินีคาธูรอส (วิหารเหนือป่า)`;
+                targetScene = 'forest'; targetX = 25 * 32; targetY = 6 * 32;
+            }
+        },
+        q6: () => {
+            if (qp.luminarchDefeated) {
+                objectiveText = `ส่งเควสต์: ปราชญ์เอลดริน (หมู่บ้าน)`;
+                targetScene = 'village'; targetX = 23 * 32; targetY = 12 * 32;
+            } else {
+                objectiveText = `สยบโกเลมลูมินาร์ค (Crystal Abyss -2)`;
+                targetScene = 'cave_depths'; targetX = 23 * 32; targetY = 7 * 32;
+            }
+        },
+        q7: () => {
+            if (qp.hydrakisDefeated) {
+                objectiveText = `ส่งเควสต์: หมอยาลิเลียน (คลินิก)`;
+                targetScene = 'village'; targetX = 45 * 32; targetY = 10 * 32;
+            } else {
+                objectiveText = `สยบพญาไฮดรา (บึงมืดตะวันตกเฉียงใต้)`;
+                targetScene = 'swamp'; targetX = 15 * 32; targetY = 7 * 32;
+            }
+        },
+        q8: () => {
+            if (qp.ignistronDefeated) {
+                objectiveText = `ส่งเควสต์: ผู้กองวาเลเรีย (ปราการ)`;
+                targetScene = 'village'; targetX = 27 * 32; targetY = 4 * 32;
+            } else {
+                objectiveText = `สยบมังกรอิกนิสทรอน (ปล่องภูเขาไฟ)`;
+                targetScene = 'volcano'; targetX = 26 * 32; targetY = 7 * 32;
+            }
+        },
+        q9: () => {
+            if (qp.frostfangDefeated) {
+                objectiveText = `ส่งเควสต์: ช่างคาเอล (โรงตีเหล็ก)`;
+                targetScene = 'village'; targetX = 9 * 32; targetY = 29 * 32;
+            } else {
+                objectiveText = `สยบไททันฟรอสต์แฟงก์ (ยอดเขาหิมะ)`;
+                targetScene = 'frost_peak'; targetX = 24 * 32; targetY = 7 * 32;
+            }
+        },
+        q10: () => {
+            if (qp.malakorDefeated) {
+                objectiveText = `ส่งเควสต์: กิลเบิร์ต (ความจริงสุสาน)`;
+                targetScene = 'village'; targetX = 12 * 32; targetY = 10 * 32;
+            } else {
+                objectiveText = `สยบลอร์ดมาลาคอร์ (สุสานต้องสาป)`;
+                targetScene = 'crypt'; targetX = 23 * 32; targetY = 7 * 32;
+            }
+        },
+        q11: () => {
+            if (qp.sylvanusDefeated) {
+                objectiveText = `ส่งเควสต์: ปราชญ์เอลดริน (หมู่บ้าน)`;
+                targetScene = 'village'; targetX = 23 * 32; targetY = 12 * 32;
+            } else {
+                objectiveText = `ปลุกเทพพฤกษาซิลวาเนีย (ป่าศักดิ์สิทธิ์)`;
+                targetScene = 'ancient_canopy'; targetX = 30 * 32; targetY = 8 * 32;
+            }
+        },
+        q12: () => {
+            if (qp.astreonDefeated) {
+                objectiveText = `ส่งเควสต์: ผู้กองวาเลเรีย (ปราการ)`;
+                targetScene = 'village'; targetX = 27 * 32; targetY = 4 * 32;
+            } else {
+                objectiveText = `ชิงศิลาอัสนี ออสทริออน (ยอดเขาพายุ)`;
+                targetScene = 'tempest_plateau'; targetX = 32 * 32; targetY = 8 * 32;
+            }
+        },
+        q_shrine: () => {
+            const shardIds = ['sacred_shard_earth', 'sacred_shard_sun', 'sacred_shard_water', 'sacred_shard_fire', 'sacred_shard_frost', 'sacred_shard_shadow', 'sacred_shard_nature', 'sacred_shard_thunder'];
+            const have = shardIds.filter(s => this.player.sacredShards?.[s] || this.countItemInInventory(s) > 0).length;
+            objectiveText = `ประดิษฐานศิลา ณ แท่นวิหารเหนือป่า (${have}/8)`;
+            targetScene = 'forest'; targetX = 25 * 32; targetY = 2 * 32;
         }
-    } else if (activeQ.id === 'q2') {
-        objectiveText = `ส่งสปอร์ & ดอกไม้ดวงดาว ให้หมอยาลิเลียน`;
-        targetScene = 'village';
-        targetX = 45 * 32; targetY = 10 * 32;
-    } else if (activeQ.id === 'q3') {
-        objectiveText = `ช่วยผู้กองวาเลเรีย ที่ปราการทิศเหนือ`;
-        targetScene = 'village';
-        targetX = 27 * 32; targetY = 4 * 32;
-    } else if (activeQ.id === 'q4') {
-        objectiveText = `สำรวจถ้ำผลึกคริสตัล & รายงานผู้เฒ่าเอลดริน`;
-        targetScene = 'village';
-        targetX = 23 * 32; targetY = 12 * 32;
-    } else if (activeQ.id === 'q5') {
-        objectiveText = `ปราบราชินีคาธูรอส ณ วิหารโบราณในป่า`;
-        targetScene = 'forest';
-        targetX = 25 * 32; targetY = 6 * 32;
+    };
+
+    if (trackerTargets[activeQ.id]) {
+        trackerTargets[activeQ.id]();
+    } else {
+        objectiveText = activeQ.desc.slice(0, 34);
     }
 
     this.ctx.font = '10px "Prompt", sans-serif';
@@ -6842,13 +7092,21 @@ Game.drawActiveQuestTracker = function() {
         } else if (this.currentScene === 'village') {
             if (targetScene === 'farm') {
                 guideX = 30 * 32; guideY = 43 * 32;
-            } else if (targetScene === 'forest' || targetScene === 'cave') {
+            } else if (targetScene === 'swamp') {
+                guideX = 0; guideY = 22 * 32;
+            } else if (targetScene === 'crypt') {
+                guideX = 59 * 32; guideY = 30 * 32;
+            } else {
                 guideX = 30 * 32; guideY = 0;
             }
         } else if (this.currentScene === 'forest') {
             if (targetScene === 'village' || targetScene === 'farm') {
                 guideX = 24 * 32; guideY = 39 * 32;
-            } else if (targetScene === 'cave') {
+            } else if (targetScene === 'ancient_canopy') {
+                guideX = 49 * 32; guideY = 20 * 32;
+            } else if (targetScene === 'frost_peak' || targetScene === 'tempest_plateau') {
+                guideX = 49 * 32; guideY = 10 * 32;
+            } else {
                 guideX = 44 * 32; guideY = 8 * 32;
             }
         }
@@ -7030,21 +7288,7 @@ Game.handleTileInteract = function(type, tx, ty) {
         this.spawnParticles(this.player.x + 12, this.player.y + 14, '#38bdf8', 25);
         this.addFloatingText('★ น้ำพุศักดิ์สิทธิ์แห่งโถงสมาคม ฟื้นฟู HP และ Energy เต็มเปี่ยม! ★', this.player.x - 50, this.player.y - 25, '#38bdf8');
     } else if (type === 'meteorite_rock') {
-        const farmMap = this.scenes.farm.map;
-        if (farmMap[ty] && farmMap[ty][tx]) {
-            farmMap[ty][tx].type = 'grass';
-            farmMap[ty][tx].solid = false;
-            farmMap[ty][tx].interactable = null;
-            SoundEngine.miningHit();
-            this.triggerScreenShake(5.0, 200);
-            this.spawnParticles(tx * 32 + 16, ty * 32 + 16, '#c084fc', 30);
-            this.addItemToInventory('star_shard', 1, 'เศษอุกกาบาตดวงดาว');
-            this.addItemToInventory('star_core', 1, 'แก่นผลึกดวงดาว');
-            this.addItemToInventory('mystery_geode', 1, 'หินผลึกปิดผนึกปริศนา');
-            this.addItemToInventory('gold_ore', 2, 'แร่ทองคำดิบ');
-            this.addFloatingText('★ กะเทาะอุกกาบาตสำเร็จ! ได้รับ Star Shard, Star Core & Geodes! ★', this.player.x - 60, this.player.y - 25, '#c084fc');
-            this.updateHUD();
-        }
+        this.mineNodeTile('meteorite_rock', tx, ty);
     } else if (type === 'npc_zul') {
         this.openVoidShopModal();
     } else if (type === 'pvp_bell') {
@@ -7123,8 +7367,14 @@ Game.handleTileInteract = function(type, tx, ty) {
     } else if (type === 'tavern_bounty_board') {
         this.openBountyBoard();
     } else if (type === 'village_archives') {
+        if (!this.player.unlockedLore) this.player.unlockedLore = {};
+        this.player.unlockedLore['lore_archives'] = true;
         SoundEngine.bell();
-        this.addFloatingText(' บันทึกโบราณ: สปอร์สีเลือดเคยระบาดเมื่อ 200 ปีก่อน และถูกสยบด้วยเซรุ่มสมุนไพร!', this.player.x, this.player.y - 20, '#38bdf8');
+        if (typeof this.triggerStoryCutscene === 'function') {
+            this.triggerStoryCutscene('archive_lore', true);
+        } else {
+            this.addFloatingText(' บันทึกโบราณ: สปอร์สีเลือดเคยระบาดเมื่อ 200 ปีก่อน และถูกสยบด้วยเซรุ่มสมุนไพร!', this.player.x, this.player.y - 20, '#38bdf8');
+        }
     } else if (type === 'mayor_desk') {
         this.startDialogue('gilbert');
     } else if (type === 'bed') {
@@ -7155,17 +7405,42 @@ Game.handleTileInteract = function(type, tx, ty) {
     } else if (type === 'hunter_post') {
         this.openModal('hunterModal');
     } else if (type === 'berry_bush') {
+        const targetX = tx !== undefined ? tx : Math.floor((this.player.x + 10) / this.tileSize);
+        const targetY = ty !== undefined ? ty : Math.floor((this.player.y + 20) / this.tileSize);
+        const tile = this.map?.[targetY]?.[targetX];
+        const now = performance.now();
+        if (now - (this._lastGatherTime || 0) < 350) return;
+        this._lastGatherTime = now;
+        if (!tile) return;
+        if (tile.harvestedToday) {
+            this.addFloatingText('พุ่มเบอร์รี่นี้ถูกเก็บไปแล้ว (รอดอกผลใหม่วันพรุ่งนี้)', targetX * 32 - 20, targetY * 32 - 15, '#94a3b8');
+            return;
+        }
+        if ((this.player.energy || 0) < 1) {
+            this.addFloatingText('หมดแรงแล้ว! พักผ่อนหรือกินอาหารก่อน', this.player.x, this.player.y - 12, '#f87171');
+            return;
+        }
+        this.player.energy = Math.max(0, this.player.energy - 1);
+        this.player.energyRegenDelay = 2000;
+        tile.harvestedToday = true;
         SoundEngine.harvest();
-        this.spawnParticles(this.player.x + 10, this.player.y + 10, '#ec4899', 12);
-        this.spawnDroppedItem('wild_berries', 2, this.player.x, this.player.y - 10);
-        this.player.energy = Math.min(this.player.maxEnergy, this.player.energy + 15);
-        this.addXp(12);
-        this.addFloatingText('★ เก็บเบอร์รี่ป่าสดใหม่ (+15 พลังงาน, +12 XP)', this.player.x - 20, this.player.y - 15, '#f472b6');
+        this.spawnParticles(targetX * 32 + 16, targetY * 32 + 16, '#ec4899', 10);
+        const count = Math.random() < 0.35 ? 2 : 1;
+        this.spawnDroppedItem('wild_berries', count, targetX * 32 + 16, targetY * 32 + 20);
+        this.addXp(10);
+        this.addFloatingText(`เก็บเบอร์รี่ป่า x${count} (-1 พลังงาน, +10 XP)`, targetX * 32 - 15, targetY * 32 - 15, '#f472b6');
         this.updateHUD();
     } else if (type === 'bench') {
+        const now = performance.now();
+        if (now - (this._lastBenchTime || 0) < 12000) {
+            const rem = Math.ceil((12000 - (now - this._lastBenchTime)) / 1000);
+            this.addFloatingText(`เพิ่งพักริมน้ำไป (พักอีกครั้งใน ${rem} วิ)`, this.player.x - 25, this.player.y - 15, '#94a3b8');
+            return;
+        }
+        this._lastBenchTime = now;
         SoundEngine.bell();
-        this.player.energy = Math.min(this.player.maxEnergy, this.player.energy + 8);
-        this.addFloatingText('★ นั่งพักผ่อนริมน้ำชิลล์ๆ (+8 พลังงาน)', this.player.x - 15, this.player.y - 15, '#60a5fa');
+        this.player.energy = Math.min(this.player.maxEnergy, this.player.energy + 12);
+        this.addFloatingText('★ นั่งพักผ่อนริมน้ำชิลล์ๆ (+12 พลังงาน)', this.player.x - 15, this.player.y - 15, '#60a5fa');
         this.updateHUD();
     } else if (type === 'npc_gilbert') {
         this.startDialogue('gilbert');
@@ -7194,51 +7469,56 @@ Game.handleTileInteract = function(type, tx, ty) {
         this.addFloatingText(' เสาโคมไฟโบราณ ส่องสว่างทั่วหมู่บ้านยามค่ำคืน', this.player.x, this.player.y - 15, '#fef08a');
     } else if (type === 'campfire') {
         this.openCampModal();
-    } else if (type === 'ruby_node') {
-        SoundEngine.miningHit();
-        this.triggerScreenShake(3.5, 120);
-        this.spawnParticles(this.player.x + 10, this.player.y + 10, '#ef4444', 12);
-        this.spawnDroppedItem('ruby_gem', 1, this.player.x, this.player.y - 12);
-        this.spawnDroppedItem('iron_ore', 1, this.player.x, this.player.y - 12);
-        this.addXp(20);
-        this.player.questProgress.rubiesMined = (this.player.questProgress.rubiesMined || 0) + 1;
-        this.addFloatingText(' ขุดได้ อัญมณีทับทิมเวทมนตร์ + แร่เหล็ก (+20 XP)', this.player.x - 20, this.player.y - 15, '#f87171');
-        // Check quest 2 objective
-        const hasHerbs = this.countItemInInventory('starflower_herb');
-        const hasRubies = this.countItemInInventory('ruby_gem');
-        if (this.player.quests.q2 === 'active' && hasHerbs >= 3 && hasRubies >= 2) {
-            this.addFloatingText('★ ภารกิจที่ 2 สำเร็จ! นำของไปส่งที่ อัศวินสาว วาเลเรีย', this.player.x - 30, this.player.y - 30, '#4ade80');
-        }
-        this.updateHUD();
+    } else if (type === 'ruby_node' || type === 'thunder_crystal_node' || type === 'breakable_rock' || type === 'gold_node' || type === 'mana_node' || type === 'diamond_node') {
+        this.mineNodeTile(type, tx, ty);
     } else if (type === 'starflower_node') {
+        const targetX = tx !== undefined ? tx : Math.floor((this.player.x + 10) / this.tileSize);
+        const targetY = ty !== undefined ? ty : Math.floor((this.player.y + 20) / this.tileSize);
+        const tile = this.map?.[targetY]?.[targetX];
+        const now = performance.now();
+        if (now - (this._lastGatherTime || 0) < 350) return;
+        this._lastGatherTime = now;
+        if (!tile) return;
+        if ((this.player.energy || 0) < 1) {
+            this.addFloatingText('หมดแรงแล้ว! พักผ่อนหรือกินอาหารก่อน', this.player.x, this.player.y - 12, '#f87171');
+            return;
+        }
+        this.player.energy = Math.max(0, this.player.energy - 1);
+        this.player.energyRegenDelay = 2000;
+        tile.depletedForageType = { type: 'starflower', interactable: 'starflower_node', solid: false };
+        tile.type = this.currentScene === 'swamp' ? 'swampFloor' : this.currentScene === 'frost_peak' ? 'snowFloor' : 'darkGrass';
+        tile.interactable = null;
         SoundEngine.harvest();
         this.triggerScreenShake(2.0, 80);
-        this.spawnParticles(this.player.x + 10, this.player.y + 10, '#38bdf8', 8);
-        this.spawnDroppedItem('starflower_herb', 1, this.player.x, this.player.y - 10);
+        this.spawnParticles(targetX * 32 + 16, targetY * 32 + 16, '#38bdf8', 10);
+        this.spawnDroppedItem('starflower_herb', 1, targetX * 32 + 16, targetY * 32 + 16);
         this.addXp(10);
-        this.addFloatingText('★ เก็บสมุนไพรดวงดาว (+10 XP)', this.player.x - 10, this.player.y - 15, '#38bdf8');
-        // Check quest 2 objective
-        const hasHerbs = this.countItemInInventory('starflower_herb');
-        const hasRubies = this.countItemInInventory('ruby_gem');
-        if (this.player.quests.q2 === 'active' && hasHerbs >= 3 && hasRubies >= 2) {
-            this.addFloatingText('★ ภารกิจที่ 2 สำเร็จ! นำของไปส่งที่ อัศวินสาว วาเลเรีย', this.player.x - 30, this.player.y - 30, '#4ade80');
-        }
+        this.addFloatingText('★ เก็บสมุนไพรดวงดาว (-1 พลังงาน, +10 XP)', targetX * 32 - 10, targetY * 32 - 15, '#38bdf8');
         this.updateHUD();
     } else if (type === 'starfruit_node') {
+        const targetX = tx !== undefined ? tx : Math.floor((this.player.x + 10) / this.tileSize);
+        const targetY = ty !== undefined ? ty : Math.floor((this.player.y + 20) / this.tileSize);
+        const tile = this.map?.[targetY]?.[targetX];
+        const now = performance.now();
+        if (now - (this._lastGatherTime || 0) < 350) return;
+        this._lastGatherTime = now;
+        if (!tile) return;
+        if ((this.player.energy || 0) < 2) {
+            this.addFloatingText('หมดแรงแล้ว! พักผ่อนหรือกินอาหารก่อน', this.player.x, this.player.y - 12, '#f87171');
+            return;
+        }
+        this.player.energy = Math.max(0, this.player.energy - 2);
+        this.player.energyRegenDelay = 2000;
+        tile.depletedForageType = { type: 'starFruitCrop', interactable: 'starfruit_node', solid: true };
+        tile.type = 'canopyGrass';
+        tile.solid = false;
+        tile.interactable = null;
         SoundEngine.harvest();
         this.triggerScreenShake(2.0, 80);
-        this.spawnParticles(this.player.x + 10, this.player.y + 10, '#facc15', 12);
-        this.spawnDroppedItem('star_fruit', 1, this.player.x, this.player.y - 10);
+        this.spawnParticles(targetX * 32 + 16, targetY * 32 + 16, '#facc15', 12);
+        this.spawnDroppedItem('star_fruit', 1, targetX * 32 + 16, targetY * 32 + 16);
         this.addXp(18);
-        this.addFloatingText('★ เก็บผลไม้ดวงดาราพฤกษา (+18 XP)', this.player.x - 10, this.player.y - 15, '#facc15');
-        this.updateHUD();
-    } else if (type === 'thunder_crystal_node') {
-        SoundEngine.miningHit();
-        this.triggerScreenShake(2.5, 90);
-        this.spawnParticles(this.player.x + 10, this.player.y + 10, '#38bdf8', 14);
-        this.spawnDroppedItem('thunder_crystal', 1, this.player.x, this.player.y - 10);
-        this.addXp(22);
-        this.addFloatingText('★ สกัดผลึกสายฟ้าอัสนีบาต (+22 XP)', this.player.x - 10, this.player.y - 15, '#38bdf8');
+        this.addFloatingText('★ เก็บผลไม้ดวงดาราพฤกษา (-2 พลังงาน, +18 XP)', targetX * 32 - 10, targetY * 32 - 15, '#facc15');
         this.updateHUD();
     } else if (type === 'cave_entrance') {
         this.warpCaveFloor(1);
@@ -7254,33 +7534,6 @@ Game.handleTileInteract = function(type, tx, ty) {
         this.ascendCaveFloor();
     } else if (type === 'cave_elevator') {
         this.openMineElevatorModal();
-    } else if (type === 'breakable_rock') {
-        SoundEngine.miningHit();
-        this.triggerScreenShake(3.0, 100);
-        this.spawnParticles(this.player.x + 10, this.player.y + 10, '#94a3b8', 14);
-
-        const targetX = tx !== undefined ? tx : Math.floor((this.player.x + 10) / this.tileSize);
-        const targetY = ty !== undefined ? ty : Math.floor((this.player.y + 20) / this.tileSize);
-        const t = this.map[targetY]?.[targetX];
-
-        this.addItemToInventory('stone', 1 + Math.floor(Math.random() * 2), 'ก้อนหินธรรมชาติ');
-        if (Math.random() < 0.35) this.addItemToInventory('copper_ore', 1, 'แร่ทองแดงดิบ');
-        else if (Math.random() < 0.20) this.addItemToInventory('coal', 1, 'ก้อนถ่านหิน');
-
-        if (t && t.hasLadderDown) {
-            t.type = 'caveLadderDown';
-            t.solid = false;
-            t.interactable = 'cave_ladder_down';
-            SoundEngine.levelUp();
-            this.addFloatingText(' พบทางลงสู่ชั้นถัดไป! (กด E หรือคลิกเพื่อลง)', this.player.x - 20, this.player.y - 15, '#67e8f9');
-        } else if (t) {
-            t.type = 'caveFloor';
-            t.solid = false;
-            t.interactable = null;
-            this.addFloatingText(' ทุบหินแตก! ได้ก้อนหิน', this.player.x - 10, this.player.y - 15, '#cbd5e1');
-        }
-        this.unlockCompendiumItem('stone');
-        this.updateHUD();
     } else if (type.startsWith('machine_')) {
         this.interactWithMachine(type);
     } else if (type.startsWith('cave_milestone_chest_')) {
@@ -7299,30 +7552,6 @@ Game.handleTileInteract = function(type, tx, ty) {
         this.addFloatingText(` เปิดหีบสมบัติชั้น ${fNum}! +${rewardGold} G และแก่นพลังดวงดาว!`, this.player.x - 35, this.player.y - 20, '#fde047');
         this.unlockCompendiumItem('star_core');
         this.unlockCompendiumItem('diamond_crystal');
-        this.updateHUD();
-    } else if (type === 'gold_node') {
-        SoundEngine.miningHit();
-        this.triggerScreenShake(3.5, 120);
-        this.spawnParticles(this.player.x + 10, this.player.y + 10, '#facc15', 12);
-        this.spawnDroppedItem('gold_ore', 1, this.player.x, this.player.y - 12);
-        this.addXp(18);
-        this.addFloatingText(' ขุดได้ แร่ทองคำดิบ x1 (+18 XP)', this.player.x - 20, this.player.y - 15, '#fde047');
-        this.updateHUD();
-    } else if (type === 'mana_node') {
-        SoundEngine.miningHit();
-        this.triggerScreenShake(3.5, 120);
-        this.spawnParticles(this.player.x + 10, this.player.y + 10, '#38bdf8', 14);
-        this.spawnDroppedItem('mana_gem', 1, this.player.x, this.player.y - 12);
-        this.addXp(18);
-        this.addFloatingText(' ขุดได้ ผลึกมานาสีคราม x1 (+18 XP)', this.player.x - 20, this.player.y - 15, '#38bdf8');
-        this.updateHUD();
-    } else if (type === 'diamond_node') {
-        SoundEngine.miningHit();
-        this.triggerScreenShake(4.5, 150);
-        this.spawnParticles(this.player.x + 10, this.player.y + 10, '#c084fc', 16);
-        this.spawnDroppedItem('diamond_crystal', 1, this.player.x, this.player.y - 12);
-        this.addXp(30);
-        this.addFloatingText(' ขุดพบ เพชรผลึกดวงดาว ล้ำค่า! (+30 XP)', this.player.x - 25, this.player.y - 15, '#e879f9');
         this.updateHUD();
     } else if (type.startsWith('cave_chest_')) {
         if (this.chests[type]) {
@@ -7473,7 +7702,311 @@ Game.breakDungeonObject = function(tx: number, ty: number, type: string) {
     } else {
         const drops = ['health_potion', 'ruby_gem', 'bat_wing', 'antidote_serum'];
         const dId = drops[Math.floor(Math.random() * drops.length)];
-        this.spawnDroppedItem(dId, 1, WORLD_ITEMS[dId]?.name || dId, tx * 32 + 16, ty * 32 + 16);
+        this.spawnDroppedItem(dId, 1, tx * 32 + 16, ty * 32 + 16);
+    }
+    this.updateHUD();
+};
+
+/**
+ * Restores renewable daily berries, herbs, palm coconuts, and partial outdoor mineral veins on a new day.
+ */
+Game.regenerateDailyNodes = function() {
+    const outdoorScenes = ['farm', 'village', 'forest', 'swamp', 'frost_peak', 'ancient_canopy', 'tempest_plateau', 'island'];
+    outdoorScenes.forEach((sName) => {
+        const sc = this.scenes?.[sName];
+        if (!sc || !sc.map) return;
+        for (let y = 0; y < sc.mapHeight; y++) {
+            for (let x = 0; x < sc.mapWidth; x++) {
+                const t = sc.map[y][x];
+                if (!t) continue;
+                if (t.type === 'berryBush') {
+                    t.harvestedToday = false;
+                }
+                if (t.type === 'palmTree') {
+                    t.palmFruitsRemaining = 2;
+                }
+                if (t.depletedForageType) {
+                    t.type = t.depletedForageType.type;
+                    t.interactable = t.depletedForageType.interactable;
+                    t.solid = !!t.depletedForageType.solid;
+                    delete t.depletedForageType;
+                }
+                if (t.depletedOreInfo && Math.random() < 0.55) {
+                    t.type = t.depletedOreInfo.type;
+                    t.interactable = t.depletedOreInfo.interactable;
+                    t.solid = true;
+                    delete t.nodeHp;
+                    delete t.nodeMaxHp;
+                    delete t.depletedOreInfo;
+                }
+            }
+        }
+    });
+};
+
+Game.maybePlayPrologueCutscene = function() {
+    if (!this.player) return;
+    if (!this.player.seenStoryCutscenes) this.player.seenStoryCutscenes = {};
+    if (!this.player.unlockedLore) this.player.unlockedLore = {};
+    if (this.player.seenStoryCutscenes.prologue) return;
+
+    const loginModal = document.getElementById('loginModal');
+    const syncModal = document.getElementById('syncModal');
+    if ((loginModal && loginModal.style.display === 'flex') || (syncModal && syncModal.style.display === 'flex') || this.activeModal) {
+        return;
+    }
+    this.player.unlockedLore['lore_prologue'] = true;
+    this.triggerStoryCutscene('prologue', false);
+};
+
+Game.triggerStoryCutscene = function(cutsceneId: string, forceReplay = false) {
+    const data = (STORY_CUTSCENES as any)?.[cutsceneId];
+    if (!data) return;
+    if (!this.player.seenStoryCutscenes) this.player.seenStoryCutscenes = {};
+    if (!forceReplay && this.player.seenStoryCutscenes[cutsceneId]) return;
+
+    this.player.seenStoryCutscenes[cutsceneId] = true;
+
+    const badgeEl = document.getElementById('storyCutsceneBadge');
+    const titleEl = document.getElementById('storyCutsceneTitle');
+    const subEl = document.getElementById('storyCutsceneSubtitle');
+    const bodyEl = document.getElementById('storyCutsceneBody');
+    const quoteEl = document.getElementById('storyCutsceneQuote');
+    const cardEl = document.getElementById('storyCutsceneCard');
+    if (!badgeEl || !titleEl || !bodyEl) return;
+
+    badgeEl.textContent = data.chapterBadge || 'บันทึกเรื่องราว';
+    titleEl.textContent = data.title || '';
+    if (subEl) subEl.textContent = data.subtitle || '';
+    if (cardEl && data.accentColor) {
+        cardEl.style.borderColor = data.accentColor;
+    }
+
+    bodyEl.innerHTML = '';
+    (data.paragraphs || []).forEach((pText: string) => {
+        const p = document.createElement('p');
+        p.textContent = pText;
+        bodyEl.appendChild(p);
+    });
+
+    if (quoteEl) {
+        if (data.quote) {
+            quoteEl.textContent = data.quote;
+            quoteEl.style.display = 'block';
+        } else {
+            quoteEl.style.display = 'none';
+        }
+    }
+
+    SoundEngine.bell?.();
+    this.openModal('storyCutsceneModal');
+};
+
+Game.closeStoryCutscene = function() {
+    SoundEngine.click?.();
+    this.closeModal('storyCutsceneModal');
+    this.updateHUD();
+};
+
+/**
+ * Unified, balanced multi-hit mining handler with tool verification, cooldown,
+ * stamina drain, spark effects, and node depletion (prevents hold-to-farm exploits).
+ */
+Game.mineNodeTile = function(nodeType: string, tx?: number, ty?: number) {
+    const now = performance.now();
+    if (now - (this._lastMineSwingTime || 0) < 460) {
+        return; // Enforce crisp rhythmic pickaxe swing cooldown
+    }
+
+    const selectedItem = this.player.inventory?.[this.player.selectedSlot];
+    if (!selectedItem || selectedItem.id !== 'pickaxe') {
+        this._lastMineSwingTime = now;
+        this.ensurePickaxeInInventory?.();
+        SoundEngine.errorClick?.();
+        this.addFloatingText('ต้องถือ อีเต๋อขุดแร่ (Pickaxe) จึงจะขุดหินและแร่ได้!', this.player.x - 35, this.player.y - 18, '#f87171');
+        return;
+    }
+
+    const targetX = tx !== undefined ? tx : Math.floor((this.player.x + 10) / this.tileSize);
+    const targetY = ty !== undefined ? ty : Math.floor((this.player.y + 20) / this.tileSize);
+    const tile = this.map?.[targetY]?.[targetX];
+    if (!tile || tile.interactable !== nodeType) return;
+
+    const NODE_CONFIG: Record<string, {
+        hp: number;
+        energy: number;
+        color: string;
+        floorType?: string;
+        xp: number;
+        label: string;
+        drops: () => void;
+    }> = {
+        breakable_rock: {
+            hp: 2 + Math.floor((this.currentCaveFloor || 1) / 8),
+            energy: 2,
+            color: '#94a3b8',
+            floorType: 'caveFloor',
+            xp: 6,
+            label: 'ทุบหินแตก! ได้ก้อนหิน',
+            drops: () => {
+                const amt = Math.random() < 0.35 ? 2 : 1;
+                this.spawnDroppedItem('stone', amt, targetX * 32 + 16, targetY * 32 + 16);
+                if (Math.random() < 0.25) this.spawnDroppedItem('copper_ore', 1, targetX * 32 + 16, targetY * 32 + 16);
+                else if (Math.random() < 0.16) this.spawnDroppedItem('coal', 1, targetX * 32 + 16, targetY * 32 + 16);
+                this.unlockCompendiumItem?.('stone');
+            }
+        },
+        gold_node: {
+            hp: 4,
+            energy: 4,
+            color: '#facc15',
+            xp: 18,
+            label: 'สกัดแร่ทองคำดิบสำเร็จ! (+18 XP)',
+            drops: () => {
+                const hasVeinSeeker = !!this.player.skillMastery?.geode_cracker;
+                const bonus = (hasVeinSeeker && Math.random() < 0.35) ? 2 : 1;
+                this.spawnDroppedItem('gold_ore', bonus, targetX * 32 + 16, targetY * 32 + 16);
+                this.unlockCompendiumItem?.('gold_ore');
+            }
+        },
+        mana_node: {
+            hp: 4,
+            energy: 4,
+            color: '#38bdf8',
+            xp: 18,
+            label: 'สกัดผลึกมานาสีครามสำเร็จ! (+18 XP)',
+            drops: () => {
+                this.spawnDroppedItem('mana_gem', 1, targetX * 32 + 16, targetY * 32 + 16);
+                this.unlockCompendiumItem?.('mana_gem');
+            }
+        },
+        ruby_node: {
+            hp: 5,
+            energy: 5,
+            color: '#ef4444',
+            xp: 22,
+            label: 'สกัดทับทิมเวทมนตร์ + แร่เหล็กสำเร็จ! (+22 XP)',
+            drops: () => {
+                this.spawnDroppedItem('ruby_gem', 1, targetX * 32 + 16, targetY * 32 + 16);
+                if (Math.random() < 0.65) this.spawnDroppedItem('iron_ore', 1, targetX * 32 + 16, targetY * 32 + 16);
+                this.player.questProgress.rubiesMined = (this.player.questProgress.rubiesMined || 0) + 1;
+                this.unlockCompendiumItem?.('ruby_gem');
+            }
+        },
+        thunder_crystal_node: {
+            hp: 6,
+            energy: 5,
+            color: '#38bdf8',
+            floorType: 'basaltFloor',
+            xp: 24,
+            label: 'สกัดผลึกสายฟ้าอัสนีบาตสำเร็จ! (+24 XP)',
+            drops: () => {
+                this.spawnDroppedItem('thunder_crystal', 1, targetX * 32 + 16, targetY * 32 + 16);
+            }
+        },
+        diamond_node: {
+            hp: 7,
+            energy: 6,
+            color: '#c084fc',
+            xp: 32,
+            label: 'สกัดเพชรคริสตัลโบราณสำเร็จ! (+32 XP)',
+            drops: () => {
+                this.spawnDroppedItem('diamond_crystal', 1, targetX * 32 + 16, targetY * 32 + 16);
+                this.unlockCompendiumItem?.('diamond_crystal');
+            }
+        },
+        mine_cinder_shard: {
+            hp: 5,
+            energy: 5,
+            color: '#f97316',
+            floorType: 'magmaFloor',
+            xp: 24,
+            label: 'สกัดเศษผลึกเพลิง (Cinder Shard) สำเร็จ! (+24 XP)',
+            drops: () => {
+                const shardAmt = Math.random() < 0.35 ? 2 : 1;
+                this.spawnDroppedItem('cinder_shard', shardAmt, targetX * 32 + 16, targetY * 32 + 16);
+                if (Math.random() < 0.25) this.spawnDroppedItem('gold_ore', 1, targetX * 32 + 16, targetY * 32 + 16);
+            }
+        },
+        meteorite_rock: {
+            hp: 8,
+            energy: 6,
+            color: '#c084fc',
+            floorType: 'grass',
+            xp: 45,
+            label: '★ กะเทาะอุกกาบาตดวงดาวสำเร็จ! ★',
+            drops: () => {
+                this.spawnDroppedItem('star_shard', 1, targetX * 32 + 16, targetY * 32 + 16);
+                this.spawnDroppedItem('star_core', 1, targetX * 32 + 16, targetY * 32 + 16);
+                this.spawnDroppedItem('mystery_geode', 1, targetX * 32 + 16, targetY * 32 + 16);
+                this.spawnDroppedItem('gold_ore', 2, targetX * 32 + 16, targetY * 32 + 16);
+            }
+        }
+    };
+
+    const cfg = NODE_CONFIG[nodeType];
+    if (!cfg) return;
+
+    const eCost = Math.max(1, cfg.energy - (this.player.houseUpgrades?.fireplace ? 1 : 0));
+    if ((this.player.energy || 0) < eCost) {
+        this._lastMineSwingTime = now;
+        this.addFloatingText('หมดแรงแล้ว! กินอาหารหรือพักผ่อนก่อนขุดแร่', this.player.x - 25, this.player.y - 14, '#f87171');
+        return;
+    }
+
+    this._lastMineSwingTime = now;
+    this.player.energy = Math.max(0, this.player.energy - eCost);
+    this.player.energyRegenDelay = 2200;
+
+    if (tile.nodeMaxHp === undefined || tile.nodeHp === undefined) {
+        tile.nodeMaxHp = cfg.hp;
+        tile.nodeHp = cfg.hp;
+    }
+    tile.nodeHp -= 1;
+
+    SoundEngine.miningHit();
+    this.spawnParticles(targetX * 32 + 16, targetY * 32 + 16, cfg.color, tile.nodeHp > 0 ? 7 : 18);
+    this.triggerScreenShake(tile.nodeHp > 0 ? 2.2 : 4.5, tile.nodeHp > 0 ? 85 : 150);
+
+    if (tile.nodeHp > 0) {
+        this.addFloatingText(`แก๊ง! [${tile.nodeHp}/${tile.nodeMaxHp}] (-${eCost} พลังงาน)`, targetX * 32 - 12, targetY * 32 - 14, '#fde047');
+        this.updateHUD();
+        return;
+    }
+
+    // Node is depleted & broken!
+    const originalTileType = tile.type;
+    delete tile.nodeHp;
+    delete tile.nodeMaxHp;
+
+    if (nodeType === 'breakable_rock' && tile.hasLadderDown) {
+        tile.type = 'caveLadderDown';
+        tile.solid = false;
+        tile.interactable = 'cave_ladder_down';
+        SoundEngine.levelUp();
+        cfg.drops();
+        this.addFloatingText(' พบทางลงสู่ชั้นถัดไป! (กด E หรือคลิกเพื่อลง)', targetX * 32 - 20, targetY * 32 - 18, '#67e8f9');
+    } else {
+        const sceneDefaultFloor =
+            cfg.floorType ||
+            (this.currentScene === 'cave' || this.currentScene === 'cave_depths' ? 'caveFloor' :
+             this.currentScene === 'volcano' || this.currentScene === 'island_volcano' ? 'magmaFloor' :
+             this.currentScene === 'frost_peak' ? 'snowFloor' :
+             this.currentScene === 'swamp' ? 'swampFloor' :
+             this.currentScene === 'forest' ? 'darkGrass' :
+             this.currentScene === 'tempest_plateau' ? 'basaltFloor' : 'grass');
+
+        // Remember outdoor renewable ore nodes so a fresh vein can regenerate on a new day
+        if (!['cave', 'cave_depths', 'volcano', 'island_volcano'].includes(this.currentScene) && nodeType !== 'meteorite_rock') {
+            tile.depletedOreInfo = { type: originalTileType, interactable: nodeType };
+        }
+        tile.type = sceneDefaultFloor;
+        tile.solid = false;
+        tile.interactable = null;
+
+        cfg.drops();
+        this.addXp(cfg.xp);
+        this.addFloatingText(cfg.label, targetX * 32 - 20, targetY * 32 - 16, cfg.color);
     }
     this.updateHUD();
 };
@@ -7779,6 +8312,37 @@ Game.sleepAndPassDay = function(forceWarpToBed = false) {
                 }
             }
         }
+    }
+
+    // Tropical Island Crop Growth & Nightly Tide Watering Refresh
+    if (this.scenes?.island?.map) {
+        const islMap = this.scenes.island.map;
+        for (let iy = 0; iy < this.scenes.island.mapHeight; iy++) {
+            for (let ix = 0; ix < this.scenes.island.mapWidth; ix++) {
+                const it = islMap[iy][ix];
+                if (isWetWeather && it.tilled) it.watered = true;
+                if (it.crop) {
+                    if (it.watered) {
+                        it.crop.daysGrown += 1;
+                        const cropInfo = CROPS[it.crop.cropId];
+                        if (cropInfo) {
+                            const effDays = Math.max(1, cropInfo.growDays - (this.player.shrineRestored ? 1 : 0));
+                            const step = effDays / 3;
+                            it.crop.stage = Math.min(3, Math.floor(it.crop.daysGrown / step));
+                            if (it.crop.stage >= 3) it.crop.ready = true;
+                        }
+                    }
+                    it.watered = isWetWeather;
+                } else if (it.tilled && !isWetWeather) {
+                    it.watered = false;
+                }
+            }
+        }
+    }
+
+    // Regenerate daily bushes, palms, herbs, and partial outdoor ore veins
+    if (typeof this.regenerateDailyNodes === 'function') {
+        this.regenerateDailyNodes();
     }
 
     // ♥ Spouse Morning Care & Daily Reset
@@ -8385,7 +8949,7 @@ Game.addItemToInventory = function(id, count = 1, name = '', quality: 0 | 1 | 2 
             let itemType = 'item';
             let cropId = undefined;
             if (isWep) itemType = 'weapon';
-            else if (id === 'hoe' || id === 'water' || id === 'scythe' || id === 'fishing_rod' || id === 'axe') itemType = 'tool';
+            else if (id === 'hoe' || id === 'water' || id === 'scythe' || id === 'fishing_rod' || id === 'axe' || id === 'pickaxe') itemType = 'tool';
             else if (id.endsWith('_seed')) {
                 itemType = 'seed';
                 cropId = id.replace('_seed', '');
@@ -8801,7 +9365,14 @@ Game.render = function() {
                     depthY: y * this.tileSize + 28,
                     render: () => {
                         this.drawContactShadow(x * this.tileSize + 16, y * this.tileSize + 26, 12, 5, 0.25);
-                        this.ctx.drawImage(SPRITES.berryBush, screenX, screenY);
+                        if (tile.harvestedToday) {
+                            this.ctx.save();
+                            this.ctx.globalAlpha = 0.65;
+                            this.ctx.drawImage(SPRITES.berryBush, screenX, screenY);
+                            this.ctx.restore();
+                        } else {
+                            this.ctx.drawImage(SPRITES.berryBush, screenX, screenY);
+                        }
                     }
                 });
             } else if (tile.type === 'hayBale') {
@@ -9421,6 +9992,22 @@ Game.render = function() {
                     this.ctx.fillRect(screenX + 8 + pulse, screenY + 6, 2, 2);
                     this.ctx.fillRect(screenX + 22 - pulse, screenY + 8, 2, 2);
                 }
+            }
+
+            // Mining node durability mini-bar when partially struck
+            if (tile.nodeHp !== undefined && tile.nodeMaxHp && tile.nodeHp < tile.nodeMaxHp) {
+                const ratio = Math.max(0, Math.min(1, tile.nodeHp / tile.nodeMaxHp));
+                renderables.push({
+                    depthY: y * this.tileSize + 95,
+                    render: () => {
+                        const bx = screenX + 4;
+                        const by = screenY - 5;
+                        this.ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+                        this.ctx.fillRect(bx - 1, by - 1, 26, 5);
+                        this.ctx.fillStyle = ratio > 0.5 ? '#facc15' : '#f97316';
+                        this.ctx.fillRect(bx, by, Math.round(24 * ratio), 3);
+                    }
+                });
             }
         }
     }
@@ -11442,42 +12029,46 @@ Game.toggleModal = function(modalType) {
 };
 
 
+Game.showModalEl = function(id: string) {
+    const el = document.getElementById(id);
+    if (el) el.style.setProperty('display', 'flex', 'important');
+};
+
 Game.openModal = function(modalType) {
     this.closeAllModals();
     this.activeModal = modalType;
 
     if (modalType === 'shop') {
         this.renderShopModal();
-        document.getElementById('shopModal').style.display = 'flex';
+        this.showModalEl('shopModal');
     } else if (modalType === 'sell') {
         this.renderSellModal();
-        document.getElementById('sellModal').style.display = 'flex';
+        this.showModalEl('sellModal');
     } else if (modalType === 'crafting') {
         this.renderCraftingModal();
-        document.getElementById('craftingModal').style.display = 'flex';
+        this.showModalEl('craftingModal');
     } else if (modalType === 'inventory') {
         this.renderInventoryModal();
-        document.getElementById('inventoryModal').style.display = 'flex';
+        this.showModalEl('inventoryModal');
     } else if (modalType === 'sleepModal') {
-        document.getElementById('sleepModal').style.display = 'flex';
+        this.showModalEl('sleepModal');
     } else if (modalType === 'houseDecorModal') {
         this.renderHouseDecorModal();
-        document.getElementById('houseDecorModal').style.display = 'flex';
+        this.showModalEl('houseDecorModal');
     } else if (modalType === 'hunterModal') {
         this.renderHuntersModal();
-        document.getElementById('hunterModal').style.display = 'flex';
+        this.showModalEl('hunterModal');
     } else if (modalType === 'questModal') {
-        this.renderQuestModal();
-        document.getElementById('questModal').style.display = 'flex';
+        this.switchQuestTab('quests');
+        this.showModalEl('questModal');
     } else if (modalType === 'forgeModal') {
         this.renderForgeModal();
-        document.getElementById('forgeModal').style.display = 'flex';
+        this.showModalEl('forgeModal');
     } else if (modalType === 'bountyBoardModal' || modalType === 'bountyBoard') {
         this.renderBountyBoard();
-        const bEl = document.getElementById('bountyBoardModal');
-        if (bEl) bEl.style.display = 'flex';
+        this.showModalEl('bountyBoardModal');
     } else if (modalType === 'controlsModal') {
-        document.getElementById('controlsModal').style.display = 'flex';
+        this.showModalEl('controlsModal');
     } else if (modalType === 'wardrobe') {
         this.openWardrobeModal();
     } else if (modalType === 'stockShelf') {
@@ -11488,15 +12079,12 @@ Game.openModal = function(modalType) {
         if (typeof Auth !== 'undefined') Auth.openAccountModal();
     } else if (modalType === 'worldMap' || modalType === 'worldMapModal') {
         this.renderWorldMap();
-        const mapModal = document.getElementById('worldMapModal');
-        if (mapModal) mapModal.style.display = 'flex';
+        this.showModalEl('worldMapModal');
     } else if (modalType === 'storageChestModal') {
         this.renderStorageChestModal();
-        const chestModal = document.getElementById('storageChestModal');
-        if (chestModal) chestModal.style.display = 'flex';
+        this.showModalEl('storageChestModal');
     } else if (modalType === 'gameMenuModal') {
-        const menuModal = document.getElementById('gameMenuModal');
-        if (menuModal) menuModal.style.display = 'flex';
+        this.showModalEl('gameMenuModal');
         const menuIcon = document.getElementById('menuBgmIcon');
         const menuStatus = document.getElementById('menuBgmStatus');
         const isPlaying = SoundEngine.isBgmOn();
@@ -11504,20 +12092,15 @@ Game.openModal = function(modalType) {
         if (menuStatus) menuStatus.textContent = isPlaying ? 'สถานะ: เปิดเสียงเพลง' : 'สถานะ: ปิดเสียงเพลง';
     } else if (modalType === 'skillMasteryModal' || modalType === 'skillMastery') {
         this.renderSkillMasteryModal();
-        const m = document.getElementById('skillMasteryModal');
-        if (m) m.style.display = 'flex';
+        this.showModalEl('skillMasteryModal');
     } else if (modalType === 'farmCaveChoiceModal') {
-        const m = document.getElementById('farmCaveChoiceModal');
-        if (m) m.style.display = 'flex';
+        this.showModalEl('farmCaveChoiceModal');
     } else if (modalType === 'festivalModal') {
-        const m = document.getElementById('festivalModal');
-        if (m) m.style.display = 'flex';
+        this.showModalEl('festivalModal');
     } else if (modalType === 'weddingCutsceneModal') {
-        const m = document.getElementById('weddingCutsceneModal');
-        if (m) m.style.display = 'flex';
+        this.showModalEl('weddingCutsceneModal');
     } else if (modalType === 'campModal') {
-        const m = document.getElementById('campModal');
-        if (m) m.style.display = 'flex';
+        this.showModalEl('campModal');
     } else if (modalType === 'volcanoForgeModal' || modalType === 'volcanoForge') {
         this.openVolcanoForgeModal();
     } else if (modalType === 'pirateShopModal' || modalType === 'pirateShop') {
@@ -11527,8 +12110,7 @@ Game.openModal = function(modalType) {
     } else if (modalType === 'multiplayerModal') {
         this.openMultiplayerModal();
     } else {
-        const fallbackEl = document.getElementById(modalType);
-        if (fallbackEl) fallbackEl.style.display = 'flex';
+        this.showModalEl(modalType);
     }
 };
 
@@ -11869,14 +12451,14 @@ Game.renderShopModal = function() {
         card.className = 'shop-card';
 
         const img = document.createElement('img');
-        img.src = SPRITES.getItemDataURL(crop.id);
+        img.src = SPRITES.getItemDataURL(crop.id + '_seed');
         img.className = 'item-pixel-icon';
 
         const info = document.createElement('div');
         info.className = 'shop-card-info';
         info.innerHTML = `
             <h4>${crop.seedName}</h4>
-            <p>โตเต็มที่: ${crop.growDays} วัน | ขายได้: ${crop.sellPrice} G</p>
+            <p>โตเต็มที่: ${crop.growDays} วัน | ขายผลผลิตได้: ${crop.sellPrice} G</p>
             <span class="price-tag">ราคา: ${crop.buyPrice} G</span>
         `;
 
@@ -11886,7 +12468,7 @@ Game.renderShopModal = function() {
         buyBtn.onclick = () => {
             if (this.player.gold >= crop.buyPrice) {
                 this.player.gold -= crop.buyPrice;
-                this.addItemToInventory(crop.id, 1, crop.seedName);
+                this.addItemToInventory(crop.id + '_seed', 1, crop.seedName);
                 SoundEngine.coin();
                 this.updateHUD();
                 this.renderShopModal();
@@ -11948,7 +12530,10 @@ Game.renderSellModal = function() {
 
         hasSellable = true;
         let price = 10;
-        if (CROPS[item.id]) price = CROPS[item.id].sellPrice;
+        if (item.type === 'seed' || (typeof item.id === 'string' && item.id.endsWith('_seed'))) {
+            const cropKey = item.cropId || String(item.id).replace(/_seed$/, '');
+            price = CROPS[cropKey] ? Math.max(5, Math.floor(CROPS[cropKey].buyPrice * 0.5)) : 8;
+        } else if (CROPS[item.id]) price = CROPS[item.id].sellPrice;
         else if (RECIPES[item.id]) price = RECIPES[item.id].sellPrice;
         else if (FISH[item.id]) price = FISH[item.id].sellPrice;
         else if (MONSTER_DROPS[item.id]) price = MONSTER_DROPS[item.id].sellPrice;
@@ -17186,7 +17771,10 @@ Game.defeatBoss = function() {
         this.player.questProgress.malakorDefeated = true;
         if (!this.player.sacredShards) this.player.sacredShards = {};
         this.player.sacredShards['sacred_shard_shadow'] = true;
+        if (!this.player.unlockedLore) this.player.unlockedLore = {};
+        this.player.unlockedLore['lore_malakor_oath'] = true;
         this.addFloatingText('★ พิชิตมหาบอสผู้บงการสำเร็จ! รายงานนายกฯ กิลเบิร์ตเพื่อรับตำแหน่งมหาผู้พิทักษ์!', this.player.x - 40, this.player.y - 50, '#fde047');
+        setTimeout(() => this.triggerStoryCutscene?.('ch10_reveal', false), 1400);
     } else if (this.boss.id === 'boss_sylvanus') {
         this.spawnDroppedItem('ancient_tree_heart', 1, this.boss.x + 32, this.boss.y + 32);
         this.spawnDroppedItem('sacred_shard_nature', 1, this.boss.x + 32, this.boss.y + 16);
@@ -17238,6 +17826,9 @@ Game.defeatBoss = function() {
         this.player.questProgress.bossDefeated = true;
         if (!this.player.sacredShards) this.player.sacredShards = {};
         this.player.sacredShards['sacred_shard_earth'] = true;
+        if (!this.player.unlockedLore) this.player.unlockedLore = {};
+        this.player.unlockedLore['lore_kathuros_crown'] = true;
+        setTimeout(() => this.triggerStoryCutscene?.('ch5_twist', false), 1400);
     }
 
     this.addFloatingText(`★ กำราบ ${this.boss.name}! ชัยชนะอันยิ่งใหญ่! (+${gReward} G, +${xReward} XP)`, this.boss.x - 40, this.boss.y - 30, '#facc15');
@@ -17257,15 +17848,16 @@ Game.startDialogue = function(npcId) {
     document.getElementById('dialogueSpeakerName').textContent = npcCfg.name;
     document.getElementById('dialogueSpeakerRole').textContent = npcCfg.role;
 
-    // Render Friendship Hearts (0-5 hearts, each 20 points)
+    // Render Friendship Hearts (0-10 hearts, each 20 points, matching gift display)
     const heartsEl = document.getElementById('dialogueFriendshipHearts');
     if (heartsEl) {
         heartsEl.innerHTML = '';
         if (!this.player.npcFriendship) this.player.npcFriendship = {};
 
         const score = this.player.npcFriendship[npcId] || 0;
-        const hearts = Math.min(5, Math.floor(score / 20));
-        for (let i = 1; i <= 5; i++) {
+        const maxHearts = score > 100 ? 10 : 5;
+        const hearts = Math.min(maxHearts, Math.floor(score / 20));
+        for (let i = 1; i <= maxHearts; i++) {
             const hSpan = document.createElement('span');
             hSpan.className = i <= hearts ? 'heart-filled' : 'heart-empty';
             hSpan.textContent = '♥';
@@ -17359,6 +17951,7 @@ Game.startDialogue = function(npcId) {
                 turnInQ5Btn.textContent = 'ส่งมอบมหาภารกิจบทที่ 5 (รับ 2,500 G + ดาบศักดิ์สิทธิ์เอ็กซ์คาลิเบอร์ + 1,200 XP)';
                 turnInQ5Btn.onclick = () => {
                     this.player.quests.q5 = 'completed';
+                    this.player.quests.q6 = 'active';
                     this.player.gold += 2500;
                     this.addXp(1200);
                     this.addItemToInventory('excalibur_sword', 1, 'ดาบศักดิ์สิทธิ์เอ็กซ์คาลิเบอร์ (Holy Excalibur)');
@@ -17366,6 +17959,9 @@ Game.startDialogue = function(npcId) {
                     this.addFloatingText('ชัยชนะอันยิ่งใหญ่! ปราบราชินีสปอร์ปีศาจสำเร็จ! (+2,500 G, +1,200 XP)', this.player.x, this.player.y - 30, '#facc15');
                     this.closeDialogue();
                     this.updateHUD();
+                    if (!this.player.seenStoryCutscenes?.ch5_twist) {
+                        setTimeout(() => this.triggerStoryCutscene?.('ch5_twist', false), 300);
+                    }
                 };
 
                 actionsEl.appendChild(turnInQ5Btn);
@@ -17393,21 +17989,27 @@ Game.startDialogue = function(npcId) {
                 turnInQ10Btn.textContent = 'ส่งมอบมหาศึกอวสานบทที่ 10 (รับ 10,000 G + เคียวมรณะสูบวิญญาณ + 5,000 XP)';
                 turnInQ10Btn.onclick = () => {
                     this.player.quests.q10 = 'completed';
+                    if (!this.player.quests.q11 || this.player.quests.q11 === 'not_started') {
+                        this.player.quests.q11 = 'active';
+                    }
                     this.player.gold += 10000;
                     this.addXp(5000);
                     this.addItemToInventory('malakor_soul_scythe', 1, 'เคียวมรณะสูบวิญญาณลอร์ดมาลาคอร์ (Malakor Soul Scythe)');
                     SoundEngine.bossVictoryFanfare();
                     this.triggerScreenShake(8.0, 400);
-                    this.addFloatingText('ชัยชนะอันเป็นอมตะ! กอบกู้แผ่นดินครบ 10 บท! (+10,000 G, +5,000 XP)', this.player.x, this.player.y - 30, '#facc15');
+                    this.addFloatingText('ชัยชนะบทที่ 10! ปลดล็อกบทที่ 11 กับปราชญ์เอลดริน (+10,000 G, +5,000 XP)', this.player.x, this.player.y - 30, '#facc15');
                     this.closeDialogue();
                     this.updateHUD();
+                    if (!this.player.seenStoryCutscenes?.ch10_reveal) {
+                        setTimeout(() => this.triggerStoryCutscene?.('ch10_reveal', false), 300);
+                    }
                 };
                 actionsEl.appendChild(turnInQ10Btn);
             } else {
                 textEl.textContent = dlgs.q10_progress || 'จงบุกสุสานใต้พิภพต้องสาป (The Nether Crypt) ทางตะวันออกเฉียงใต้ สยบลอร์ดมาลาคอร์เพื่อยุติคำสาปสปอร์มรณะชั่วนิรันดร์!';
             }
         } else if (this.player.quests.q10 === 'completed') {
-            textEl.textContent = 'มหาผู้พิทักษ์แห่งจักรวาล! แผ่นดินศิลาสุขาวดีรุ่งโรจน์และสงบสุขชั่วนิรันดร์ด้วยวีรกรรมอันยิ่งใหญ่ของท่าน!';
+            textEl.textContent = dlgs.grand_finale_victory || 'หลานรักแห่งอาเธอร์! บัดนี้จงสานต่อภารกิจรวบรวมศิลาที่เหลือกับปราชญ์เอลดรินและผู้กองวาเลเรีย เพื่อปลดผนึกวิหารศักดิ์สิทธิ์!';
         } else {
             textEl.textContent = 'ขอขอบคุณท่านผู้กอบกู้แผ่นดิน! หากต้องการไขความลับเพิ่มเติม จงไปปรึกษาผู้เฒ่าปราชญ์เอลดรินที่วิหารศักดิ์สิทธิ์เถิด!';
         }
@@ -17481,9 +18083,12 @@ Game.startDialogue = function(npcId) {
                 turnInQ7Btn.textContent = 'ส่งภารกิจบทที่ 7 (รับ 3,500 G + ยาฟื้นพลัง x5 + 1,800 XP)';
                 turnInQ7Btn.onclick = () => {
                     this.player.quests.q7 = 'completed';
+                    this.player.quests.q8 = 'active';
                     this.player.gold += 3500;
                     this.addXp(1800);
                     this.addItemToInventory('health_potion', 5, 'ยาฟื้นพลังชีวิตชั้นเลิศ');
+                    if (!this.player.unlockedLore) this.player.unlockedLore = {};
+                    this.player.unlockedLore['lore_lilian_parents'] = true;
                     SoundEngine.levelUp();
                     this.addFloatingText('สำเร็จบทที่ 7! ปลดล็อกบทที่ 8 กับผู้กองวาเลเรีย', this.player.x, this.player.y - 25, '#4ade80');
                     this.closeDialogue();
@@ -17618,8 +18223,42 @@ Game.startDialogue = function(npcId) {
             } else {
                 textEl.textContent = dlgs.q8_progress || 'ระวังอุกกาบาตเพลิงและธารลาวาเดือดของอิกนิสทรอนด้วยนะสหาย! รีบหลบวงเตือนบนพื้นให้ทัน!';
             }
+        } else if (this.player.quests.q11 === 'completed' && (!this.player.quests.q12 || this.player.quests.q12 === 'not_started')) {
+            textEl.textContent = dlgs.q12_intro || 'หน่วยลาดตระเวนแจ้งข่าวด่วน! "จ้าวพายุออสทริออน" กำลังทดสอบเจตจำนงบนที่ราบสูงอัสนีบาต เหนือยอดเขาหิมะฟรอสต์พีค!';
+            const acceptQ12Btn = document.createElement('button');
+            acceptQ12Btn.className = 'btn-dialogue-action btn-quest-accept';
+            acceptQ12Btn.textContent = 'รับภารกิจบทที่ 12: บัลลังก์สายฟ้าเหนือเมฆา';
+            acceptQ12Btn.onclick = () => {
+                this.player.quests.q12 = 'active';
+                SoundEngine.bossRoar();
+                this.addFloatingText('รับภารกิจบทที่ 12: บัลลังก์สายฟ้าเหนือเมฆา!', this.player.x, this.player.y - 20, '#38bdf8');
+                this.closeDialogue();
+                this.updateHUD();
+            };
+            actionsEl.appendChild(acceptQ12Btn);
+        } else if (this.player.quests.q12 === 'active') {
+            if (this.player.questProgress.astreonDefeated) {
+                textEl.textContent = dlgs.q12_complete || 'อัสนีบาตยอมสยบแทบเท้าเจ้าแล้ว! บัดนี้ศิลาศักดิ์สิทธิ์ครบทั้ง 8 ธาตุ จงไปรวมพลังที่แท่นบูชาวิหารโบราณกับปราชญ์เอลดริน!';
+                const turnInQ12Btn = document.createElement('button');
+                turnInQ12Btn.className = 'btn-dialogue-action btn-quest-accept';
+                turnInQ12Btn.textContent = 'ส่งภารกิจบทที่ 12 (รับ 7,000 G + ผลึกสายฟ้า x5 + 4,000 XP)';
+                turnInQ12Btn.onclick = () => {
+                    this.player.quests.q12 = 'completed';
+                    this.player.quests.q_shrine = 'active';
+                    this.player.gold += 7000;
+                    this.addXp(4000);
+                    this.addItemToInventory('thunder_crystal', 5, 'ผลึกสายฟ้าอัสนีบาต');
+                    SoundEngine.levelUp();
+                    this.addFloatingText('สำเร็จบทที่ 12! ศิลาครบ 8 ธาตุแล้ว มุ่งหน้าสู่แท่นบูชาวิหารเหนือป่า!', this.player.x - 30, this.player.y - 25, '#fde047');
+                    this.closeDialogue();
+                    this.updateHUD();
+                };
+                actionsEl.appendChild(turnInQ12Btn);
+            } else {
+                textEl.textContent = dlgs.q12_progress || 'อย่าเข้าใกล้เสาล่อฟ้าที่เชื่อมสายไฟฟ้าบนพื้น และเตรียมซุปความเร็วสายลมไว้ให้พร้อม!';
+            }
         } else {
-            textEl.textContent = 'แนวรบปราการเหนือมั่นคงแล้ว! ขอบใจเจ้ามาก บัดนี้จงไปปรึกษา ผู้เฒ่าปราชญ์เอลดริน ที่วิหารศักดิ์สิทธิ์เพื่อสืบหารังไหมของแมลงยักษ์เถิด!';
+            textEl.textContent = 'แนวรบปราการเหนือมั่นคงแล้ว! ขอบใจเจ้ามาก สู้เคียงบ่าเคียงไหล่กันต่อไปเพื่อหุบเขาศิลาสุขาวดี!';
         }
     } else if (npcId === 'eldrin') {
         const q3State = this.player.quests.q3;
@@ -17701,6 +18340,43 @@ Game.startDialogue = function(npcId) {
             } else {
                 textEl.textContent = dlgs.q6_progress || 'จงลงบันไดรอยแยกผลึก (Abyss Rift) ในถ้ำ สยบโกเลมลูมินาร์คใน The Crystal Abyss Floor -2!';
             }
+        } else if (this.player.quests.q10 === 'completed' && (!this.player.quests.q11 || this.player.quests.q11 === 'not_started' || this.player.quests.q11 === 'active')) {
+            if (this.player.quests.q11 !== 'active') {
+                textEl.textContent = dlgs.q11_intro || 'แม้ร่างของมาลาคอร์จะสลาย แต่รากแห่งพงไพรโบราณทางตะวันออกของป่าทมิฬยังร่ำไห้ด้วยพิษความมืด! จงไปปลุกสติ "เทพพฤกษา ซิลวาเนีย"!';
+                const acceptQ11Btn = document.createElement('button');
+                acceptQ11Btn.className = 'btn-dialogue-action btn-quest-accept';
+                acceptQ11Btn.textContent = 'รับภารกิจบทที่ 11: พฤกษาวิปโยคแห่งไพรสณฑ์บรรพกาล';
+                acceptQ11Btn.onclick = () => {
+                    this.player.quests.q11 = 'active';
+                    SoundEngine.bossRoar();
+                    this.addFloatingText('รับภารกิจบทที่ 11: พฤกษาวิปโยค (Sylvanus)!', this.player.x, this.player.y - 20, '#4ade80');
+                    this.closeDialogue();
+                    this.updateHUD();
+                };
+                actionsEl.appendChild(acceptQ11Btn);
+            } else if (this.player.questProgress.sylvanusDefeated) {
+                textEl.textContent = dlgs.q11_complete || 'ป่าโบราณกลับมาร้องเพลงแห่งสายลมอีกครั้ง... เหลือเพียงศิลาอัสนีชิ้นสุดท้ายกับผู้กองวาเลเรีย!';
+                const turnInQ11Btn = document.createElement('button');
+                turnInQ11Btn.className = 'btn-dialogue-action btn-quest-accept';
+                turnInQ11Btn.textContent = 'ส่งภารกิจบทที่ 11 (รับ 5,500 G + ผลไม้ดวงดารา x4 + 3,200 XP)';
+                turnInQ11Btn.onclick = () => {
+                    this.player.quests.q11 = 'completed';
+                    this.player.quests.q12 = 'active';
+                    this.player.gold += 5500;
+                    this.addXp(3200);
+                    this.addItemToInventory('star_fruit', 4, 'ผลไม้ดวงดาราพฤกษา');
+                    SoundEngine.levelUp();
+                    this.addFloatingText('สำเร็จบทที่ 11! ปลดล็อกบทที่ 12 กับผู้กองวาเลเรีย!', this.player.x, this.player.y - 25, '#4ade80');
+                    this.closeDialogue();
+                    this.updateHUD();
+                };
+                actionsEl.appendChild(turnInQ11Btn);
+            } else {
+                textEl.textContent = dlgs.q11_progress || 'เมื่อซิลวาเนียสร้างดอกไม้ตูมสีทอง จงรีบฟันทำลายทันที มิฉะนั้นมันจะดูดพลังรักษาตัวนางจนเต็ม!';
+            }
+        } else if (this.player.quests.q_shrine === 'active' || (this.player.quests.q12 === 'completed' && !this.player.shrineRestored)) {
+            this.player.quests.q_shrine = 'active';
+            textEl.textContent = 'ศิลาทั้งแปดธาตุพร้อมแล้ว! จงเดินขึ้นไปทางเหนือสุดของป่าทมิฬ ประดิษฐานศิลาทั้งหมดลงบนแท่นบูชาวิหารศักดิ์สิทธิ์ (Sacred Shrine Altar) เพื่อทำตามเจตนารมณ์สุดท้ายของปู่อาเธอร์!';
         } else {
             textEl.textContent = dlgs.victory || 'ความสงบสุขกลับคืนสู่ผืนป่าและฟาร์มของเราแล้ว ขอพรแห่งปัญญาและแสงสว่างจงสถิตอยู่กับเจ้าตลอดกาล ผู้กล้าแห่งฟาร์มสุขใจ!';
         }
@@ -17808,19 +18484,34 @@ Game.startDialogue = function(npcId) {
         };
 
         actionsEl.appendChild(openForgeBtn);
+    } else if (npcId === 'luna') {
+        if (this.player.spouse === 'luna') {
+            textEl.textContent = dlgs.married || dlgs.dating || dlgs.intro;
+        } else if (this.player.dating === 'luna') {
+            textEl.textContent = dlgs.dating || dlgs.flower_talk || dlgs.intro;
+        } else {
+            textEl.textContent = dlgs.intro || 'สวัสดีจ้ะ! ดอกไม้ในหมู่บ้านกำลังต้องการกำลังใจจากแสงแดดและผู้กล้าเช่นเจ้านะ!';
+        }
+        const flwBtn = document.createElement('button');
+        flwBtn.className = 'btn-dialogue-action';
+        flwBtn.textContent = 'คุยเรื่องดอกไม้และปู่อาเธอร์';
+        flwBtn.onclick = () => {
+            textEl.textContent = dlgs.flower_talk || 'ดอกไม้ที่ปลูกด้วยใจ ย่อมพ้นฤดูหนาวไปได้เสมอจ้ะ!';
+        };
+        actionsEl.appendChild(flwBtn);
     }
 
     // Check NPC Heart Events (Heart 2 = 40 pts, Heart 4 = 80 pts)
     const friendshipPts = this.player.npcFriendship?.[npcId] || 0;
     const seenEvents = this.player.seenHeartEvents || {};
 
-    const event2Id = `${npcId}_heart2`;
-    const event4Id = `${npcId}_heart4`;
+    const event2Id = (NPC_HEART_EVENTS as any)?.[`${npcId}_2`] ? `${npcId}_2` : `${npcId}_heart2`;
+    const event4Id = (NPC_HEART_EVENTS as any)?.[`${npcId}_4`] ? `${npcId}_4` : `${npcId}_heart4`;
 
     if ((NPC_HEART_EVENTS as any)?.[event2Id] && friendshipPts >= 40 && !seenEvents[event2Id]) {
         const heart2Btn = document.createElement('button');
         heart2Btn.className = 'btn-dialogue-action btn-quest-accept';
-        heart2Btn.textContent = '★ เหตุการณ์ผูกใจ 2 หัวใจ';
+        heart2Btn.textContent = '★ เหตุการณ์ผูกใจ 2 หัวใจ (รับรางวัลถาวร)';
         heart2Btn.onclick = () => {
             this.closeDialogue();
             this.triggerHeartEvent(event2Id);
@@ -17831,7 +18522,7 @@ Game.startDialogue = function(npcId) {
     if ((NPC_HEART_EVENTS as any)?.[event4Id] && friendshipPts >= 80 && !seenEvents[event4Id]) {
         const heart4Btn = document.createElement('button');
         heart4Btn.className = 'btn-dialogue-action btn-quest-accept';
-        heart4Btn.textContent = '★ เหตุการณ์ผูกใจ 4 หัวใจ';
+        heart4Btn.textContent = '★ เหตุการณ์ผูกใจ 4 หัวใจ (รับรางวัลถาวร)';
         heart4Btn.onclick = () => {
             this.closeDialogue();
             this.triggerHeartEvent(event4Id);
@@ -17862,10 +18553,85 @@ Game.closeDialogue = function() {
 };
 
 
+Game.switchQuestTab = function(tab: 'quests' | 'chronicle') {
+    const qList = document.getElementById('questsList');
+    const cList = document.getElementById('chronicleList');
+    const tMain = document.getElementById('questTabMain');
+    const tChron = document.getElementById('questTabChronicle');
+    const descEl = document.getElementById('questModalDesc');
+    if (tab === 'chronicle') {
+        if (qList) qList.style.display = 'none';
+        if (cList) cList.style.display = 'block';
+        tMain?.classList.remove('active');
+        tChron?.classList.add('active');
+        if (descEl) descEl.textContent = 'บันทึกเรื่องราวมรดกของปู่อาเธอร์ ปริศนาผนึกแปดศิลา และคัตซีนที่ปลดล็อกแล้ว';
+        this.renderChronicleList();
+    } else {
+        if (qList) qList.style.display = 'block';
+        if (cList) cList.style.display = 'none';
+        tMain?.classList.add('active');
+        tChron?.classList.remove('active');
+        if (descEl) descEl.textContent = 'ติดตามเควสต์เนื้อเรื่อง ผจญภัยสู่ผืนป่าโบราณ และกอบกู้แผ่นดินจากจอมอสูร';
+        this.renderQuestModal();
+    }
+};
+
+Game.renderChronicleList = function() {
+    const cList = document.getElementById('chronicleList');
+    if (!cList) return;
+    cList.innerHTML = '';
+
+    const seenCuts = this.player.seenStoryCutscenes || {};
+    const unlockedLore = this.player.unlockedLore || {};
+
+    STORY_LORE_ENTRIES.forEach((entry) => {
+        const isUnlocked = !!(
+            unlockedLore[entry.id] ||
+            (entry.cutsceneId && seenCuts[entry.cutsceneId]) ||
+            (entry.id === 'lore_prologue') ||
+            (entry.id === 'lore_lilian_parents' && (this.player.quests?.q7 === 'completed' || this.player.questProgress?.hydrakisDefeated)) ||
+            (entry.id === 'lore_kathuros_crown' && (this.player.questProgress?.kathurosDefeated || this.player.quests?.q5 === 'completed')) ||
+            (entry.id === 'lore_malakor_oath' && (this.player.questProgress?.malakorDefeated || this.player.quests?.q10 === 'completed'))
+        );
+
+        const card = document.createElement('div');
+        card.className = 'chronicle-card' + (isUnlocked ? '' : ' locked');
+
+        if (isUnlocked) {
+            card.innerHTML = `
+                <div class="chronicle-card-header">
+                    <strong style="color:#78350f; font-size:13px;">✦ ${entry.title}</strong>
+                    <span class="chronicle-cat-badge">${entry.category}</span>
+                </div>
+                <p class="chronicle-card-text">${entry.text}</p>
+            `;
+            if (entry.cutsceneId && (STORY_CUTSCENES as any)?.[entry.cutsceneId]) {
+                const replayBtn = document.createElement('button');
+                replayBtn.className = 'btn-secondary';
+                replayBtn.style.cssText = 'margin-top: 8px; font-size: 11px; padding: 4px 10px;';
+                replayBtn.textContent = '▶ อ่านคัตซีนเรื่องราวอีกครั้ง';
+                replayBtn.onclick = () => this.triggerStoryCutscene(entry.cutsceneId!, true);
+                card.appendChild(replayBtn);
+            }
+        } else {
+            card.innerHTML = `
+                <div class="chronicle-card-header">
+                    <strong style="color:#475569; font-size:13px;">??? (บันทึกความลับที่ยังไม่ถูกค้นพบ)</strong>
+                    <span class="chronicle-cat-badge" style="background:#e2e8f0; border-color:#94a3b8; color:#475569;">${entry.category}</span>
+                </div>
+                <p class="chronicle-card-text" style="color:#64748b;">สำรวจหอจดหมายเหตุหมู่บ้าน ขวดแก้วเกาะสมบัติ หรือปราบมหาบอสประจำบทเพื่อปลดล็อก</p>
+            `;
+        }
+        cList.appendChild(card);
+    });
+};
+
 Game.renderQuestModal = function() {
     const list = document.getElementById('questsList');
     if (!list) return;
     list.innerHTML = '';
+
+    const shardIds = ['sacred_shard_earth', 'sacred_shard_sun', 'sacred_shard_water', 'sacred_shard_fire', 'sacred_shard_frost', 'sacred_shard_shadow', 'sacred_shard_nature', 'sacred_shard_thunder'];
 
     Object.values(QUESTS).forEach(q => {
         const state = this.player.quests[q.id] || 'available';
@@ -17918,6 +18684,15 @@ Game.renderQuestModal = function() {
             } else if (q.id === 'q10') {
                 const def = this.player.questProgress.malakorDefeated ? '✓ สยบสำเร็จ' : 'ยังไม่ถูกปราบ';
                 progressDetail = `<div class="quest-prog-text">ลอร์ดมรณะกระดูกอสูร มาลาคอร์ (สุสานใต้พิภพ): ${def}</div>`;
+            } else if (q.id === 'q11') {
+                const def = this.player.questProgress.sylvanusDefeated ? '✓ ปลุกสติสำเร็จ' : 'ยังไม่ถูกปราบ';
+                progressDetail = `<div class="quest-prog-text">เทพพฤกษาบรรพกาล ซิลวาเนีย (ป่าศักดิ์สิทธิ์): ${def}</div>`;
+            } else if (q.id === 'q12') {
+                const def = this.player.questProgress.astreonDefeated ? '✓ พิชิตสำเร็จ' : 'ยังไม่ถูกปราบ';
+                progressDetail = `<div class="quest-prog-text">จ้าวแห่งพายุสายฟ้า ออสทริออน (ที่ราบสูงสายฟ้า): ${def}</div>`;
+            } else if (q.id === 'q_shrine') {
+                const have = shardIds.filter(s => this.player.sacredShards?.[s] || this.countItemInInventory(s) > 0).length;
+                progressDetail = `<div class="quest-prog-text">แก่นศิลาศักดิ์สิทธิ์: ${have}/8 ธาตุ (แท่นบูชาวิหารเหนือป่าทมิฬ)</div>`;
             }
         } else {
             progressDetail = `<div class="quest-prog-text" style="color:#94a3b8;">คุยกับ ${NPC_STORY[q.giver]?.name || 'NPC'} เพื่อรับภารกิจ</div>`;
@@ -20948,6 +21723,11 @@ Game.travelToIsland = function() {
 };
 
 Game.forageIslandPineapple = function(tx: number, ty: number) {
+    const now = performance.now();
+    if (now - (this._lastGatherTime || 0) < 350) return;
+    this._lastGatherTime = now;
+    const tile = this.map?.[ty]?.[tx];
+    if (!tile || tile.interactable !== 'forage_pineapple') return;
     const quality = this.rollItemQuality('foraging', this.player.skills?.foraging || 1);
     this.addItemToInventory('pineapple', 1, 'สับปะรดภูเขาไฟเขตร้อน', quality);
     this.addXp(25);
@@ -20955,12 +21735,18 @@ Game.forageIslandPineapple = function(tx: number, ty: number) {
     this.spawnParticles(tx * 32 + 16, ty * 32 + 16, '#facc15', 16);
     const qBadge = this.getQualityBadgeText(quality);
     this.addFloatingText(`เก็บสับปะรดป่าเขตร้อน ${qBadge}! (+25 XP)`, tx * 32, ty * 32 - 15, '#fde047');
-    this.map[ty][tx].type = 'sand';
-    this.map[ty][tx].interactable = null;
+    tile.depletedForageType = { type: 'forage_pineapple', interactable: 'forage_pineapple', solid: false };
+    tile.type = 'sand';
+    tile.interactable = null;
     this.updateHUD();
 };
 
 Game.forageIslandCoconut = function(tx: number, ty: number) {
+    const now = performance.now();
+    if (now - (this._lastGatherTime || 0) < 350) return;
+    this._lastGatherTime = now;
+    const tile = this.map?.[ty]?.[tx];
+    if (!tile || tile.interactable !== 'forage_coconut') return;
     const quality = this.rollItemQuality('foraging', this.player.skills?.foraging || 1);
     this.addItemToInventory('coconut', 1, 'มะพร้าวป่าสด', quality);
     this.addXp(20);
@@ -20968,12 +21754,18 @@ Game.forageIslandCoconut = function(tx: number, ty: number) {
     this.spawnParticles(tx * 32 + 16, ty * 32 + 16, '#78350f', 14);
     const qBadge = this.getQualityBadgeText(quality);
     this.addFloatingText(`เก็บมะพร้าวป่า ${qBadge}! (+20 XP)`, tx * 32, ty * 32 - 15, '#fef08a');
-    this.map[ty][tx].type = 'sand';
-    this.map[ty][tx].interactable = null;
+    tile.depletedForageType = { type: 'forage_coconut', interactable: 'forage_coconut', solid: false };
+    tile.type = 'sand';
+    tile.interactable = null;
     this.updateHUD();
 };
 
 Game.forageIslandBanana = function(tx: number, ty: number) {
+    const now = performance.now();
+    if (now - (this._lastGatherTime || 0) < 350) return;
+    this._lastGatherTime = now;
+    const tile = this.map?.[ty]?.[tx];
+    if (!tile || tile.interactable !== 'forage_banana') return;
     const quality = this.rollItemQuality('foraging', this.player.skills?.foraging || 1);
     this.addItemToInventory('banana', 1, 'กล้วยหอมทอง (Golden Banana)', quality);
     this.addXp(20);
@@ -20981,19 +21773,26 @@ Game.forageIslandBanana = function(tx: number, ty: number) {
     this.spawnParticles(tx * 32 + 16, ty * 32 + 16, '#facc15', 14);
     const qBadge = this.getQualityBadgeText(quality);
     this.addFloatingText(`เก็บกล้วยหอมทอง ${qBadge}! (+20 XP)`, tx * 32, ty * 32 - 15, '#fde047');
-    this.map[ty][tx].type = 'sand';
-    this.map[ty][tx].interactable = null;
+    tile.depletedForageType = { type: 'forage_banana', interactable: 'forage_banana', solid: false };
+    tile.type = 'sand';
+    tile.interactable = null;
     this.updateHUD();
 };
 
 Game.forageIslandSeashell = function(tx: number, ty: number) {
+    const now = performance.now();
+    if (now - (this._lastGatherTime || 0) < 350) return;
+    this._lastGatherTime = now;
+    const tile = this.map?.[ty]?.[tx];
+    if (!tile || tile.interactable !== 'forage_seashell') return;
     this.addItemToInventory('seashell', 1, 'เปลือกหอยมุกสีรุ้ง', 0);
     this.addXp(15);
     SoundEngine.itemPop();
     this.spawnParticles(tx * 32 + 16, ty * 32 + 16, '#f472b6', 12);
     this.addFloatingText(`เก็บเปลือกหอยมุกสีรุ้ง! (+15 XP)`, tx * 32, ty * 32 - 15, '#fbcfe8');
-    this.map[ty][tx].type = 'sand';
-    this.map[ty][tx].interactable = null;
+    tile.depletedForageType = { type: 'seashell', interactable: 'forage_seashell', solid: false };
+    tile.type = 'sand';
+    tile.interactable = null;
     this.updateHUD();
 };
 
@@ -21006,22 +21805,46 @@ Game.forageIslandMessageBottle = function(tx: number, ty: number) {
     this.addFloatingText('เปิดขวดแก้ว: พบลายแทงสมบัติ & +2 เหรียญทองโบราณ!', tx * 32, ty * 32 - 20, '#38bdf8');
     this.map[ty][tx].type = 'sand';
     this.map[ty][tx].interactable = null;
+    if (!this.player.unlockedLore) this.player.unlockedLore = {};
+    this.player.unlockedLore['lore_blackhound'] = true;
+    this.triggerStoryCutscene?.('pirate_lore', true);
     this.updateHUD();
 };
 
 Game.shakePalmTree = function(tx: number, ty: number) {
+    const now = performance.now();
+    if (now - (this._lastGatherTime || 0) < 420) return;
+    this._lastGatherTime = now;
+    const tile = this.map?.[ty]?.[tx];
+    if (!tile) return;
+
+    if (tile.palmFruitsRemaining === undefined) tile.palmFruitsRemaining = 2;
+    if (tile.palmFruitsRemaining <= 0) {
+        this.addFloatingText('ต้นมะพร้าวนี้ไม่มีลูกเหลือแล้ว (กลับมาเขย่าใหม่พรุ่งนี้)', tx * 32 - 20, ty * 32 - 15, '#94a3b8');
+        return;
+    }
+    if ((this.player.energy || 0) < 1) {
+        this.addFloatingText('หมดแรงแล้ว! พักผ่อนหรือกินอาหารก่อน', this.player.x, this.player.y - 12, '#f87171');
+        return;
+    }
+
+    this.player.energy = Math.max(0, this.player.energy - 1);
+    this.player.energyRegenDelay = 2000;
+    tile.palmFruitsRemaining -= 1;
+
     SoundEngine.hit();
     this.spawnParticles(tx * 32 + 16, ty * 32 + 10, '#22c55e', 12);
     const roll = Math.random();
-    if (roll < 0.45) {
+    if (roll < 0.50) {
         this.spawnDroppedItem('coconut', 1, tx * 32 + 16, ty * 32 + 24);
-        this.addFloatingText('มะพร้าวร่วงหล่นลงมา!', tx * 32, ty * 32 - 15, '#fef08a');
-    } else if (roll < 0.70) {
+        this.addFloatingText(`มะพร้าวร่วงหล่นลงมา! (เหลือ ${tile.palmFruitsRemaining} ครั้ง)`, tx * 32, ty * 32 - 15, '#fef08a');
+    } else if (roll < 0.80) {
         this.spawnDroppedItem('banana', 1, tx * 32 + 16, ty * 32 + 24);
-        this.addFloatingText('กล้วยหอมทองร่วงหล่นลงมา!', tx * 32, ty * 32 - 15, '#fde047');
+        this.addFloatingText(`กล้วยหอมทองร่วงหล่นลงมา! (เหลือ ${tile.palmFruitsRemaining} ครั้ง)`, tx * 32, ty * 32 - 15, '#fde047');
     } else {
-        this.addFloatingText('ใบมะพร้าวพลิ้วไหวตามสายลม', tx * 32, ty * 32 - 15, '#86efac');
+        this.addFloatingText('ใบมะพร้าวพลิ้วไหวตามสายลม (ไม่มีผลตกรอบนี้)', tx * 32, ty * 32 - 15, '#86efac');
     }
+    this.updateHUD();
 };
 
 Game.inspectPirateShipwreck = function() {
@@ -21725,11 +22548,20 @@ Game.chooseHeartEventOption = function(choiceIdx: number) {
     if (event.rewardType === 'hp') {
         this.player.maxHp += event.rewardValue;
         this.player.hp = this.player.maxHp;
+        if (event.id === 'luna_4') {
+            this.player.maxEnergy += 15;
+            this.player.energy = this.player.maxEnergy;
+        }
     } else if (event.rewardType === 'damage') {
         this.player.bonusBaseDamage = (this.player.bonusBaseDamage || 0) + event.rewardValue;
     } else if (event.rewardType === 'energy') {
         this.player.maxEnergy += event.rewardValue;
         this.player.energy = this.player.maxEnergy;
+        if (event.id === 'gilbert_2') {
+            this.player.gold += 400;
+        } else if (event.id === 'bob_4') {
+            this.player.gold += 1000;
+        }
     }
 
     if (!this.player.seenHeartEvents) this.player.seenHeartEvents = {};
@@ -21784,13 +22616,20 @@ Game.interactWithShrineAltar = function() {
     });
 
     if (count >= 8) {
+        if (!this.player.quests) this.player.quests = {};
+        this.player.quests.q_shrine = 'completed';
         if (!this.player.grandSovereignAwakened) {
             this.player.grandSovereignAwakened = true;
+            this.player.title = 'มหาจักรพรรดิผู้พิทักษ์แห่งศิลาสุขาวดี';
+            if (!this.player.unlockedTitles) this.player.unlockedTitles = [];
+            if (!this.player.unlockedTitles.includes(this.player.title)) {
+                this.player.unlockedTitles.push(this.player.title);
+            }
             this.player.gold += 5000;
             this.addXp(5000);
             this.triggerScreenShake(9.0, 500);
             SoundEngine.shrineEpilogue();
-            this.addFloatingText('★ ปลดผนึก 8 ศิลาเทพบรรพกาลสำเร็จ! ได้รับฉายา "มหาจักรพรรดิผู้พิทักษ์แห่งจักรวาลและแผ่นดินสุขาวดี" (+5,000 G, +5,000 XP)', this.player.x - 50, this.player.y - 30, '#fde047');
+            this.addFloatingText('★ ปลดผนึก 8 ศิลาเทพบรรพกาลสำเร็จ! ได้รับฉายา "มหาจักรพรรดิผู้พิทักษ์แห่งศิลาสุขาวดี" (+5,000 G, +5,000 XP)', this.player.x - 50, this.player.y - 30, '#fde047');
         }
         this.startShrineEpilogueCutscene();
     } else if (count >= 6) {
@@ -24405,22 +25244,7 @@ Game.activateVolcanoSwitch = function(tx: number, ty: number) {
 };
 
 Game.mineCinderShardNode = function(tx: number, ty: number) {
-    if (!this.map[ty] || !this.map[ty][tx]) return;
-    const tile = this.map[ty][tx];
-    SoundEngine.miningHit();
-    this.spawnParticles(tx * 32 + 16, ty * 32 + 16, '#f97316', 16);
-    const shardAmt = Math.random() < 0.35 ? 2 : 1;
-    this.addItemToInventory('cinder_shard', shardAmt, 'เศษผลึกเพลิง (Cinder Shard)', 0);
-    if (Math.random() < 0.25) {
-        this.addItemToInventory('gold_ore', 1, 'แร่ทองคำดิบ', 0);
-    }
-    this.addFloatingText('+เศษผลึกเพลิง (Cinder Shard)', tx * 32 - 20, ty * 32 - 15, '#f97316');
-    this.player.energy = Math.max(0, this.player.energy - 3);
-
-    tile.type = 'magmaFloor';
-    tile.solid = false;
-    delete tile.interactable;
-    this.updateHUD();
+    this.mineNodeTile('mine_cinder_shard', tx, ty);
 };
 
 Game.breakVolcanoUrn = function(tx: number, ty: number) {

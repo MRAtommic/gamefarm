@@ -2746,6 +2746,13 @@ export const SPRITES: Record<string, any> = {};
                 ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 3;
                 ctx.beginPath(); ctx.arc(14, 10, 7, Math.PI * 1.1, Math.PI * 1.8); ctx.stroke();
                 break;
+            case 'pickaxe':
+                ctx.strokeStyle = '#92400e'; ctx.lineWidth = 2.5;
+                ctx.beginPath(); ctx.moveTo(4, 20); ctx.lineTo(18, 6); ctx.stroke();
+                ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.arc(13, 11, 8, -Math.PI * 0.45, Math.PI * 0.05); ctx.stroke();
+                ctx.fillStyle = '#f8fafc'; ctx.fillRect(19, 3, 2, 3);
+                break;
             case 'seeds':
             case 'wheat_seed':
             case 'carrot_seed':
@@ -3603,10 +3610,40 @@ export const SPRITES: Record<string, any> = {};
                 ctx.fillStyle = '#d97706'; ctx.fillRect(9, 12, 4, 3);
                 break;
             default:
-                // Generic item box
-                ctx.fillStyle = '#38bdf8'; ctx.fillRect(5, 5, 14, 14);
-                ctx.fillStyle = '#ffffff'; ctx.fillRect(7, 7, 10, 10);
-                ctx.fillStyle = '#0284c7'; ctx.fillRect(9, 9, 6, 6);
+                if (typeof itemId === 'string' && itemId.endsWith('_seed')) {
+                    const seedAccentMap = {
+                        wheat_seed: '#eab308',
+                        carrot_seed: '#f97316',
+                        tomato_seed: '#ef4444',
+                        corn_seed: '#facc15',
+                        strawberry_seed: '#f43f5e',
+                        pumpkin_seed: '#ea580c',
+                        sunflower_seed: '#fde047',
+                        rice_seed: '#e2e8f0',
+                        cabbage_seed: '#4ade80',
+                        chili_seed: '#dc2626',
+                        sugarcane_seed: '#84cc16',
+                        pineapple_seed: '#f59e0b',
+                        coconut_seed: '#78350f',
+                        banana_seed: '#facc15',
+                        golden_melon_seed: '#fbbf24',
+                        starfruit_seed: '#38bdf8',
+                        cosmic_fruit_seed: '#c084fc',
+                        potato_seed: '#a16207',
+                        watermelon_seed: '#16a34a'
+                    };
+                    const accent = seedAccentMap[itemId] || '#22c55e';
+                    ctx.fillStyle = '#d97706'; ctx.fillRect(6, 6, 12, 14);
+                    ctx.fillStyle = '#fef3c7'; ctx.fillRect(8, 9, 8, 9);
+                    ctx.fillStyle = '#78350f'; ctx.fillRect(7, 5, 10, 3);
+                    ctx.fillStyle = accent; ctx.beginPath(); ctx.arc(12, 14, 3, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#16a34a'; ctx.fillRect(11, 9, 2, 3);
+                } else {
+                    // Generic item box
+                    ctx.fillStyle = '#38bdf8'; ctx.fillRect(5, 5, 14, 14);
+                    ctx.fillStyle = '#ffffff'; ctx.fillRect(7, 7, 10, 10);
+                    ctx.fillStyle = '#0284c7'; ctx.fillRect(9, 9, 6, 6);
+                }
                 break;
         }
 
@@ -3779,7 +3816,12 @@ export const SPRITES: Record<string, any> = {};
         watermelon: createCropSpriteSet('#16a34a', '#14532d', 'round'),
         peach: createCropSpriteSet('#fb7185', '#15803d', 'round'),
         coconut: createCropSpriteSet('#78350f', '#15803d', 'round'),
-        sugarcane: createCropSpriteSet('#84cc16', '#4d7c0f', 'wheat')
+        sugarcane: createCropSpriteSet('#84cc16', '#4d7c0f', 'wheat'),
+        pineapple: createCropSpriteSet('#f59e0b', '#16a34a', 'carrot'),
+        banana: createCropSpriteSet('#facc15', '#15803d', 'wheat'),
+        golden_melon: createCropSpriteSet('#fbbf24', '#16a34a', 'round'),
+        starfruit: createCropSpriteSet('#fde047', '#0284c7', 'strawberry'),
+        cosmic_fruit: createCropSpriteSet('#c084fc', '#4c1d95', 'strawberry')
     };
 
     // Interior Tiles & Furniture

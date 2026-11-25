@@ -765,16 +765,21 @@
             </div>
         </div>
 
-        <!-- MODAL: Quest Log (สมุดภารกิจเนื้อเรื่อง) -->
+        <!-- MODAL: Quest Log (สมุดภารกิจเนื้อเรื่อง & ตำนาน) -->
         <div id="questModal" class="modal-overlay" style="display: none;">
             <div class="modal-window">
                 <div class="modal-header">
-                    <h2>สมุดภารกิจเนื้อเรื่อง (Quest Log)</h2>
+                    <h2>สมุดภารกิจเนื้อเรื่อง & บันทึกตำนาน (Story Journal)</h2>
                     <button class="btn-close" onclick="Game.closeAllModals()">✕</button>
                 </div>
                 <div class="modal-body">
-                    <p class="modal-desc">ติดตามเควสต์เนื้อเรื่อง ผจญภัยสู่ผืนป่าโบราณ และกอบกู้แผ่นดินจากจอมอสูร</p>
+                    <div class="crafting-tabs-row quest-tabs-row" style="margin-bottom: 12px;">
+                        <button id="questTabMain" class="craft-tab-btn active" onclick="Game.switchQuestTab('quests')">ภารกิจเนื้อเรื่อง (1-12)</button>
+                        <button id="questTabChronicle" class="craft-tab-btn" onclick="Game.switchQuestTab('chronicle')">บันทึกตำนาน & คัตซีน (Lore)</button>
+                    </div>
+                    <p class="modal-desc" id="questModalDesc">ติดตามเควสต์เนื้อเรื่อง ผจญภัยสู่ผืนป่าโบราณ และกอบกู้แผ่นดินจากจอมอสูร</p>
                     <div id="questsList"></div>
+                    <div id="chronicleList" style="display: none;"></div>
                     <div class="modal-actions"
                         style="margin-top: 15px; border-top: 2px solid #d4a373; padding-top: 12px; justify-content: flex-end;">
                         <button class="btn-secondary" onclick="Game.closeAllModals()">ปิดหน้าต่าง</button>
@@ -1277,6 +1282,23 @@
             </div>
         </div>
 
+        <!-- MODAL: Dramatic Story Cutscene Overlay (ฉากคัตซีนเนื้อเรื่อง) -->
+        <div id="storyCutsceneModal" class="modal-overlay story-cutscene-overlay" style="display: none;">
+            <div class="story-cutscene-card" id="storyCutsceneCard">
+                <div id="storyCutsceneBadge" class="story-cutscene-badge">บทนำแห่งชะตากรรม</div>
+                <h1 id="storyCutsceneTitle" class="story-cutscene-title">จดหมายฉบับสุดท้ายจากปู่อาเธอร์</h1>
+                <p id="storyCutsceneSubtitle" class="story-cutscene-subtitle">หุบเขาแห่งศิลาสุขาวดี</p>
+                <div class="story-cutscene-divider">✦ ✦ ✦</div>
+                <div id="storyCutsceneBody" class="story-cutscene-body"></div>
+                <blockquote id="storyCutsceneQuote" class="story-cutscene-quote"></blockquote>
+                <div class="story-cutscene-footer">
+                    <button class="btn-primary story-cutscene-btn" onclick="Game.closeStoryCutscene()">
+                        รับรู้ชะตากรรม & ออกผจญภัย ▶
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- MODAL: Ancient Shrine Epilogue (ฉากจบฟื้นฟูวิหารศักดิ์สิทธิ์ & Master Mode) -->
         <div id="shrineEpilogueModal" class="modal-overlay shrine-epilogue-overlay" style="display: none;">
             <div class="shrine-epilogue-card">
@@ -1290,12 +1312,14 @@
                     <span class="shrine-gem gem-fire" title="แก่นเพลิง">★ เพลิง</span>
                     <span class="shrine-gem gem-frost" title="แก่นเหมันต์">★ น้ำแข็ง</span>
                     <span class="shrine-gem gem-shadow" title="แก่นทมิฬ">★ มิติเงา</span>
+                    <span class="shrine-gem gem-earth" title="แก่นพฤกษา">★ พฤกษา</span>
+                    <span class="shrine-gem gem-sun" title="แก่นอัสนี">★ สายฟ้า</span>
                 </div>
                 <div id="shrineEpilogueText" class="shrine-story-text">
-                    เมื่อแก่นศิลาศักดิ์สิทธิ์ทั้ง 6 ธาตุถูกสถิตลงบนแท่นบูชาโบราณ ลำแสงสวรรค์สีทองก็แผ่กระจายทะลุหมู่เมฆหมอกทมิฬ...<br><br>
-                    สปอร์ร้ายและคำสาปอสูรที่คุกคามฟาร์มและชาวเมืองได้มลายสิ้นไปจนหมดสิ้น ผืนดินกลับมาเขียวขจี อุดมสมบูรณ์ และสงบสุขอย่างที่ไม่เคยเป็นมาก่อนในรอบหลายร้อยปี!<br><br>
+                    เมื่อแก่นศิลาศักดิ์สิทธิ์ทั้ง 8 ธาตุถูกสถิตลงบนแท่นบูชาโบราณ ลำแสงสวรรค์สีทองก็แผ่กระจายทะลุหมู่เมฆหมอกทมิฬ...<br><br>
+                    คำสาปของมาลาคอร์และสปอร์อสูรที่คุกคามฟาร์มมานานกว่าสองร้อยปีมลายสิ้นไปจนหมด เจตนารมณ์สุดท้ายของปู่อาเธอร์สำเร็จลุล่วง ผืนดินกลับมาเขียวขจีและเปี่ยมด้วยพรแห่งแสงดาวชั่วนิรันดร์!<br><br>
                     <strong>ชาวหมู่บ้านศิลาสุขาวดีขอยกย่องท่านในฐานะ:</strong><br>
-                    <span class="shrine-honor-title">"มหาผู้กอบกู้แห่งศิลาสุขาวดี (Savior of the Valley)"</span>
+                    <span class="shrine-honor-title">"มหาจักรพรรดิผู้พิทักษ์แห่งศิลาสุขาวดี (Savior of the Valley)"</span>
                 </div>
                 <div class="shrine-buffs-box">
                     <div class="shrine-buff-item">✓ พรแห่งเทพ: พืชผลทุกชนิดเติบโตเร็วขึ้น 1 วันถาวร</div>

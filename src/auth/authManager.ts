@@ -261,6 +261,31 @@ export const Auth: any = (function() {
             }
         }
 
+        // 1.2 Pack modified island tiles
+        const islandTiles = [];
+        if (Game.scenes && Game.scenes.island && Game.scenes.island.map) {
+            const iMap = Game.scenes.island.map;
+            for (let y = 0; y < Game.scenes.island.mapHeight; y++) {
+                for (let x = 0; x < Game.scenes.island.mapWidth; x++) {
+                    const tile = iMap[y][x];
+                    if (tile.tilled || tile.watered || tile.crop) {
+                        islandTiles.push({
+                            x: x,
+                            y: y,
+                            tilled: !!tile.tilled,
+                            watered: !!tile.watered,
+                            crop: tile.crop ? {
+                                cropId: tile.crop.cropId,
+                                stage: tile.crop.stage,
+                                daysGrown: tile.crop.daysGrown,
+                                ready: !!tile.crop.ready
+                            } : null
+                        });
+                    }
+                }
+            }
+        }
+
         // 2. Pack animals state
         const animalsData = (Game.animals || []).map(a => ({
             id: a.id,
@@ -347,7 +372,12 @@ export const Auth: any = (function() {
                 sacredShards: JSON.parse(JSON.stringify(Game.player.sacredShards || {})),
                 shrineRestored: !!Game.player.shrineRestored,
                 masterMode: !!Game.player.masterMode,
-                bonusBaseDamage: Game.player.bonusBaseDamage || 0
+                bonusBaseDamage: Game.player.bonusBaseDamage || 0,
+                seenStoryCutscenes: JSON.parse(JSON.stringify(Game.player.seenStoryCutscenes || {})),
+                unlockedLore: JSON.parse(JSON.stringify(Game.player.unlockedLore || {})),
+                sailboatRepaired: !!Game.player.sailboatRepaired,
+                pirateChestOpened: !!Game.player.pirateChestOpened,
+                grandSovereignAwakened: !!Game.player.grandSovereignAwakened
             },
             currentScene: Game.currentScene || 'farm',
             time: {
@@ -360,6 +390,7 @@ export const Auth: any = (function() {
             stats: JSON.parse(JSON.stringify(Game.stats || {})),
             farmTiles: farmTiles,
             greenhouseTiles: greenhouseTiles,
+            islandTiles: islandTiles,
             animals: animalsData,
             shopShelves: shelvesData,
             hiredHunters: hiredHuntersData,
@@ -492,8 +523,8 @@ export const Auth: any = (function() {
             maxInventorySlots: Math.max(36, data.player.maxInventorySlots || 36),
             selectedSlot: data.player.selectedSlot || 0,
             inventory: data.player.inventory || [],
-            quests: Object.assign({ q1: 'active', q2: 'not_started', q3: 'not_started', q4: 'not_started', q5: 'not_started', q6: 'not_started', q7: 'not_started', q8: 'not_started', q9: 'not_started', q10: 'not_started' }, data.player.quests || {}),
-            questProgress: Object.assign({ bugsDefeated: 0, sporesCollected: 0, wolvesKilled: 0, rubiesMined: 0, manaGemsFound: 0, caveMonstersDefeated: 0, kathurosDefeated: false, bossDefeated: false, luminarchDefeated: false, hydrakisDefeated: false, ignistronDefeated: false, frostfangDefeated: false, malakorDefeated: false }, data.player.questProgress || {}),
+            quests: Object.assign({ q1: 'active', q2: 'not_started', q3: 'not_started', q4: 'not_started', q5: 'not_started', q6: 'not_started', q7: 'not_started', q8: 'not_started', q9: 'not_started', q10: 'not_started', q11: 'not_started', q12: 'not_started', q_shrine: 'not_started' }, data.player.quests || {}),
+            questProgress: Object.assign({ bugsDefeated: 0, sporesCollected: 0, wolvesKilled: 0, rubiesMined: 0, manaGemsFound: 0, caveMonstersDefeated: 0, kathurosDefeated: false, bossDefeated: false, luminarchDefeated: false, hydrakisDefeated: false, ignistronDefeated: false, frostfangDefeated: false, malakorDefeated: false, sylvanusDefeated: false, astreonDefeated: false }, data.player.questProgress || {}),
             claimedBounties: data.player.claimedBounties || {},
             defeatedBosses: data.player.defeatedBosses || {},
             bossDefeatDay: data.player.bossDefeatDay || {},
@@ -505,7 +536,7 @@ export const Auth: any = (function() {
             spouse: data.player.spouse || null,
             skillMastery: data.player.skillMastery || {},
             masteryPoints: data.player.masteryPoints || 0,
-            npcFriendship: data.player.npcFriendship || {},
+            npcFriendship: Object.assign({ gilbert: 10, lilian: 10, valeria: 10, kael: 10, bob: 10, eldrin: 10, luna: 10 }, data.player.npcFriendship || {}),
             mineProgress: data.player.mineProgress || { currentFloor: 1, maxUnlockedFloor: 1 },
             museumCollections: data.player.museumCollections || {},
             equippedRune: data.player.equippedRune || null,
@@ -514,13 +545,24 @@ export const Auth: any = (function() {
             sacredShards: data.player.sacredShards || {},
             shrineRestored: !!data.player.shrineRestored,
             masterMode: !!data.player.masterMode,
-            bonusBaseDamage: data.player.bonusBaseDamage || 0
+            bonusBaseDamage: data.player.bonusBaseDamage || 0,
+            seenStoryCutscenes: data.player.seenStoryCutscenes || {},
+            unlockedLore: data.player.unlockedLore || {},
+            sailboatRepaired: !!data.player.sailboatRepaired,
+            pirateChestOpened: !!data.player.pirateChestOpened,
+            grandSovereignAwakened: !!data.player.grandSovereignAwakened
         });
 
         // Ensure inventory slots match maxInventorySlots (minimum 36)
         const targetSlots = Math.max(Game.player.maxInventorySlots || 36, (Game.player.inventory || []).length);
         while (Game.player.inventory.length < targetSlots) {
             Game.player.inventory.push(null);
+        }
+        if (typeof Game.normalizeSeedItemsInInventory === 'function') {
+            Game.normalizeSeedItemsInInventory();
+        }
+        if (typeof Game.ensurePickaxeInInventory === 'function') {
+            Game.ensurePickaxeInInventory();
         }
 
         // 2. Restore Time & Calendar
@@ -558,6 +600,20 @@ export const Auth: any = (function() {
             data.greenhouseTiles.forEach((savedTile: any) => {
                 if (gMap[savedTile.y] && gMap[savedTile.y][savedTile.x]) {
                     const target = gMap[savedTile.y][savedTile.x];
+                    target.type = savedTile.tilled ? 'soil' : target.type;
+                    target.tilled = savedTile.tilled;
+                    target.watered = savedTile.watered;
+                    target.crop = savedTile.crop;
+                }
+            });
+        }
+
+        // 4.2 Overlay saved island crops
+        if (data.islandTiles && Game.scenes && Game.scenes.island && Game.scenes.island.map) {
+            const iMap = Game.scenes.island.map;
+            data.islandTiles.forEach((savedTile: any) => {
+                if (iMap[savedTile.y] && iMap[savedTile.y][savedTile.x]) {
+                    const target = iMap[savedTile.y][savedTile.x];
                     target.type = savedTile.tilled ? 'soil' : target.type;
                     target.tilled = savedTile.tilled;
                     target.watered = savedTile.watered;
